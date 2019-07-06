@@ -18,11 +18,15 @@ function get_linux_codename {
     echo "${linux_codename}"
 }
 
-function banner {
-    clr_bold clr_green " "
-    clr_bold clr_green " "
+function banner_base {
+    # $1: clr_green or clr_red
+    # $2: banner_text
+    local color=$1
+    local banner_text=$2
+    clr_bold ${color} " "
+    clr_bold ${color} " "
     local sep="********************************************************************************"
-    clr_bold clr_green "${sep}"
+    clr_bold ${color} "${sep}"
 
     local message
     local line
@@ -30,27 +34,29 @@ function banner {
       for line in "${message[@]}"; do
           clr_bold clr_green "* ${line}"
       done
-    done <<< "$1"
+    done <<< "${banner_text}"
 
     clr_bold clr_green "${sep}"
 }
 
 
+function banner {
+    # $1: banner_text
+    # usage :
+    # banner "this is a test wit ${IFS}two lines !"
+
+    local banner_text=$1
+    banner_base "clr_red" "${banner_text}"
+}
+
+
 function banner_warning {
-    clr_bold clr_red " "
-    clr_bold clr_red " "
-    local sep="********************************************************************************"
-    clr_bold clr_red "${sep}"
+    # $1: banner_text
+    # usage :
+    # banner "this is a test wit ${IFS}two lines !"
 
-    local message
-    local line
-    while IFS=$'\n' read -ra message; do
-      for line in "${message[@]}"; do
-          clr_bold clr_red "* ${line}"
-      done
-    done <<< "$1"
-
-    clr_bold clr_red "${sep}"
+    local banner_text=$1
+    banner_base "clr_green" "${banner_text}"
 }
 
 function linux_update {
