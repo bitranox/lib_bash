@@ -26,7 +26,7 @@ function banner {
 
     local message
     local line
-    while IFS='\n' read -ra message; do
+    while IFS='\\n' read -ra message; do
       for line in "${message[@]}"; do
           clr_bold clr_green "* ${line}"
       done
@@ -44,7 +44,7 @@ function banner_warning {
 
     local message
     local line
-    while IFS='\n' read -ra message; do
+    while IFS='\\n' read -ra message; do
       for line in "${message[@]}"; do
           clr_bold clr_red "* ${line}"
       done
