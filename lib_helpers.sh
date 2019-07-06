@@ -23,7 +23,10 @@ function banner {
     clr_bold clr_green " "
     local sep="********************************************************************************"
     clr_bold clr_green "${sep}"
-    clr_bold clr_green "* ${1}"
+    local line
+    for line in ${1}; do
+        clr_bold clr_green "* ${line}"
+    done
     clr_bold clr_green "${sep}"
 }
 
@@ -33,8 +36,10 @@ function banner_warning {
     clr_bold clr_red " "
     local sep="********************************************************************************"
     clr_bold clr_red "${sep}"
-    clr_bold clr_red "* ${1}"
-    clr_bold clr_red "${sep}"
+    local line
+    for line in ${1}; do
+        clr_bold clr_red "* ${line}"
+    done
 }
 
 function linux_update {
