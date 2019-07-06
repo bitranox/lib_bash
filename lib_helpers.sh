@@ -23,10 +23,15 @@ function banner {
     clr_bold clr_green " "
     local sep="********************************************************************************"
     clr_bold clr_green "${sep}"
+
+    local message
     local line
-    for line in ${1}; do
-        clr_bold clr_green "* ${line}"
-    done
+    while IFS='\n' read -ra message; do
+      for line in "${message[@]}"; do
+          clr_bold clr_green "* ${line}"
+      done
+    done <<< "$1"
+
     clr_bold clr_green "${sep}"
 }
 
@@ -36,10 +41,16 @@ function banner_warning {
     clr_bold clr_red " "
     local sep="********************************************************************************"
     clr_bold clr_red "${sep}"
+
+    local message
     local line
-    for line in ${1}; do
-        clr_bold clr_red "* ${line}"
-    done
+    while IFS='\n' read -ra message; do
+      for line in "${message[@]}"; do
+          clr_bold clr_red "* ${line}"
+      done
+    done <<< "$1"
+
+    clr_bold clr_red "${sep}"
 }
 
 function linux_update {
