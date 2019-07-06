@@ -32,11 +32,11 @@ function banner_base {
     local line
     while IFS=$'\n' read -ra message; do
       for line in "${message[@]}"; do
-          clr_bold clr_green "* ${line}"
+          clr_bold ${color} "* ${line}"
       done
     done <<< "${banner_text}"
 
-    clr_bold clr_green "${sep}"
+    clr_bold ${color} "${sep}"
 }
 
 
@@ -46,7 +46,7 @@ function banner {
     # banner "this is a test wit ${IFS}two lines !"
 
     local banner_text=$1
-    banner_base "clr_red" "${banner_text}"
+    banner_base "clr_green" "${banner_text}"
 }
 
 
@@ -56,7 +56,7 @@ function banner_warning {
     # banner "this is a test wit ${IFS}two lines !"
 
     local banner_text=$1
-    banner_base "clr_green" "${banner_text}"
+    banner_base "clr_red" "${banner_text}"
 }
 
 function linux_update {
