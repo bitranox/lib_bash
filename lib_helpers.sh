@@ -19,24 +19,27 @@ function get_linux_codename {
 }
 
 function banner_base {
-    # $1: clr_green or clr_red
+    # $1: colours like "clr_bold clr_green" or "clr_red"
     # $2: banner_text
+    # usage :
+    # banner_base "clr_bold clr_green" "this is a test wit ${IFS}two lines !"
+
     local color=$1
     local banner_text=$2
-    clr_bold ${color} " "
-    clr_bold ${color} " "
+    ${color} " "
+    ${color} " "
     local sep="********************************************************************************"
-    clr_bold ${color} "${sep}"
+    ${color} "${sep}"
 
     local message
     local line
     while IFS=$'\n' read -ra message; do
       for line in "${message[@]}"; do
-          clr_bold ${color} "* ${line}"
+          ${color} "* ${line}"
       done
     done <<< "${banner_text}"
 
-    clr_bold ${color} "${sep}"
+    ${color} "${sep}"
 }
 
 
@@ -46,7 +49,7 @@ function banner {
     # banner "this is a test wit ${IFS}two lines !"
 
     local banner_text=$1
-    banner_base "clr_green" "${banner_text}"
+    banner_base "clr_bold clr_green" "${banner_text}"
 }
 
 
@@ -56,7 +59,7 @@ function banner_warning {
     # banner "this is a test wit ${IFS}two lines !"
 
     local banner_text=$1
-    banner_base "clr_red" "${banner_text}"
+    banner_base "clr_bold clr_red" "${banner_text}"
 }
 
 function linux_update {
