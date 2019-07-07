@@ -31,6 +31,7 @@ function get_sudo_command_prefix {
 
 function set_lib_bash_permissions {
     local sudo_command_prefix=$(get_sudo_command_prefix)
+    echo "sudo command prefix : ${sudo_command_prefix}"
     ${sudo_command_prefix} chmod -R 0644 /usr/lib/lib_bash
     ${sudo_command_prefix} chmod -R +x /usr/lib/lib_bash/*.sh
     ${sudo_command_prefix} chown -R root /usr/lib/lib_bash
@@ -41,6 +42,7 @@ function install_lib_bash_if_not_exist {
     if [[ ! -d "/usr/lib/lib_bash" ]]; then
         echo "installing lib_bash"
         $(get_sudo_command_prefix) git clone https://github.com/bitranox/lib_bash.git /usr/lib/lib_bash > /dev/null 2>&1
+        set_lib_bash_permissions
     fi
 }
 
