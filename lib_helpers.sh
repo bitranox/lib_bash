@@ -9,7 +9,6 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
-
 source /usr/lib/lib_bash/lib_color.sh
 
 function get_sudo_exists {
@@ -43,14 +42,14 @@ function get_user_and_group{
 function set_user_and_group{
     # $1: File or Directory
     # $2: user<IFS>group
-    local filename=${1}
+    local path_file=${1}
     local user_group=$2
     local sudo_command_prefix=$(get_sudo_command_prefix)
     read -r -a array <<< "${user_group}"
     local new_user="${array[0]}"
     local new_group="${array[1]}"
-    ${sudo_command_prefix} chown "${new_user}" "${filename}"
-    ${sudo_command_prefix} chgrp "${new_group}" "${filename}"
+    ${sudo_command_prefix} chown "${new_user}" "${path_file}"
+    ${sudo_command_prefix} chgrp "${new_group}" "${path_file}"
 }
 
 
