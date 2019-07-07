@@ -39,6 +39,7 @@ function set_lib_bash_permissions {
 
 function install_lib_bash_if_not_exist {
     if [[ ! -d "/usr/lib/lib_bash" ]]; then
+        echo "installing lib_bash"
         $(get_sudo_command_prefix) git clone https://github.com/bitranox/lib_bash.git /usr/lib/lib_bash > /dev/null 2>&1
     fi
 }
@@ -56,6 +57,7 @@ function get_needs_update {
 function update_lib_bash_if_exist {
     if [[ -d "/usr/lib/lib_bash" ]]; then
         if [[ $(get_needs_update) == "True" ]]; then
+            echo "lib_bash needs to update"
             (
                 # create a subshell to preserve current directory
                 cd /usr/lib/lib_bash
@@ -64,6 +66,8 @@ function update_lib_bash_if_exist {
                 ${sudo_command_prefix} git reset --hard origin/master  > /dev/null 2>&1
                 set_lib_bash_permissions
             )
+        else
+            echo "lib_bash is up to date"
         fi
     fi
 }
