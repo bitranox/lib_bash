@@ -35,15 +35,15 @@ function get_sudo_command_prefix {
 function get_user_and_group{
     # $1: File or Directory
     # returns user'${IFS}'group  '${IFS}' is the default seperator
-    local filename=$1
-    local user_group=$(stat -c "%U${IFS}%G" ${filename})
+    local path_file=${1}
+    local user_group=$(stat -c "%U${IFS}%G" ${path_file})
     echo "${user_group}"
 }
 
 function set_user_and_group{
     # $1: File or Directory
     # $2: user<IFS>group
-    local filename=$1
+    local filename=${1}
     local user_group=$2
     local sudo_command_prefix=$(get_sudo_command_prefix)
     read -r -a array <<< "${user_group}"
