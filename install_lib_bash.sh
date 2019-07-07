@@ -18,36 +18,37 @@ function get_sudo_exists {
     fi
 }
 
-function get_sudo_command_prefix {
+function get_sudo_command {
+    # we need this for travis - there is no sudo command !
     if [[ $(get_sudo_exists) == "True" ]]; then
-        local sudo_cmd_prefix="sudo"
-        echo ${sudo_cmd_prefix}
+        local sudo_command="sudo"
+        echo ${sudo_command}
     else
-        local sudo_cmd_prefix=""
-        echo ${sudo_cmd_prefix}
+        local sudo_command=""
+        echo ${sudo_command}
     fi
 
 }
 
 function set_lib_bash_permissions {
-    local sudo_command_prefix=$(get_sudo_command_prefix)
-    ${sudo_command_prefix} chmod -R 0755 /usr/lib/lib_bash
-    ${sudo_command_prefix} chmod -R +x /usr/lib/lib_bash/*.sh
-    ${sudo_command_prefix} chown -R root /usr/lib/lib_bash
-    ${sudo_command_prefix} chgrp -R root /usr/lib/lib_bash
+    local sudo_command=$(get_sudo_command)
+    ${sudo_command} chmod -R 0755 /usr/lib/lib_bash
+    ${sudo_command} chmod -R +x /usr/lib/lib_bash/*.sh
+    ${sudo_command} chown -R root /usr/lib/lib_bash
+    ${sudo_command} chgrp -R root /usr/lib/lib_bash
 }
 
 function install_lib_bash_if_not_exist {
     if [[ ! -d "/usr/lib/lib_bash" ]]; then
         echo "installing lib_bash"
-        $(get_sudo_command_prefix) git clone https://github.com/bitranox/lib_bash.git /usr/lib/lib_bash > /dev/null 2>&1
+        $(get_sudo_command) git clone https://github.com/bitranox/lib_bash.git /usr/lib/lib_bash > /dev/null 2>&1
         set_lib_bash_permissions
     fi
 }
 
 function get_needs_update {
     local git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
-    local git_local_hash=$( $(get_sudo_command_prefix) cat /usr/lib/lib_bash/.git/refs/heads/master)
+    local git_local_hash=$( $(get_sudo_command) cat /usr/lib/lib_bash/.git/refs/heads/master)
     if [[ "${git_remote_hash}" == "${git_local_hash}" ]]; then
         echo "False"
     else
@@ -62,9 +63,9 @@ function update_lib_bash_if_exist {
             (
                 # create a subshell to preserve current directory
                 cd /usr/lib/lib_bash
-                local sudo_command_prefix=$(get_sudo_command_prefix)
-                ${sudo_command_prefix} git fetch --all  > /dev/null 2>&1
-                ${sudo_command_prefix} git reset --hard origin/master  > /dev/null 2>&1
+                local sudo_command=$(get_sudo_command)
+                ${sudo_command} git fetch --all  > /dev/null 2>&1
+                ${sudo_command} git reset --hard origin/master  > /dev/null 2>&1
                 set_lib_bash_permissions
             )
             echo "lib_bash update complete"
