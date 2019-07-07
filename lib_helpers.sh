@@ -1,11 +1,58 @@
 #!/bin/bash
 
-function include_dependencies {
-    local my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
-    source "${my_dir}/lib_color.sh"
+# function include_dependencies {
+#     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+#     source "${my_dir}/lib_color.sh"
+#     source "${my_dir}/lib_helpers.sh"
+#
+# }
+#
+# include_dependencies  # we need to do that via a function to have local scope of my_dir
+
+
+source /usr/lib/lib_bash/lib_color.sh
+
+function get_sudo_exists {
+    # we need this for travis - there is no sudo command !
+    if [[ -f /usr/bin/sudo ]]; then
+        echo "True"
+    else
+        echo "False"
+    fi
 }
 
-include_dependencies  # we need to do that via a function to have local scope of my_dir
+function get_sudo_command_prefix {
+    if [[ $(get_sudo_exists) == "True" ]]; then
+        local sudo_cmd_prefix="sudo"
+        echo ${sudo_cmd_prefix}
+    else
+        local sudo_cmd_prefix=""
+        echo ${sudo_cmd_prefix}
+    fi
+
+}
+
+function get_user_and_group{
+    # $1: File or Directory
+    # returns user${IFS}group  ${IFS} is the default seperator
+    local filename=$1
+    local user_group=$(stat -c "%U${IFS}%G" ${filename})
+    echo "${user_group}"
+}
+
+function set_user_and_group{
+    # $1: File or Directory
+    # $2: user${IFS}group
+    local filename=$1
+    local user_group=$2
+    local sudo_command_prefix=$(get_sudo_command_prefix)
+    read -r -a array <<< "${user_group}"
+    local new_user="${array[0]}"
+    local new_group="${array[1]}"
+    ${sudo_command_prefix} chown "${new_user}" "${filename}"
+    ${sudo_command_prefix} chgrp "${new_group}" "${filename}"
+}
+
 
 
 function fail {
@@ -31,7 +78,6 @@ function banner_base {
     local sep="********************************************************************************"
     ${color} "${sep}"
 
-    local message
     local line
     while IFS=$'\n' read -ra message; do
       for line in "${message[@]}"; do
@@ -66,11 +112,12 @@ function linux_update {
     # update / upgrade linux and clean / autoremove
     clr_bold clr_green " "
     clr_bold clr_green "Linux Update"
-    retry sudo apt-get update
-    retry sudo apt-get upgrade -y
-    retry sudo apt-get dist-upgrade -y
-    retry sudo apt-get autoclean -y
-    retry sudo apt-get autoremove -y
+    local sudo_command_prefix=$(get_sudo_command_prefix)
+    retry ${sudo_command_prefix} apt-get update
+    retry ${sudo_command_prefix} apt-get upgrade -y
+    retry ${sudo_command_prefix} apt-get dist-upgrade -y
+    retry ${sudo_command_prefix} apt-get autoclean -y
+    retry ${sudo_command_prefix} apt-get autoremove -y
 }
 
 
@@ -97,7 +144,7 @@ function wait_for_enter_warning {
 function reboot {
     clr_bold clr_green " "
     clr_bold clr_green "Rebooting"
-    sudo shutdown -r now
+    $(get_sudo_command_prefix) shutdown -r now
 }
 
 
@@ -107,12 +154,18 @@ function backup_file {
     # copies <file> to <file>.original if <file>.original does not exist
 
     # if <file> exist
-    if [[ -f "${1}" ]]; then
+    local path_file=$1
+
+    if [[ -f "${path_file}" ]]; then
         # copy <file>.original to <file>.backup
-        sudo cp -f "${1}" "${1}.backup"
+        local sudo_command_prefix=$(get_sudo_command_prefix)
+        local user_and_group=$(get_user_and_group ${path_file})
+        ${sudo_command_prefix} cp -f "${path_file}" "${path_file}.backup"
+        set_user_and_group "${path_file}.backup" ${user_and_group}
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            sudo cp -f "${1}" "${1}.original"
+            ${sudo_command_prefix} cp -f "${path_file}" "${path_file}.original"
+            set_user_and_group "${path_file}.original" ${user_and_group}
         fi
     fi
 }
@@ -124,7 +177,7 @@ function remove_file {
 
     # if <file> exist
     if [[ -f "${1}" ]]; then
-        sudo rm -f "${1}"
+        $(get_sudo_command_prefix) rm -f "${1}"
     fi
 }
 
@@ -136,14 +189,17 @@ function replace_or_add_lines_containing_string_in_file {
     local path_file=$1
     local search_string=$2
     local new_line=$3
+    local user_and_group=$(get_user_and_group ${path_file})
+    local sudo_command_prefix=$(get_sudo_command_prefix)
     local number_of_lines_found=$(cat ${path_file} | grep -c ${search_string})
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
-        sudo sed -i "/${search_string}/c\\${new_line}" ${path_file}
+        ${sudo_command_prefix} sed -i "/${search_string}/c\\${new_line}" ${path_file}
     else
         # add line if not there
-        sudo sh -c "echo \"${new_line}\" >> ${path_file}"
+        ${sudo_command_prefix} sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
+    set_user_and_group "${path_file}" ${user_and_group}
 }
 
 

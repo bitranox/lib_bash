@@ -1,12 +1,13 @@
 #!/bin/bash
 
-function include_dependencies {
-    local my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
-    source "${my_dir}/lib_color.sh"
-}
+# function include_dependencies {
+#     local my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+#     source "${my_dir}/lib_color.sh"
+# }
+#
+# include_dependencies  # we need to do that via a function to have local scope of my_dir
 
-include_dependencies  # we need to do that via a function to have local scope of my_dir
-
+source /usr/lib/lib_bash/lib_color.sh
 
 function fail {
   clr_bold clr_red "${1}" >&2
@@ -26,10 +27,10 @@ function retry {
   while true; do
 	my_command="${@}"
     "$@" && break || {
-      if [[ $n -lt $max ]]; then
+      if [[ ${n} -lt ${max} ]]; then
         ((n++))
         clr_bold clr_red "Command \"${my_command}\" failed. Attempt ${n}/${max}:"
-        sleep $delay;
+        sleep ${delay};
       else
         fail "The command \"${my_command}\" has failed after ${n} attempts."
       fi
@@ -45,10 +46,10 @@ function retry_nofail {
   while true; do
 	my_command="${@}"
     "$@" && break || {
-      if [[ $n -lt $max ]]; then
+      if [[ ${n} -lt ${max} ]]; then
         ((n++))
         clr_bold clr_red "Command \"${my_command}\" failed. Attempt ${n}/${max}:"
-        sleep $delay;
+        sleep ${delay};
       else
         nofail "The command \"${my_command}\" has failed after ${n} attempts, continue with exit code 0"
       fi
