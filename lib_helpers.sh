@@ -34,7 +34,7 @@ function get_sudo_command_prefix {
 
 function get_user_and_group{
     # $1: File or Directory
-    # returns user'${IFS}'group  '${IFS}' is the default seperator
+    # returns user<IFS>group  <IFS> is the default seperator
     local path_file=${1}
     local user_group=$(stat -c "%U${IFS}%G" ${path_file})
     echo "${user_group}"
