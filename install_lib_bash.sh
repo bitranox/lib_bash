@@ -66,6 +66,7 @@ function update_lib_bash_if_exist {
                 ${sudo_command_prefix} git reset --hard origin/master  > /dev/null 2>&1
                 set_lib_bash_permissions
             )
+            echo "lib_bash update complete"
         else
             echo "lib_bash is up to date"
         fi
