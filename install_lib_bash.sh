@@ -31,7 +31,7 @@ function get_sudo_command_prefix {
 
 function set_lib_bash_permissions {
     local sudo_command_prefix=$(get_sudo_command_prefix)
-    ${sudo_command_prefix} chmod -R 0755 /usr/lib/lib_bash
+    ${sudo_command_prefix} chmod -R 0644 /usr/lib/lib_bash
     ${sudo_command_prefix} chmod -R +x /usr/lib/lib_bash/*.sh
     ${sudo_command_prefix} chown -R root /usr/lib/lib_bash
     ${sudo_command_prefix} chgrp -R root /usr/lib/lib_bash
