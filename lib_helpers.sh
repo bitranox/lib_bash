@@ -34,7 +34,7 @@ function get_sudo_command_prefix {
 
 function get_user_and_group{
     # $1: File or Directory
-    # returns user${IFS}group  ${IFS} is the default seperator
+    # returns user'${IFS}'group  '${IFS}' is the default seperator
     local filename=$1
     local user_group=$(stat -c "%U${IFS}%G" ${filename})
     echo "${user_group}"
@@ -42,7 +42,7 @@ function get_user_and_group{
 
 function set_user_and_group{
     # $1: File or Directory
-    # $2: user${IFS}group
+    # $2: user<IFS>group
     local filename=$1
     local user_group=$2
     local sudo_command_prefix=$(get_sudo_command_prefix)
@@ -69,7 +69,7 @@ function banner_base {
     # $1: colours like "clr_bold clr_green" or "clr_red"
     # $2: banner_text
     # usage :
-    # banner_base "clr_bold clr_green" "this is a test with ${IFS}two lines !"
+    # banner_base "clr_bold clr_green" "this is a test with '${IFS}'two lines !"
 
     local color=$1
     local banner_text=$2
@@ -92,7 +92,7 @@ function banner_base {
 function banner {
     # $1: banner_text
     # usage :
-    # banner "this is a test wit ${IFS}two lines !"
+    # banner "this is a test wit '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_green" "${banner_text}"
@@ -102,7 +102,7 @@ function banner {
 function banner_warning {
     # $1: banner_text
     # usage :
-    # banner "this is a test wit ${IFS}two lines !"
+    # banner "this is a test wit '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_red" "${banner_text}"
