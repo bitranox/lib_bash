@@ -87,7 +87,7 @@ function restart_calling_script {
         # no parameters passed
         exit 0
     else
-        # paramaters passed, running the new Version of the calling script
+        # parameters passed, running the new Version of the calling script
         "${caller_command[@]}"
         # exit this old instance with error code 100
         exit 100
@@ -95,8 +95,14 @@ function restart_calling_script {
 
 }
 
-if [[ $(is_lib_bash_installed) == "True" ]]; then
+function source_lib_color {
+    # this is needed, otherwise "${@}" will be passed to lib_color
     source /usr/lib/lib_bash/lib_color.sh
+}
+
+
+if [[ $(is_lib_bash_installed) == "True" ]]; then
+    source_lib_color
     update_lib_bash
     restart_calling_script  "${@}"  # needs caller name and parameters
 else
