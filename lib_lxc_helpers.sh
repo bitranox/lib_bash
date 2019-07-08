@@ -69,7 +69,7 @@ function lxc_wait_until_internet_connected {
     local container_name=$1
     clr_green "Container ${container_name}: wait for internet connection"
     while true; do
-        lxc_exec "${container_name}" "wget -q --spider http://google.com"
+        lxc_exec "${container_name}" "sudo wget -q --spider http://google.com"
         if [[ $? -eq 0 ]]; then
             break
         else
