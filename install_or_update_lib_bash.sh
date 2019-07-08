@@ -77,7 +77,6 @@ function update_lib_bash {
         clr_green "lib_bash update complete"
     else
         clr_green "lib_bash is up to date"
-        exit 0
     fi
 }
 
