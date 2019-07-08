@@ -83,14 +83,12 @@ function update_lib_bash {
 function restart_calling_script {
     local caller_command=("$@")
     if [ ${#caller_command[@]} -eq 0 ]; then
-        echo "exit 0"
+        # no parameters passed
         exit 0
     else
-        # running the new Version of the calling script
+        # paramaters passed, running the new Version of the calling script
         "${caller_command[@]}"
-
         # exit this old instance with error code 100
-        echo "exit 100"
         exit 100
     fi
 
