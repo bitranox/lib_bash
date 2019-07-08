@@ -78,6 +78,7 @@ function update_lib_bash {
     else
         clr_green "lib_bash is up to date"
     fi
+
 }
 
 function restart_calling_script {
