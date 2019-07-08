@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# function include_dependencies {
-#     local my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
-#     source "${my_dir}/lib_color.sh"
-# }
-#
-# include_dependencies  # we need to do that via a function to have local scope of my_dir
+function include_dependencies {
+    source /usr/lib/lib_bash/lib_color.sh
+    source /usr/lib/lib_bash/lib_helpers.sh
+}
 
 # we need to do this in a function otherwise parameter {@} will be passed !
 # and we need to do it here, before another library overwrites the function include_dependencies
