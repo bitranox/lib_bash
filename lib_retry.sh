@@ -2,7 +2,6 @@
 
 function include_dependencies {
     source /usr/lib/lib_bash/lib_color.sh
-    source /usr/lib/lib_bash/lib_helpers.sh
 }
 
 # we need to do this in a function otherwise parameter {@} will be passed !
