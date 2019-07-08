@@ -7,7 +7,10 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
-source /usr/lib/lib_bash/lib_color.sh
+# we need to do this in a function otherwise parameter {@} will be passed !
+# and we need to do it here, before another library overwrites the function include_dependencies
+include_dependencies
+
 
 function fail {
   clr_bold clr_red "${1}" >&2

@@ -9,8 +9,15 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
-source /usr/lib/lib_bash/lib_color.sh
-source /usr/lib/lib_bash/lib_helpers.sh
+function include_dependencies {
+    source /usr/lib/lib_bash/lib_color.sh
+    source /usr/lib/lib_bash/lib_helpers.sh
+}
+
+# we need to do this in a function otherwise parameter {@} will be passed !
+# and we need to do it here, before another library overwrites the function include_dependencies
+include_dependencies
+
 
 function lxc_exec {
     # parameter: $1 = container_name
@@ -126,7 +133,6 @@ function lxc_replace_or_add_lines_containing_string_in_file {
         lxc exec $container_name -- sh -c "sudo sh -c \"echo \\"$new_line\\" >> $path_file\""
     fi
 }
-
 
 
 

@@ -9,7 +9,13 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
-source /usr/lib/lib_bash/lib_color.sh
+function include_dependencies {
+    source /usr/lib/lib_bash/lib_color.sh
+}
+
+# we need to do this in a function otherwise parameter {@} will be passed !
+# and we need to do it here, before another library overwrites the function include_dependencies
+include_dependencies
 
 function get_sudo_exists {
     # we need this for travis - there is no sudo command !
@@ -201,7 +207,6 @@ function replace_or_add_lines_containing_string_in_file {
     fi
     set_user_and_group "${path_file}" ${user_and_group}
 }
-
 
 ## make it possible to call functions without source include
 # Check if the function exists (bash specific)
