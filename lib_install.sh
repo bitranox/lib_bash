@@ -57,20 +57,26 @@ function install_essentials {
 
 function install_and_update_language_packs {
     # install language pack and install language files for applications
+    # returns Error 100 if reboot is needed (in variable $?)
     banner "Install and Update Language Packs"
     local sudo_command=$(get_sudo_command)
+    local reboot_needed="False"
 
     if [[ "$(get_is_package_installed language-pack-de)" == "False" ]]; then
         retry ${sudo_command} apt-get install language-pack-de -y
+        reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed language-pack-de-base)" == "False" ]]; then
         retry ${sudo_command} apt-get install language-pack-de-base -y
+        reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed manpages-de)" == "False" ]]; then
         retry ${sudo_command} apt-get install manpages-de -y
+        reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed language-pack-gnome-de)" == "False" ]]; then
         retry ${sudo_command} apt-get install language-pack-gnome-de -y
+        reboot_needed="True"
     fi
 
     ${sudo_command} update-locale LANG=\"de_AT.UTF-8\" LANGUAGE=\"de_AT:de\"
@@ -82,9 +88,16 @@ function install_and_update_language_packs {
       for language_support in "${language_support_array[@]}"; do
           if [[ "$(get_is_package_installed ${language_support})" == "False" ]]; then
             retry ${sudo_command} apt-get install ${language_support} -y
+            reboot_needed="True"
           fi
       done
     done <<< "${language_support_list}"
+
+    if [[ ${reboot_needed} == "True" ]]; then
+        return 100
+    else
+        return 0
+    fi
 }
 
 
