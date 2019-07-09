@@ -154,6 +154,17 @@ function reboot {
 }
 
 
+function get_is_package_installed {
+    # $1: package name
+    local package_name=$1
+    if [[ $(dpkg -l ${package_name} 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "un" ]]; then
+        echo "False"
+    else
+        echo "True"
+    fi
+}
+
+
 function backup_file {
     # $1 : <file>
     # copies <file> to <file>.backup
