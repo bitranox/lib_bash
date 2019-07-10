@@ -16,7 +16,6 @@ function fail {
 
 function nofail {
   clr_bold clr_red "${1}"
-  exit 0
 }
 
 
@@ -39,7 +38,6 @@ function retry {
 }
 
 
-
 function retry_nofail {
   local n=1
   local max=5
@@ -52,7 +50,7 @@ function retry_nofail {
         clr_bold clr_red "Command \"${my_command}\" failed. Attempt ${n}/${max}: - no panic, we will continue after the last attempt !"
         sleep ${delay};
       else
-        nofail "The command \"${my_command}\" has failed after ${n} attempts, continue with exit code 0"
+        nofail "The command \"${my_command}\" has failed after ${n} attempts, continue ..."
       fi
     }
   done
