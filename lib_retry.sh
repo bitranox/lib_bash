@@ -16,7 +16,6 @@ function fail {
 
 function nofail {
   clr_bold clr_red "${1}" >&2
-  exit 0
 }
 
 
