@@ -52,6 +52,7 @@ function retry_nofail {
         sleep ${delay};
       else
         nofail "The command \"${my_command}\" has failed after ${n} attempts, continue ..."
+        break
       fi
     }
   done
