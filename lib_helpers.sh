@@ -64,10 +64,10 @@ function get_is_string1_in_string2 {
     # $1: haystack
     local search_string="${1}"
     local haystack="${2}"
-    if [[ "$haystack}" == *${search_string}* ]]; then
-        echo "True"
-    else
+    if [[ $(echo "$haystack}" | grep -c ${search_string}) == "0" ]]; then
         echo "False"
+    else
+        echo "True"
     fi
 }
 
