@@ -59,7 +59,17 @@ function set_user_and_group {
     ${sudo_command} chgrp "${new_group}" "${path_file}"
 }
 
-
+function get_is_string1_in_string2 {
+    # $1: search_string
+    # $1: haystack
+    local search_string="${1}"
+    local haystack="${2}"
+    if [[ "$haystack}" == *"${search_string}"* ]]; then
+        echo "True"
+    else
+        echo "False"
+    fi
+}
 
 function fail {
   clr_bold clr_red "${1}" >&2
