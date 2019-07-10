@@ -15,7 +15,7 @@ function fail {
 }
 
 function nofail {
-  clr_bold clr_red "${1}" >&2
+  clr_bold clr_red "${1}"
 }
 
 
@@ -47,7 +47,7 @@ function retry_nofail {
     "$@" && break || {
       if [[ ${n} -lt ${max} ]]; then
         ((n++))
-        clr_bold clr_red "Command \"${my_command}\" failed. Attempt ${n}/${max}:"
+        clr_bold clr_red "Command \"${my_command}\" failed. Attempt ${n}/${max}: - no panic, we will continue after the last attempt !"
         sleep ${delay};
       else
         nofail "The command \"${my_command}\" has failed after ${n} attempts, continue with exit code 0"
