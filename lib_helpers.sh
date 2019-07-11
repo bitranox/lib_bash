@@ -9,6 +9,15 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
+function get_own_script_name {
+    # returns the name of the current script, even if it is sourced
+    if [[ "${0}" != "${BASH_SOURCE}" ]]; then
+        echo "${BASH_SOURCE}"
+    else
+        echo "${0}"
+    fi
+}
+
 function update_myself {
     /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
 }
