@@ -35,8 +35,6 @@ function get_log_file_name {
     local own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
     local log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
     echo "${log_file_name}"
-
-
 }
 
 
@@ -70,6 +68,8 @@ function add_user_as_sudoer {
     local username="${1}"
     $(which sudo) adduser "${username}"
     $(which sudo) usermod -aG sudo "${username}"
+    $(which sudo) chown -R /home/"${username}"
+    $(which sudo) chgrp -R /home/"${username}"
 }
 
 
