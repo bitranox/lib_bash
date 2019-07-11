@@ -230,6 +230,7 @@ if [[ ! -z "$1" ]]
           update_myself ${0} ${@}  # pass own script name and parameters
           "$@"
         else
+          update_myself ${0} ${@}  # pass own script name and parameters
           # Show a helpful error
           function_name="${1}"
           library_name="${0}"
