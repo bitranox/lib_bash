@@ -210,6 +210,16 @@ function replace_or_add_lines_containing_string_in_file {
     set_user_and_group "${path_file}" ${user_and_group}
 }
 
+
+function get_is_hetzner_virtual_server {
+    if [[ $(cat /sys/class/dmi/id/product_family | grep -c "Hetzner_vServer") != "0" ]]; then
+        echo "True"
+    else
+        echo "False"
+    fi
+}
+
+
 ## make it possible to call functions without source include
 # Check if the function exists (bash specific)
 if [[ ! -z "$1" ]]
