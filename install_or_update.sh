@@ -17,7 +17,7 @@ function set_lib_bash_permissions {
 }
 
 function is_lib_bash_installed {
-        if [[ -f "/usr/local/lib_bash/install_or_update_lib_bash.sh" ]]; then
+        if [[ -f "/usr/local/lib_bash/install_or_update.sh" ]]; then
             echo "True"
         else
             echo "False"
