@@ -17,7 +17,7 @@ function set_lib_bash_permissions {
 }
 
 function is_lib_bash_installed {
-        if [[ -d "/usr/local/lib_bash" ]]; then
+        if [[ -f "/usr/local/lib_bash/install_or_update_lib_bash.sh" ]]; then
             echo "True"
         else
             echo "False"
@@ -37,6 +37,7 @@ function is_lib_bash_to_update {
 
 function install_lib_bash {
     echo "installing lib_bash"
+    $(which sudo) rm -fR /usr/local/lib_bash
     $(which sudo) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
 }
