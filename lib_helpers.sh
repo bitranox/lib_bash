@@ -34,7 +34,12 @@ function get_log_file_name {
     local own_script_name_wo_extension=${own_script_name_full%.*}
     local own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
     local log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
+    echo $own_script_name_full
+    echo $own_script_name_wo_extension
+    echo $own_script_name_wo_extension_dashed
     echo "${log_file_name}"
+
+
 }
 
 
