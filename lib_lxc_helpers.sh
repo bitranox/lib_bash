@@ -148,9 +148,10 @@ if [[ ! -z "$1" ]]
         if declare -f "${1}" > /dev/null
         then
           # call arguments verbatim
-          update_myself ${0} ${@}  # pass own script name and parameters
+          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           "$@"
         else
+          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           # Show a helpful error
           function_name="${1}"
           library_name="${0}"

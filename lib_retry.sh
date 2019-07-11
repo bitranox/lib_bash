@@ -70,10 +70,10 @@ if [[ ! -z "$1" ]]
         if declare -f "${1}" > /dev/null
         then
           # call arguments verbatim
-          update_myself ${0} ${@}  # pass own script name and parameters
+          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           "$@"
         else
-          # Show a helpful error
+          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           function_name="${1}"
           library_name="${0}"
           fail "\"${function_name}\" is not a known function name of \"${library_name}\""
