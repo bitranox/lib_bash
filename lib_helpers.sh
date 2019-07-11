@@ -9,6 +9,11 @@
 #
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
+function update_myself {
+    /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
+}
+
+
 function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }
@@ -212,6 +217,7 @@ if [[ ! -z "$1" ]]
         if declare -f "${1}" > /dev/null
         then
           # call arguments verbatim
+          update_myself ${0} ${@}  # pass own script name and parameters
           "$@"
         else
           # Show a helpful error
