@@ -57,7 +57,7 @@ function fail {
 
 function get_linux_codename {
     local linux_release=`lsb_release --codename | cut -f2`
-    echo "${linux_codename}"
+    echo "${linux_release}"
 }
 
 function banner_base {
