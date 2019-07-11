@@ -10,13 +10,34 @@
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
 function get_own_script_name {
+    # $1: script_name "${0}"
+    # $2: bash_source "${BASH_SOURCE}"
     # returns the name of the current script, even if it is sourced
-    if [[ "${0}" != "${BASH_SOURCE}" ]]; then
-        echo "${BASH_SOURCE}"
+    local script_name="${1}"
+    local bash_source="${2}"
+
+    if [[ "${script_name}" != "${bash_source}" ]]; then
+        echo "${bash_source}"
     else
-        echo "${0}"
+        echo "${script_name}"
     fi
 }
+
+function get_log_file_name {
+    # $1: script_name "${0}"
+    # $2: bash_source "${BASH_SOURCE}"
+    # usage : test=$(get_log_file_name "${0}" "${BASH_SOURCE}")
+    # returns the name of the logfile : ${HOME}/log_usr_local_lib_<...>_001_000_<...>.log
+    local script_name="${1}"
+    local bash_source="${2}"
+    local own_script_name_full=$(get_own_script_name "${script_name}" "${bash_source}")
+    local own_script_name_wo_extension_dashed=filename="${own_script_name_full%.*}" | tr '/' '_'
+    local log_file_name="${HOME}/${own_script_name_wo_extension_dashed}.log"
+    echo "${log_file_name}"
+}
+
+
+
 
 function update_myself {
     /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
