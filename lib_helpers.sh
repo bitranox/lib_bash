@@ -10,32 +10,12 @@
 # include_dependencies  # we need to do that via a function to have local scope of my_dir
 
 function include_dependencies {
-    source /usr/lib/lib_bash/lib_color.sh
+    source /usr/local/lib_bash/lib_color.sh
 }
 
 # we need to do this in a function otherwise parameter {@} will be passed !
 # and we need to do it here, before another library overwrites the function include_dependencies
 include_dependencies
-
-function get_sudo_exists {
-    # we need this for travis - there is no sudo command !
-    if [[ -f /usr/bin/sudo ]]; then
-        echo "True"
-    else
-        echo "False"
-    fi
-}
-
-function get_sudo_command {
-    if [[ $(get_sudo_exists) == "True" ]]; then
-        local sudo_command="sudo"
-        echo ${sudo_command}
-    else
-        local sudo_command=""
-        echo ${sudo_command}
-    fi
-
-}
 
 function get_user_and_group {
     # $1: File or Directory
@@ -51,12 +31,11 @@ function set_user_and_group {
     # $2: user${IFS}group
     local path_file=${1}
     local user_group=$2
-    local sudo_command=$(get_sudo_command)
     read -r -a array <<< "${user_group}"
     local new_user="${array[0]}"
     local new_group="${array[1]}"
-    ${sudo_command} chown "${new_user}" "${path_file}"
-    ${sudo_command} chgrp "${new_group}" "${path_file}"
+    $(which sudo) chown "${new_user}" "${path_file}"
+    $(which sudo) chgrp "${new_group}" "${path_file}"
 }
 
 function get_is_string1_in_string2 {
@@ -128,12 +107,11 @@ function linux_update {
     # update / upgrade linux and clean / autoremove
     clr_bold clr_green " "
     clr_bold clr_green "Linux Update"
-    local sudo_command=$(get_sudo_command)
-    retry ${sudo_command} apt-get update
-    retry ${sudo_command} apt-get upgrade -y
-    retry ${sudo_command} apt-get dist-upgrade -y
-    retry ${sudo_command} apt-get autoclean -y
-    retry ${sudo_command} apt-get autoremove -y
+    retry $(which sudo) apt-get update
+    retry $(which sudo) apt-get upgrade -y
+    retry $(which sudo) apt-get dist-upgrade -y
+    retry $(which sudo) apt-get autoclean -y
+    retry $(which sudo) apt-get autoremove -y
 }
 
 
@@ -160,7 +138,7 @@ function wait_for_enter_warning {
 function reboot {
     clr_bold clr_green " "
     clr_bold clr_green "Rebooting"
-    $(get_sudo_command) shutdown -r now
+    $(which sudo) shutdown -r now
 }
 
 
@@ -185,13 +163,12 @@ function backup_file {
 
     if [[ -f "${path_file}" ]]; then
         # copy <file>.original to <file>.backup
-        local sudo_command=$(get_sudo_command)
         local user_and_group=$(get_user_and_group ${path_file})
-        ${sudo_command} cp -f "${path_file}" "${path_file}.backup"
+        $(which sudo) cp -f "${path_file}" "${path_file}.backup"
         set_user_and_group "${path_file}.backup" ${user_and_group}
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            ${sudo_command} cp -f "${path_file}" "${path_file}.original"
+            $(which sudo) cp -f "${path_file}" "${path_file}.original"
             set_user_and_group "${path_file}.original" ${user_and_group}
         fi
     fi
@@ -204,7 +181,7 @@ function remove_file {
 
     # if <file> exist
     if [[ -f "${1}" ]]; then
-        $(get_sudo_command) rm -f "${1}"
+        $(which sudo) rm -f "${1}"
     fi
 }
 
@@ -217,14 +194,13 @@ function replace_or_add_lines_containing_string_in_file {
     local search_string=$2
     local new_line=$3
     local user_and_group=$(get_user_and_group ${path_file})
-    local sudo_command=$(get_sudo_command)
     local number_of_lines_found=$(cat ${path_file} | grep -c ${search_string})
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
-        ${sudo_command} sed -i "/${search_string}/c\\${new_line}" ${path_file}
+        $(which sudo) sed -i "/${search_string}/c\\${new_line}" ${path_file}
     else
         # add line if not there
-        ${sudo_command} sh -c "echo \"${new_line}\" >> ${path_file}"
+        $(which sudo) sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
     set_user_and_group "${path_file}" ${user_and_group}
 }

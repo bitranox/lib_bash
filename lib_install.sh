@@ -1,46 +1,45 @@
 #!/bin/bash
 
 function include_dependencies {
-    source /usr/lib/lib_bash/lib_color.sh
-    source /usr/lib/lib_bash/lib_retry.sh
-    source /usr/lib/lib_bash/lib_helpers.sh
+    source /usr/local/lib_bash/lib_color.sh
+    source /usr/local/lib_bash/lib_retry.sh
+    source /usr/local/lib_bash/lib_helpers.sh
 }
 
 
 function install_dialog {
     if [[ "$(get_is_package_installed dialog)" == "False" ]]; then
-        retry $(get_sudo_command) apt-get install dialog -y > /dev/null 2>&1
+        retry $(which sudo) apt-get install dialog -y > /dev/null 2>&1
     fi
 }
 
 function install_git {
     if [[ "$(get_is_package_installed git)" == "False" ]]; then
-        retry $(get_sudo_command) apt-get install git -y > /dev/null 2>&1
+        retry $(which sudo) apt-get install git -y > /dev/null 2>&1
     fi
 }
 
 function install_net_tools {
     if [[ "$(get_is_package_installed net-tools)" == "False" ]]; then
-        retry $(get_sudo_command) apt-get install net-tools -y > /dev/null 2>&1
+        retry $(which sudo) apt-get install net-tools -y > /dev/null 2>&1
     fi
 }
 
 function uninstall_whoopsie {
-    local sudo_command=$(get_sudo_command)
     if [[ "$(get_is_package_installed whoopsie)" == "True" ]]; then
-        retry ${sudo_command} apt-get purge whoopsie -y > /dev/null 2>&1
+        retry $(which sudo) apt-get purge whoopsie -y > /dev/null 2>&1
     fi
     if [[ "$(get_is_package_installed libwhoopsie0)" == "True" ]]; then
-        retry ${sudo_command} apt-get purge libwhoopsie0 -y > /dev/null 2>&1
+        retry $(which sudo) apt-get purge libwhoopsie0 -y > /dev/null 2>&1
     fi
     if [[ "$(get_is_package_installed libwhoopsie-preferences0)" == "True" ]]; then
-        retry ${sudo_command} apt-get purge libwhoopsie-preferences0 -y > /dev/null 2>&1
+        retry $(which sudo) apt-get purge libwhoopsie-preferences0 -y > /dev/null 2>&1
     fi
 }
 
 function uninstall_apport {
     if [[ "$(get_is_package_installed apport)" == "True" ]]; then
-        retry $(get_sudo_command) apt-get purge apport -y > /dev/null 2>&1
+        retry $(which sudo) apt-get purge apport -y > /dev/null 2>&1
     fi
 }
 
@@ -59,27 +58,26 @@ function install_and_update_language_packs {
     # install language pack and install language files for applications
     # returns Error 100 if reboot is needed (in variable $?)
     banner "Install and Update Language Packs"
-    local sudo_command=$(get_sudo_command)
     local reboot_needed="False"
 
     if [[ "$(get_is_package_installed language-pack-de)" == "False" ]]; then
-        retry ${sudo_command} apt-get install language-pack-de -y
+        retry $(which sudo) apt-get install language-pack-de -y
         reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed language-pack-de-base)" == "False" ]]; then
-        retry ${sudo_command} apt-get install language-pack-de-base -y
+        retry $(which sudo) apt-get install language-pack-de-base -y
         reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed manpages-de)" == "False" ]]; then
-        retry ${sudo_command} apt-get install manpages-de -y
+        retry $(which sudo) apt-get install manpages-de -y
         reboot_needed="True"
     fi
     if [[ "$(get_is_package_installed language-pack-gnome-de)" == "False" ]]; then
-        retry ${sudo_command} apt-get install language-pack-gnome-de -y
+        retry $(which sudo) apt-get install language-pack-gnome-de -y
         reboot_needed="True"
     fi
 
-    ${sudo_command} update-locale LANG=\"de_AT.UTF-8\" LANGUAGE=\"de_AT:de\"
+    $(which sudo) update-locale LANG=\"de_AT.UTF-8\" LANGUAGE=\"de_AT:de\"
 
 
     local language_support_list=$(check-language-support -l de)
@@ -87,7 +85,7 @@ function install_and_update_language_packs {
     while IFS=$'\n' read -ra language_support_array; do
       for language_support in "${language_support_array[@]}"; do
           if [[ "$(get_is_package_installed ${language_support})" == "False" ]]; then
-            retry ${sudo_command} apt-get install ${language_support} -y
+            retry $(which sudo) apt-get install ${language_support} -y
             reboot_needed="True"
           fi
       done
