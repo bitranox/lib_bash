@@ -72,6 +72,21 @@ function add_user_as_sudoer {
     $(which sudo) chgrp -R /home/"${username}"
 }
 
+function repair_user_permissions {
+    local user_list=$(cut -d: -f1 /etc/passwd)
+    local user_name=""
+
+    while IFS=$'\n' read -ra user_array; do
+      for user_name in "${user_array[@]}"; do
+          if [[ -d /home/"${user_name}" ]]; then
+            $(which sudo) chown -R "${user_name}" /home/"${user_name}"
+            $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
+            reboot_needed="True"
+          fi
+      done
+    done <<< "${user_list}"
+
+}
 
 function set_user_and_group {
     # $1: File or Directory
