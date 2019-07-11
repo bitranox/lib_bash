@@ -31,6 +31,15 @@ function get_user_and_group {
     echo "${user_group}"
 }
 
+
+function add_user_as_sudoer {
+    # $1 : username
+    local username="${1}"
+    $(which sudo) adduser "${username}"
+    $(which sudo) usermod -aG sudo "${username}"
+}
+
+
 function set_user_and_group {
     # $1: File or Directory
     # $2: user${IFS}group
