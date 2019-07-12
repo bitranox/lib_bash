@@ -248,15 +248,33 @@ function remove_file {
 }
 
 
+function get_prepend_auto_configuration_message_to_line {
+    # $1: the line
+    # $2: the comment character, usually "#" or ";"
+    # usage: get_prepend_auto_configuration_message_to_line "test" "#"
+    # output: # auto configured by bitranox at yyyy-mm-dd HH:MM:SS\ntest
+    local line="{$1}"
+    local comment_char="{$2}"
+    local datetime=$(date '+%Y-%m-%d %H:%M:%S')
+    local new_line="${comment_char} auto configured by bitranox scripts at ${datetime}\n${line}"
+}
+
+
 function replace_or_add_lines_containing_string_in_file {
     # $1 : File
     # $2 : search string
     # $3 : new line to replace
-    local path_file=$1
-    local search_string=$2
-    local new_line=$3
+    # $4 : comment_char in that file
+
+    local path_file="{$1}"
+    local search_string="{$2}"
+    local new_line="{$3}"
+    local comment_char="{$4}"
     local user_and_group=$(get_user_and_group ${path_file})
     local number_of_lines_found=$(cat ${path_file} | grep -c ${search_string})
+
+    new_line=$(get_prepend_auto_configuration_message_to_line ${new_line} ${comment_char})
+
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
         $(which sudo) sed -i "/${search_string}/c\\${new_line}" ${path_file}
