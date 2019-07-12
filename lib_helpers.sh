@@ -57,8 +57,8 @@ function get_user_and_group {
     # $1: File or Directory
     # returns user${IFS}group  ${IFS} is the default seperator
 
-    local path_file=${1}
-    local user_group=$(stat -c "%U${IFS}%G" ${path_file})
+    local path_file="${1}"
+    local user_group=$(stat -c "%U${IFS}%G" "${path_file}")
     echo "${user_group}"
 }
 
@@ -221,17 +221,17 @@ function backup_file {
     # copies <file> to <file>.original if <file>.original does not exist
 
     # if <file> exist
-    local path_file=$1
+    local path_file="${1}"
 
     if [[ -f "${path_file}" ]]; then
         # copy <file>.original to <file>.backup
-        local user_and_group=$(get_user_and_group ${path_file})
+        local user_and_group=$(get_user_and_group "${path_file}")
         $(which sudo) cp -f "${path_file}" "${path_file}.backup"
-        set_user_and_group "${path_file}.backup" ${user_and_group}
+        set_user_and_group "${path_file}.backup" "${user_and_group}"
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
             $(which sudo) cp -f "${path_file}" "${path_file}.original"
-            set_user_and_group "${path_file}.original" ${user_and_group}
+            set_user_and_group "${path_file}.original" "${user_and_group}"
         fi
     fi
 }
