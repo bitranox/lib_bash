@@ -257,6 +257,7 @@ function get_prepend_auto_configuration_message_to_line {
     local comment_char="${2}"
     local datetime=$(date '+%Y-%m-%d %H:%M:%S')
     local new_line="${comment_char} auto configured by bitranox scripts at ${datetime}\n${line}"
+    echo "${new_line}"
 }
 
 
