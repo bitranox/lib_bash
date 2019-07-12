@@ -221,17 +221,17 @@ function backup_file {
     # copies <file> to <file>.original if <file>.original does not exist
 
     # if <file> exist
-    local path_file=${1}
+    local path_file="${1}"
 
     if [[ -f ${path_file} ]]; then
         # copy <file>.original to <file>.backup
         local user_and_group=$(get_user_and_group "${path_file}")
-        $(which sudo) cp -f ${path_file} ${path_file}.backup
-        set_user_and_group "${path_file}.backup" ${user_and_group}
+        $(which sudo) cp -f "${path_file}" "${path_file}.backup"
+        set_user_and_group "${path_file}.backup" "${user_and_group}"
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            $(which sudo) cp -f ${path_file} "${path_file}.original"
-            set_user_and_group "${path_file}.original" ${user_and_group}
+            $(which sudo) cp -f "${path_file}" "${path_file}.original"
+            set_user_and_group "${path_file}.original" "${user_and_group}"
         fi
     fi
 }
@@ -270,19 +270,19 @@ function replace_or_add_lines_containing_string_in_file {
     local search_string="{$2}"
     local new_line="{$3}"
     local comment_char="{$4}"
-    local user_and_group=$(get_user_and_group ${path_file})
-    local number_of_lines_found=$(cat ${path_file} | grep -c ${search_string})
+    local user_and_group=$(get_user_and_group "${path_file}")
+    local number_of_lines_found=$(cat "${path_file}" | grep -c "${search_string}")
 
-    new_line=$(get_prepend_auto_configuration_message_to_line ${new_line} ${comment_char})
+    new_line="$(get_prepend_auto_configuration_message_to_line ${new_line} ${comment_char})"
 
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
-        $(which sudo) sed -i "/${search_string}/c\\${new_line}" ${path_file}
+        $(which sudo) sed -i "/${search_string}/c\\${new_line}" "${path_file}"
     else
         # add line if not there
         $(which sudo) sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
-    set_user_and_group "${path_file}" ${user_and_group}
+    set_user_and_group "${path_file}" "${user_and_group}"
 }
 
 
