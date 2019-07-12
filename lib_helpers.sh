@@ -91,8 +91,8 @@ function repair_user_permissions {
 function set_user_and_group {
     # $1: File or Directory
     # $2: user${IFS}group
-    local path_file=${1}
-    local user_group=$2
+    local path_file="${1}"
+    local user_group="${2}"
     read -r -a array <<< "${user_group}"
     local new_user="${array[0]}"
     local new_group="${array[1]}"
