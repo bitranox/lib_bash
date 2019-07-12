@@ -273,7 +273,7 @@ function replace_or_add_lines_containing_string_in_file {
     local user_and_group=$(get_user_and_group "${path_file}")
     local number_of_lines_found=$(cat "${path_file}" | grep -c "${search_string}")
 
-    new_line="$(get_prepend_auto_configuration_message_to_line ${new_line} ${comment_char})"
+    # new_line="$(get_prepend_auto_configuration_message_to_line ${new_line} ${comment_char})"
 
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
