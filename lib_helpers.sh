@@ -221,17 +221,17 @@ function backup_file {
     # copies <file> to <file>.original if <file>.original does not exist
 
     # if <file> exist
-    local path_file="${1}"
+    local path_file=${1}
 
-    if [[ -f "${path_file}" ]]; then
+    if [[ -f ${path_file} ]]; then
         # copy <file>.original to <file>.backup
         local user_and_group=$(get_user_and_group "${path_file}")
-        $(which sudo) cp -f "${path_file}" "${path_file}.backup"
-        set_user_and_group "${path_file}.backup" "${user_and_group}"
+        $(which sudo) cp -f ${path_file} ${path_file}.backup
+        set_user_and_group "${path_file}.backup" ${user_and_group}
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            $(which sudo) cp -f "${path_file}" "${path_file}.original"
-            set_user_and_group "${path_file}.original" "${user_and_group}"
+            $(which sudo) cp -f ${path_file} "${path_file}.original"
+            set_user_and_group "${path_file}.original" ${user_and_group}
         fi
     fi
 }
