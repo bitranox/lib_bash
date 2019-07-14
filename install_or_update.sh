@@ -92,3 +92,4 @@ if [[ $(is_lib_bash_installed) == "True" ]]; then
 else
     install_lib_bash
 fi
+
