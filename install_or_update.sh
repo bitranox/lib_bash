@@ -71,6 +71,7 @@ function update_lib_bash {
             set_lib_bash_permissions
         )
         clr_green "lib_bash update complete"
+        exit 0
     else
         clr_green "lib_bash is up to date"
     fi
