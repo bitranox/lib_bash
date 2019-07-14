@@ -5,7 +5,11 @@ function update_myself {
 }
 
 
-update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
+if [[ -z "${@}" ]]; then
+    update_myself ${0}
+else
+    update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions  when called verbatim
+fi
 
 
 function include_dependencies {
