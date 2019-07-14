@@ -42,22 +42,6 @@ function install_lib_bash {
     set_lib_bash_permissions
 }
 
-function update_lib_bash {
-    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        clr_green "lib_bash needs to update"
-        (
-            # create a subshell to preserve current directory
-            cd /usr/local/lib_bash
-            $(which sudo) git fetch --all  > /dev/null 2>&1
-            $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
-            set_lib_bash_permissions
-        )
-        clr_green "lib_bash update complete"
-    else
-        clr_green "lib_bash is up to date"
-    fi
-
-}
 
 function restart_calling_script {
     local caller_command=("$@")
@@ -75,6 +59,27 @@ function restart_calling_script {
 
 }
 
+
+function update_lib_bash {
+    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
+        clr_green "lib_bash needs to update"
+        (
+            # create a subshell to preserve current directory
+            cd /usr/local/lib_bash
+            $(which sudo) git fetch --all  > /dev/null 2>&1
+            $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
+            set_lib_bash_permissions
+        )
+        clr_green "lib_bash update complete"
+        restart_calling_script  "${@}"  # needs caller name and parameters
+
+    else
+        clr_green "lib_bash is up to date"
+    fi
+
+}
+
+
 function source_lib_color {
     # this is needed, otherwise "${@}" will be passed to lib_color
     source /usr/local/lib_bash/lib_color.sh
@@ -84,7 +89,6 @@ function source_lib_color {
 if [[ $(is_lib_bash_installed) == "True" ]]; then
     source_lib_color
     update_lib_bash
-    restart_calling_script  "${@}"  # needs caller name and parameters
 else
     install_lib_bash
 fi
