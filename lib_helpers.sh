@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# function include_dependencies {
-#     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
-#     source "${my_dir}/lib_color.sh"
-#     source "${my_dir}/lib_helpers.sh"
-#
-# }
-#
-# include_dependencies  # we need to do that via a function to have local scope of my_dir
+function update_myself {
+    /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
+}
+
+
+update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
+
+
+function include_dependencies {
+    source /usr/local/lib_bash/lib_color.sh
+}
+
+
+include_dependencies
+
 
 function get_own_script_name {
     # $1: script_name "${0}"
@@ -23,6 +30,7 @@ function get_own_script_name {
     fi
 }
 
+
 function get_log_file_name {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
@@ -37,23 +45,6 @@ function get_log_file_name {
     echo "${log_file_name}"
 }
 
-
-
-
-function update_myself {
-    /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
-}
-
-update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
-
-
-function include_dependencies {
-    source /usr/local/lib_bash/lib_color.sh
-}
-
-# we need to do this in a function otherwise parameter {@} will be passed !
-# and we need to do it here, before another library overwrites the function include_dependencies
-include_dependencies
 
 function get_user_and_group {
     # $1: File or Directory
@@ -74,6 +65,7 @@ function add_user_as_sudoer {
     $(which sudo) chgrp -R /home/"${username}"
 }
 
+
 function repair_user_permissions {
     local user_list=$(cut -d: -f1 /etc/passwd)
     local user_name=""
@@ -90,6 +82,7 @@ function repair_user_permissions {
 
 }
 
+
 function set_user_and_group {
     # $1: File or Directory
     # $2: user${IFS}group
@@ -101,6 +94,7 @@ function set_user_and_group {
     $(which sudo) chown "${new_user}" "${path_file}"
     $(which sudo) chgrp "${new_group}" "${path_file}"
 }
+
 
 function get_is_string1_in_string2 {
     # $1: search_string
@@ -114,10 +108,12 @@ function get_is_string1_in_string2 {
     fi
 }
 
+
 function fail {
   clr_bold clr_red "${1}" >&2
   exit 1
 }
+
 
 function get_linux_release_name {
     local linux_release_name=`lsb_release --codename | cut -f2`
@@ -166,6 +162,7 @@ function banner_warning {
     local banner_text=$1
     banner_base "clr_bold clr_red" "${banner_text}"
 }
+
 
 function linux_update {
     # update / upgrade linux and clean / autoremove

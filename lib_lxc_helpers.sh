@@ -13,6 +13,7 @@ function update_myself {
     /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
 }
 
+
 update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
 
 
@@ -21,8 +22,7 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_helpers.sh
 }
 
-# we need to do this in a function otherwise parameter {@} will be passed !
-# and we need to do it here, before another library overwrites the function include_dependencies
+
 include_dependencies
 
 
@@ -33,8 +33,6 @@ function lxc_exec {
     local shell_command=$2
     lxc exec "${container_name}" -- sh -c "${shell_command}"
 }
-
-
 
 
 function lxc_update {
@@ -63,6 +61,7 @@ function lxc_wait_until_machine_stopped {
     clr_green "Container ${container_name}: stopped"
 }
 
+
 function lxc_wait_until_machine_running {
     # parameter: $1 = container_name
     local container_name=$1
@@ -77,6 +76,7 @@ function lxc_wait_until_machine_running {
     done
     clr_green "Container ${container_name}: started"
 }
+
 
 function lxc_wait_until_internet_connected {
     # parameter: $1 = container_name
@@ -102,6 +102,7 @@ function lxc_startup {
     lxc start "${container_name}"
     lxc_wait_until_machine_running "${container_name}"
 }
+
 
 function lxc_shutdown {
     # parameter: $1 = container_name
@@ -140,7 +141,6 @@ function lxc_replace_or_add_lines_containing_string_in_file {
         lxc exec $container_name -- sh -c "sudo sh -c \"echo \\"$new_line\\" >> $path_file\""
     fi
 }
-
 
 
 ## make it possible to call functions without source include

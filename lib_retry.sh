@@ -4,6 +4,7 @@ function update_myself {
     /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
 }
 
+
 update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
 
 
@@ -11,8 +12,7 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }
 
-# we need to do this in a function otherwise parameter {@} will be passed !
-# and we need to do it here, before another library overwrites the function include_dependencies
+
 include_dependencies
 
 
@@ -20,6 +20,7 @@ function fail {
   clr_bold clr_red "${1}" >&2
   exit 1
 }
+
 
 function nofail {
   clr_bold clr_red "${1}"
@@ -63,7 +64,6 @@ function retry_nofail {
     }
   done
 }
-
 
 
 ## make it possible to call functions without source include
