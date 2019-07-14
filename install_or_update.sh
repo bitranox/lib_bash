@@ -63,21 +63,15 @@ function restart_calling_script {
 
 
 function update_lib_bash {
-    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        clr_green "lib_bash needs to update"
-        (
-            # create a subshell to preserve current directory
-            cd /usr/local/lib_bash
-            $(which sudo) git fetch --all  > /dev/null 2>&1
-            $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
-            set_lib_bash_permissions
-        )
-        clr_green "lib_bash update complete"
-        exit 0
-    else
-        clr_green "lib_bash is up to date"
-    fi
-
+    clr_green "lib_bash needs to update"
+    (
+        # create a subshell to preserve current directory
+        cd /usr/local/lib_bash
+        $(which sudo) git fetch --all  > /dev/null 2>&1
+        $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
+        set_lib_bash_permissions
+    )
+    clr_green "lib_bash update complete"
 }
 
 
@@ -88,9 +82,16 @@ function source_lib_color {
 
 
 if [[ $(is_lib_bash_installed) == "True" ]]; then
-    source_lib_color
-    update_lib_bash
-    restart_calling_script  "${@}" || exit 0 # needs caller name and parameters
+    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
+        source_lib_color
+        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: lib_bash is not up to date"; fi
+        update_lib_bash
+        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: call restart_calling_script ${@}"; fi
+        restart_calling_script  "${@}"
+        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: call restart_calling_script ${@} returned ${?}"; fi
+    else
+        clr_green "lib_bash is up to date"
+    fi
 else
     install_lib_bash
 fi
