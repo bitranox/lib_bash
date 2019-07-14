@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export bitranox_debug="True"
+
 # function include_dependencies {
 #     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
 #     source "${my_dir}/lib_color.sh"
@@ -46,12 +48,12 @@ function install_lib_bash {
 function restart_calling_script {
     local caller_command=("$@")
     if [ ${#caller_command[@]} -eq 0 ]; then
-        echo "lib_bash: no caller command - exit 0"
+        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash: no caller command - exit 0"; fi
         # no parameters passed
         exit 0
     else
         # parameters passed, running the new Version of the calling script
-        echo "lib_bash: calling command : $@ - exit 100"
+        if [[ -n "${bitranox_debug}" == "True" ]]; then echo "lib_bash: calling command : $@ - exit 100"; fi
         "${caller_command[@]}"
         # exit this old instance with error code 100
         exit 100
