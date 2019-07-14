@@ -25,13 +25,13 @@ function is_lib_bash_installed {
 }
 
 
-function is_lib_bash_to_update {
+function is_lib_bash_up_to_date {
     local git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
     local git_local_hash=$( $(which sudo) cat /usr/local/lib_bash/.git/refs/heads/master)
     if [[ "${git_remote_hash}" == "${git_local_hash}" ]]; then
-        echo "False"
-    else
         echo "True"
+    else
+        echo "False"
     fi
 }
 
@@ -43,7 +43,7 @@ function install_lib_bash {
 }
 
 function update_lib_bash {
-    if [[ $(is_lib_bash_to_update) == "True" ]]; then
+    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
         clr_green "lib_bash needs to update"
         (
             # create a subshell to preserve current directory
@@ -62,10 +62,12 @@ function update_lib_bash {
 function restart_calling_script {
     local caller_command=("$@")
     if [ ${#caller_command[@]} -eq 0 ]; then
+        echo "no caller command - exit 0"
         # no parameters passed
         exit 0
     else
         # parameters passed, running the new Version of the calling script
+        echo "caller command : $@ - exit 100"
         "${caller_command[@]}"
         # exit this old instance with error code 100
         exit 100
