@@ -4,6 +4,9 @@ function update_myself {
     /usr/local/lib_bash/install_or_update.sh "${@}" || exit 0              # exit old instance after updates
 }
 
+update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
+
+
 function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }
@@ -70,10 +73,8 @@ if [[ ! -z "$1" ]]
         if declare -f "${1}" > /dev/null
         then
           # call arguments verbatim
-          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           "$@"
         else
-          update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
           function_name="${1}"
           library_name="${0}"
           fail "\"${function_name}\" is not a known function name of \"${library_name}\""
