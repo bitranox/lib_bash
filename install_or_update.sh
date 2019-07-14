@@ -84,11 +84,11 @@ function source_lib_color {
 if [[ $(is_lib_bash_installed) == "True" ]]; then
     source_lib_color
     if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: lib_bash is not up to date"; fi
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@main: lib_bash is not up to date"; fi
         update_lib_bash
-        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: call restart_calling_script ${@}"; fi
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@main: call restart_calling_script ${@}"; fi
         restart_calling_script  "${@}"
-        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@main: call restart_calling_script ${@} returned ${?}"; fi
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@main: call restart_calling_script ${@} returned ${?}"; fi
     else
         clr_green "lib_bash is up to date"
     fi
