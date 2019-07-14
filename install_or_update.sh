@@ -53,7 +53,7 @@ function restart_calling_script {
         exit 0
     else
         # parameters passed, running the new Version of the calling script
-        if [[ -n "${bitranox_debug}" == "True" ]]; then echo "lib_bash: calling command : $@ - exit 100"; fi
+        if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash: calling command : ${@} - exit 100"; fi
         "${caller_command[@]}"
         # exit this old instance with error code 100
         exit 100
