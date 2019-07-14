@@ -5,7 +5,7 @@ function update_myself {
 }
 
 
-update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions
+update_myself ${0} ${@}  > /dev/null 2>&1  # suppress messages here, not to spoil up answers from functions  when called verbatim
 
 
 function include_dependencies {
