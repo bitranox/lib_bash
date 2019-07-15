@@ -16,10 +16,11 @@ function assert_equal {
 	local result=$(eval ${1})
 
 	if [[ "${result}" != "${expected}" ]]; then
+		clr_reverse clr_cyan  "File     : $0"
 		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
+		clr_red "***********************************************************************************************"
 	fi
-	}
-
+}
 
 function get_own_script_name {
     # $1: script_name "${0}"
@@ -51,13 +52,33 @@ function get_log_file_name {
 }
 
 
-function get_user_and_group {
+function get_user_from_fileobject {
     # $1: File or Directory
-    # returns user${IFS}group  ${IFS} is the default seperator
-
+    # returns user
     local path_file="${1}"
-    local user_group=$(stat -c "%U${IFS}%G" "${path_file}")
-    echo "${user_group}"
+    local user=$(stat -c "%U$" "${path_file}")
+    echo "${user}"
+}
+
+function get_group_from_fileobject {
+    # $1: File or Directory
+    # returns group
+    local path_file="${1}"
+    local group=$(stat -c "%G" "${path_file}")
+    echo "${group}"
+}
+
+
+function tests_get_user_and_group_for_fileobject {
+    $(which sudo) rm -Rf "${HOME}/test_get_user_and_group"
+    $(which sudo) mkdir -p "${HOME}/test_get_user_and_group"
+	assert_equal "get_user_from_fileobject ${HOME}/test_get_user_and_group" "root"
+	assert_equal "get_group_from_fileobject ${HOME}/test_get_user_and_group" "root"
+    $(which sudo) chown nogroup ${HOME}/test_get_user_and_group
+    assert_equal "get_user_from_fileobject ${HOME}/test_get_user_and_group" "nogroup"
+    $(which sudo) chgrp nogroup ${HOME}/test_get_user_and_group
+    assert_equal "get_group_from_fileobject ${HOME}/test_get_user_and_group" "nogroup"
+    $(which sudo) rm -Rf "${HOME}/test_get_user_and_group"
 }
 
 
@@ -82,34 +103,6 @@ function repair_user_permissions {
           $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
         fi
     done
-}
-
-
-
-function set_user_and_group {
-    # $1: File or Directory
-    # $2: user${IFS}group
-    local path_file="${1}"
-    local user_group="${2}"
-    read -r -a array <<< "${user_group}"
-    local new_user="${array[0]}"
-    local new_group="${array[1]}"
-    $(which sudo) chown "${new_user}" "${path_file}"
-    $(which sudo) chgrp "${new_group}" "${path_file}"
-}
-
-
-function set_user_and_group_for_file_or_directory {
-    # $1: File or Directory
-    # $2: user${IFS}group
-    local path_file="${1}"
-    local array_user_group=("${2}")
-    local new_user="${array_user_group[0]}"
-    local new_group="${array_user_group[1]}"
-    echo ${new_user}
-    echo ${new_group}
-    $(which sudo) chown "${new_user}" "${path_file}"
-    $(which sudo) chgrp "${new_group}" "${path_file}"
 }
 
 
@@ -247,14 +240,17 @@ function backup_file {
     local path_file="${1}"
 
     if [[ -f ${path_file} ]]; then
-        # copy <file>.original to <file>.backup
-        local user_and_group=$(get_user_and_group "${path_file}")
+        local user=$(get_user_from_fileobject "${path_file}")
+        local group=$(get_group_from_fileobject "${path_file}")
+
         $(which sudo) cp -f "${path_file}" "${path_file}.backup"
-        set_user_and_group "${path_file}.backup" "${user_and_group}"
+        $(which sudo) chown "${user}" "${path_file}.backup"
+        $(which sudo) chgrp "${group}" "${path_file}.backup"
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
             $(which sudo) cp -f "${path_file}" "${path_file}.original"
-            set_user_and_group "${path_file}.original" "${user_and_group}"
+            $(which sudo) chown "${user}" "${path_file}.original"
+            $(which sudo) chgrp "${group}" "${path_file}.original"
         fi
     fi
 }
@@ -294,7 +290,8 @@ function replace_or_add_lines_containing_string_in_file {
     local search_string="${2}"
     local new_line="${3}"
     local comment_char="${4}"
-    local user_and_group=$(get_user_and_group "${path_file}")
+    local user=$(get_user_from_fileobject "${path_file}")
+    local group=$(get_group_from_fileobject "${path_file}")
     local number_of_lines_found=$(cat "${path_file}" | grep -c "${search_string}")
 
     new_line=$(get_prepend_auto_configuration_message_to_line "${new_line}" "${comment_char}")
@@ -306,7 +303,8 @@ function replace_or_add_lines_containing_string_in_file {
         # add line if not there
         $(which sudo) sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
-    set_user_and_group "${path_file}" "${user_and_group}"
+    $(which sudo) chown ${user} "${path_file}"
+    $(which sudo) chgrp ${group} "${path_file}"
 }
 
 
@@ -348,6 +346,7 @@ function call_function_from_commandline {
 function tests {
 	# clr_green "no tests in ${0}"
 	tests_is_str1_in_str2
+	tests_set_user_and_group_for_fileobject
 }
 
 

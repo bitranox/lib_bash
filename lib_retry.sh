@@ -15,9 +15,11 @@ function assert_equal {
 	local result=$(eval ${1})
 
 	if [[ "${result}" != "${expected}" ]]; then
+		clr_reverse clr_cyan  "File     : $0"
 		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
+		clr_red "***********************************************************************************************"
 	fi
-	}
+}
 
 
 function fail {
