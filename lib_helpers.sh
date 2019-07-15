@@ -80,12 +80,25 @@ function repair_user_permissions {
           if [[ -d /home/"${user_name}" ]]; then
             $(which sudo) chown -R "${user_name}" /home/"${user_name}"
             $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
-            reboot_needed="True"
           fi
       done
     done <<< "${user_list}"
 
 }
+
+function repair_user_permissions_new {
+    local user_name=""
+    local user_array=( "$(cut -d: -f1 /etc/passwd)" )
+
+    for user_name in "${user_array[@]}"; do
+        echo "${user_name}"
+        if [[ -d /home/"${user_name}" ]]; then
+          $(which sudo) chown -R "${user_name}" /home/"${user_name}"
+          $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
+        fi
+    done
+}
+
 
 
 function set_user_and_group {
@@ -313,6 +326,7 @@ function check_if_bash_function_is_declared {
     declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
 }
 
+
 function call_function_from_commandline {
     # $1 : library_name ("${0}")
     # $2 : function_name ("${1}")
@@ -320,7 +334,6 @@ function call_function_from_commandline {
     local library_name="${1}"
     local function_name="${2}"
     local call_args_array=("${@}")
-    # read -r -a call_args <<< "${@}"
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
@@ -330,6 +343,7 @@ function call_function_from_commandline {
         fi
     fi
 }
+
 
 
 function tests {

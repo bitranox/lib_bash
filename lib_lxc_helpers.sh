@@ -132,23 +132,24 @@ function check_if_bash_function_is_declared {
     declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
 }
 
+
 function call_function_from_commandline {
     # $1 : library_name ("${0}")
     # $2 : function_name ("${1}")
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args=( )
-    read -r -a call_args <<< "${@}"
+    local call_args_array=("${@}")
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            eval "${call_args[@]:1}"
+            eval "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
     fi
 }
+
 
 function tests {
 	clr_green "no tests in ${0}"
