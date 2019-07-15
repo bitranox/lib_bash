@@ -1,5 +1,26 @@
 #!/bin/bash
 
+export bitranox_debug_lib_bash_install="True"
+# export bitranox_debug_global="False"
+# export bitranox_debug_lib_bash="False"
+
+
+function debug {
+    # $1: debug_message
+    local debug_message="${1}"
+    local function_name=
+    # local script_name=$( get_own_script_name )  # wenn lib_helpers is loaded, we get it automatically
+    local script_name="/usr/local/lib_bash/install_or_update.sh"
+
+    if [[ "${bitranox_debug_global}" == "True" ]]; then
+        export bitranox_debug_lib_bash="True"
+    fi
+    if [[ "${bitranox_debug_lib_bash}" == "True" ]]; then
+        export bitranox_debug_lib_bash_install="True"
+    fi
+}
+
+
 function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }

@@ -25,17 +25,13 @@ function debug {
         export bitranox_debug_lib_bash_install="True"
     fi
 
-#### sample Debug Message Template
-if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
-# get_own_script_name
-
-
-**************************************************************************************************************${IFS}\
-File          : lib_bash/install_or_update.sh${IFS}\
-Function      : ${FUNCNAME[ 1 ]}${IFS}\
-Caller        : ${FUNCNAME[ 2 ]}${IFS}\
-Debug Message : ${debug_message}${IFS}\
-**************************************************************************************************************"; fi
+    if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
+    **************************************************************************************************************${IFS}\
+    File          : lib_bash/install_or_update.sh${IFS}\
+    Function      : ${FUNCNAME[ 1 ]}${IFS}\
+    Caller        : ${FUNCNAME[ 2 ]}${IFS}\
+    Debug Message : ${debug_message}${IFS}\
+    **************************************************************************************************************"; fi
 }
 
 
