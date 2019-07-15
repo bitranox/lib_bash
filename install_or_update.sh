@@ -14,7 +14,7 @@ function source_lib_color {
 function debug {
     # $1: debug_message
     local debug_message="${1}"
-    local function_name=${FUNCNAME[ 1 ]}
+    local function_name=
     # local script_name=$( get_own_script_name )  # wenn lib_helpers is loaded, we get it automatically
     local script_name="/usr/local/lib_bash/install_or_update.sh"
 
@@ -32,7 +32,8 @@ if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
 
 **************************************************************************************************************${IFS}\
 File          : lib_bash/install_or_update.sh${IFS}\
-Function      : ${function_name}${IFS}\
+Function      : ${FUNCNAME[ 1 ]}${IFS}\
+Caller        : ${FUNCNAME[ 2 ]}${IFS}\
 Debug Message : ${debug_message}${IFS}\
 **************************************************************************************************************"; fi
 }
