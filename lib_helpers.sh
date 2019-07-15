@@ -22,6 +22,7 @@ function assert_equal {
 	fi
 }
 
+
 function get_own_script_name {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
@@ -69,19 +70,6 @@ function get_group_from_fileobject {
 }
 
 
-function tests_get_user_and_group_for_fileobject {
-    $(which sudo) rm -Rf "${HOME}/test_get_user_and_group"
-    $(which sudo) mkdir -p "${HOME}/test_get_user_and_group"
-	assert_equal "get_user_from_fileobject ${HOME}/test_get_user_and_group" "root"
-	assert_equal "get_group_from_fileobject ${HOME}/test_get_user_and_group" "root"
-    $(which sudo) chown nogroup ${HOME}/test_get_user_and_group
-    assert_equal "get_user_from_fileobject ${HOME}/test_get_user_and_group" "nogroup"
-    $(which sudo) chgrp nogroup ${HOME}/test_get_user_and_group
-    assert_equal "get_group_from_fileobject ${HOME}/test_get_user_and_group" "nogroup"
-    $(which sudo) rm -Rf "${HOME}/test_get_user_and_group"
-}
-
-
 function add_user_as_sudoer {
     # $1 : username
     local username="${1}"
@@ -109,9 +97,9 @@ function repair_user_permissions {
 function is_str1_in_str2 {
     # $1: search_string
     # $1: haystack
-    local search_string="${1}"
-    local haystack="${2}"
-    if [[ $(echo "$haystack}" | grep -c ${search_string}) == "0" ]]; then
+    local str1="${1}"
+    local str2="${2}"
+    if [[ $(echo "$str2}" | grep -c "${str1}" ) == "0" ]]; then
         echo "False"
     else
         echo "True"
@@ -346,7 +334,6 @@ function call_function_from_commandline {
 function tests {
 	# clr_green "no tests in ${0}"
 	tests_is_str1_in_str2
-	tests_get_user_and_group_for_fileobject
 }
 
 
