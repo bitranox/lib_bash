@@ -293,6 +293,7 @@ function check_if_bash_function_is_declared {
     declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
 }
 
+
 function call_function_from_commandline {
     # $1 : library_name ("${0}")
     # $2 : function_name ("${1}")
