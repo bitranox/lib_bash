@@ -30,7 +30,7 @@ function debug {
 
 #### sample Debug Message Template
 if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
-**************************************************************************************************************{IFS}\
+**************************************************************************************************************${IFS}\
 File          : lib_bash/install_or_update.sh${IFS}\
 Function      : ${function_name}${IFS}\
 Caller        : ${caller}${IFS}\
