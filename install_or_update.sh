@@ -113,7 +113,7 @@ function tests {
 if [[ $(is_lib_bash_installed) == "True" ]]; then
     source_lib_color
     if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        debug "main" "${@}" "lib_bash is not up to date"
+        debug "main" "${0}" "lib_bash is not up to date"
         update_lib_bash
         debug "main" "${@}" "call restart_calling_script ${@}"
         restart_calling_script  "${@}"
