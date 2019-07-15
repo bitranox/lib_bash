@@ -103,22 +103,21 @@ function tests {
     clr_green "no tests in lib_bash/install_or_update"
 }
 
-if [[ $(is_lib_bash_installed) == "True" ]]; then
-    source_lib_color
-    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        debug "${debug_lib_bash}" "lib_bash is not up to date"
-        update_lib_bash
-        debug "${debug_lib_bash}" "call restart_calling_script ${@}"
-        restart_calling_script  "${@}"
-        debug "${debug_lib_bash}" "call restart_calling_script ${@} returned with exit code ${?}"
+if [[ "${0}" != "${BASH_SOURCE}" ]]; then    # if the script is not sourced
+    if [[ $(is_lib_bash_installed) == "True" ]]; then
+        source_lib_color
+        if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
+            debug "${debug_lib_bash}" "lib_bash is not up to date"
+            update_lib_bash
+            debug "${debug_lib_bash}" "call restart_calling_script ${@}"
+            restart_calling_script  "${@}"
+            debug "${debug_lib_bash}" "call restart_calling_script ${@} returned with exit code ${?}"
 
+        else
+            debug "${debug_lib_bash}" "lib_bash is up to date"
+        fi
     else
-        debug "${debug_lib_bash}" "lib_bash is up to date"
+        install_lib_bash
     fi
-else
-    install_lib_bash
 fi
 
-
-## make it possible to call functions without source include
-call_function_from_commandline "${0}" "${@}"
