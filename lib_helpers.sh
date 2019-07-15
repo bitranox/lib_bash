@@ -1,47 +1,13 @@
 #!/bin/bash
 
-export bitranox_debug_lib_bash_install="True"
-# export bitranox_debug_global="False"
-# export bitranox_debug_lib_bash="False"
-
-
-function debug {
-    # $1: debug_message
-    local debug_message="${1}"
-    local function_name=
-    # local script_name=$( get_own_script_name )  # wenn lib_helpers is loaded, we get it automatically
-    local script_name="/usr/local/lib_bash/install_or_update.sh"
-
-    if [[ "${bitranox_debug_global}" == "True" ]]; then
-        export bitranox_debug_lib_bash="True"
-    fi
-    if [[ "${bitranox_debug_lib_bash}" == "True" ]]; then
-        export bitranox_debug_lib_bash_install="True"
-    fi
-}
-
+# export bitranox_debug_global=False
+export debug_lib_bash="True"
 
 function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }
 
-
 include_dependencies
-
-
-function assert_equal {
-	# $1 : test
-	# $2 : expected
-	local test="${1}"
-	local expected="${2}"
-	local result=$(eval ${1})
-
-	if [[ "${result}" != "${expected}" ]]; then
-		clr_reverse clr_cyan  "File     : $0"
-		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
-		clr_red "***********************************************************************************************"
-	fi
-}
 
 
 function get_own_script_name {
@@ -56,6 +22,42 @@ function get_own_script_name {
     else
         echo "${script_name}"
     fi
+}
+
+
+function debug {
+    # $1: should_debug: True/False
+    # $2: debug_message
+    local should_debug="${1}"
+    local debug_message="${2}"
+    local script_name=$( get_own_script_name )
+
+    if [[ "${bitranox_debug_global}" == "True" ]]; then
+        should_debug="True"
+    fi
+
+    if [[ "${should_debug}" == "True" ]]; then clr_blue "\
+    **************************************************************************************************************${IFS}\
+    File          : lib_bash/install_or_update.sh${IFS}\
+    Function      : ${FUNCNAME[ 1 ]}${IFS}\
+    Caller        : ${FUNCNAME[ 2 ]}${IFS}\
+    Debug Message : ${debug_message}${IFS}\
+    **************************************************************************************************************"; fi
+}
+
+
+function assert_equal {
+	# $1 : test
+	# $2 : expected
+	local test="${1}"
+	local expected="${2}"
+	local result=$(eval ${1})
+
+	if [[ "${result}" != "${expected}" ]]; then
+		clr_reverse clr_cyan  "File     : $0"
+		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
+		clr_red "***********************************************************************************************"
+	fi
 }
 
 
@@ -168,7 +170,6 @@ function banner_base {
 
     ${color} "${sep}"
 }
-
 
 
 function banner {

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# export bitranox_debug_global=False
+# export debug_lib_bash="True"
+
+
 function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
     source /usr/local/lib_bash/lib_helpers.sh

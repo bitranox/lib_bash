@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export bitranox_debug_lib_bash_install="True"
-# export bitranox_debug_global="False"
-# export bitranox_debug_lib_bash="False"
+# export bitranox_debug_global=False
+export debug_lib_bash="True"
 
 
 function source_lib_color {
@@ -12,20 +11,18 @@ function source_lib_color {
 
 
 function debug {
-    # $1: debug_message
-    local debug_message="${1}"
-    local function_name=
+    # $1: should_debug: True/False
+    # $2: debug_message
+    local should_debug="${1}"
+    local debug_message="${2}"
     # local script_name=$( get_own_script_name )  # wenn lib_helpers is loaded, we get it automatically
     local script_name="/usr/local/lib_bash/install_or_update.sh"
 
     if [[ "${bitranox_debug_global}" == "True" ]]; then
-        export bitranox_debug_lib_bash="True"
-    fi
-    if [[ "${bitranox_debug_lib_bash}" == "True" ]]; then
-        export bitranox_debug_lib_bash_install="True"
+        should_debug="True"
     fi
 
-    if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
+    if [[ "${should_debug}" == "True" ]]; then clr_blue "\
     **************************************************************************************************************${IFS}\
     File          : lib_bash/install_or_update.sh${IFS}\
     Function      : ${FUNCNAME[ 1 ]}${IFS}\
@@ -65,7 +62,7 @@ function is_lib_bash_up_to_date {
 }
 
 function install_lib_bash {
-    debug "installing lib_bash"
+    debug "${debug_lib_bash}" "installing lib_bash"
     $(which sudo) rm -fR /usr/local/lib_bash
     $(which sudo) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
@@ -81,16 +78,16 @@ function restart_calling_script {
         exit 0
     else
         # parameters passed, running the new Version of the calling script
-        debug "calling command : ${@}"
+        debug "${debug_lib_bash}" "calling command : ${@}"
         eval "${caller_command[@]}"
-        debug "after calling command ${@} : exiting with 100"
+        debug "${debug_lib_bash}" "after calling command ${@} : exiting with 100"
         exit 100
     fi
 }
 
 
 function update_lib_bash {
-    debug "updating lib_bash"
+    debug "${debug_lib_bash}" "updating lib_bash"
     (
         # create a subshell to preserve current directory
         cd /usr/local/lib_bash
@@ -98,7 +95,7 @@ function update_lib_bash {
         $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
         set_lib_bash_permissions
     )
-    debug "lib_bash update complete"
+    debug "${debug_lib_bash}" "lib_bash update complete"
 }
 
 
@@ -109,14 +106,14 @@ function tests {
 if [[ $(is_lib_bash_installed) == "True" ]]; then
     source_lib_color
     if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
-        debug "lib_bash is not up to date"
+        debug "${debug_lib_bash}" "lib_bash is not up to date"
         update_lib_bash
-        debug "call restart_calling_script ${@}"
+        debug "${debug_lib_bash}" "call restart_calling_script ${@}"
         restart_calling_script  "${@}"
-        debug "call restart_calling_script ${@} returned with exit code ${?}"
+        debug "${debug_lib_bash}" "call restart_calling_script ${@} returned with exit code ${?}"
 
     else
-        debug "lib_bash is up to date"
+        debug "${debug_lib_bash}" "lib_bash is up to date"
     fi
 else
     install_lib_bash
