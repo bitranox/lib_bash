@@ -311,5 +311,6 @@ function call_function_from_commandline {
 }
 
 
+
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${1}" "${@}"
