@@ -148,8 +148,31 @@ function get_linux_release_name {
     echo "${linux_release_name}"
 }
 
-
 function banner_base {
+    # $1: colours like "clr_bold clr_green" or "clr_red"
+    # $2: banner_text
+    # usage :
+    # banner_base "clr_bold clr_green" "this is a test with${IFS}two lines !"
+
+    local color=$1
+    local banner_text=$2
+    ${color} " "
+    ${color} " "
+    local sep="********************************************************************************"
+    ${color} "${sep}"
+
+    local line
+    while IFS=$'\n' read -ra message; do
+      for line in "${message[@]}"; do
+          ${color} "* ${line}"
+      done
+    done <<< "${banner_text}"
+
+    ${color} "${sep}"
+}
+
+
+function banner_base_test {
     # $1: colours like "clr_bold clr_green" or "clr_red"
     # $2: banner_text
     # usage :
