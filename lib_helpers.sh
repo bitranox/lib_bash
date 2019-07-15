@@ -24,6 +24,17 @@ function get_own_script_name {
     fi
 }
 
+function is_script_sourced {
+    # $1: script_name "${0}"
+    # $2: bash_source "${BASH_SOURCE}"
+    local script_name="${1}"
+    local bash_source="${2}"
+    if [[ "${script_name}" != "${bash_source}" ]]; then
+        echo "True"
+    else
+        echo "False"
+    fi
+}
 
 function debug {
     # $1: should_debug: True/False
