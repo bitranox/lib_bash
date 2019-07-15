@@ -103,7 +103,7 @@ function tests {
     clr_green "no tests in lib_bash/install_or_update"
 }
 
-if [[ "${0}" != "${BASH_SOURCE}" ]]; then    # if the script is not sourced
+if [[ "${0}" == "${BASH_SOURCE}" ]]; then    # if the script is not sourced
     if [[ $(is_lib_bash_installed) == "True" ]]; then
         source_lib_color
         if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
