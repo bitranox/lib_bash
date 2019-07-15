@@ -346,7 +346,7 @@ function call_function_from_commandline {
 function tests {
 	# clr_green "no tests in ${0}"
 	tests_is_str1_in_str2
-	tests_set_user_and_group_for_fileobject
+	tests_get_user_and_group_for_fileobject
 }
 
 
