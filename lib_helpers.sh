@@ -88,7 +88,7 @@ function set_user_and_group {
 }
 
 
-function get_is_string1_in_string2 {
+function is_str1_in_str2 {
     # $1: search_string
     # $1: haystack
     local search_string="${1}"
