@@ -1,11 +1,48 @@
 #!/bin/bash
 
-export bitranox_debug="True"
+export bitranox_debug_lib_bash_install="True"
+# export bitranox_debug_global="False"
+# export bitranox_debug_lib_bash="False"
+
 
 function source_lib_color {
     # this is needed, otherwise "${@}" will be passed to lib_color
     source /usr/local/lib_bash/lib_color.sh
 }
+
+
+function debug {
+    # $1: function_name
+    # $2: debug_message
+    # $2: caller
+
+    local function_name="${1}"
+    local debug_message="${2}"
+    local caller="${3}"
+
+
+    if [[ "${bitranox_debug_global}" == "True" ]]; then
+        export bitranox_debug_lib_bash="True"
+    fi
+    if [[ "${bitranox_debug_lib_bash}" == "True" ]]; then
+        export bitranox_debug_lib_bash_install="True"
+    fi
+
+#### sample Debug Message Template
+if [[ "${bitranox_debug_lib_bash_install}" == "True" ]]; then clr_blue "\
+**************************************************************************************************************{IFS}\
+File          : lib_bash/install_or_update.sh${IFS}\
+Function      : ${function_name}${IFS}\
+Caller        : ${caller}${IFS}\
+Debug Message : ${debug_message}${IFS}\
+**************************************************************************************************************"; fi
+}
+
+
+function test_debug {
+    assert "debug \"${0}\" \"Test Debug Message\"" ""
+}
+
 
 function is_lib_bash_installed {
         if [[ -f "/usr/local/lib_bash/install_or_update.sh" ]]; then
@@ -37,7 +74,7 @@ function is_lib_bash_up_to_date {
 }
 
 function install_lib_bash {
-    if [[ "${bitranox_debug}" == "True" ]]; then echo "lib_bash\install_or_update.sh@install_lib_bash: install lib_bash"; fi
+    debug "install_lib_bash" "${@}" "installing lib_bash"
     $(which sudo) rm -fR /usr/local/lib_bash
     $(which sudo) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
@@ -48,12 +85,14 @@ function install_lib_bash {
 function restart_calling_script {
     local caller_command=("${@}")
     if [[ ${#caller_command[@]} -eq 0 ]]; then
-        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: no caller command - exit 0"; fi
+        debug "restart_calling_script" "${@}" "no caller command - exit 0"
         # no parameters passed
         exit 0
     else
         # parameters passed, running the new Version of the calling script
         if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: calling command : ${@}"; fi
+        debug "restart_calling_script" "${@}" "calling command : ${@}"
+
         eval "${caller_command[@]}"
         if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: after calling command : ${@} - exiting with 100"; fi
         exit 100
@@ -76,7 +115,7 @@ function update_lib_bash {
 
 
 function tests {
-	clr_green "no tests in ${0}"
+	test_debug
 }
 
 if [[ $(is_lib_bash_installed) == "True" ]]; then
