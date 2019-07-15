@@ -72,21 +72,6 @@ function add_user_as_sudoer {
 
 
 function repair_user_permissions {
-    local user_list=$(cut -d: -f1 /etc/passwd)
-    local user_name=""
-
-    while IFS=$'\n' read -ra user_array; do
-      for user_name in "${user_array[@]}"; do
-          if [[ -d /home/"${user_name}" ]]; then
-            $(which sudo) chown -R "${user_name}" /home/"${user_name}"
-            $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
-          fi
-      done
-    done <<< "${user_list}"
-
-}
-
-function repair_user_permissions_new {
     local user_name=""
     local user_array=( "$(cut -d: -f1 /etc/passwd)" )
 
@@ -109,6 +94,20 @@ function set_user_and_group {
     read -r -a array <<< "${user_group}"
     local new_user="${array[0]}"
     local new_group="${array[1]}"
+    $(which sudo) chown "${new_user}" "${path_file}"
+    $(which sudo) chgrp "${new_group}" "${path_file}"
+}
+
+
+function set_user_and_group_for_file_or_directory {
+    # $1: File or Directory
+    # $2: user${IFS}group
+    local path_file="${1}"
+    local array_user_group=("${2}")
+    local new_user="${array_user_group[0]}"
+    local new_group="${array_user_group[1]}"
+    echo ${new_user}
+    echo ${new_group}
     $(which sudo) chown "${new_user}" "${path_file}"
     $(which sudo) chgrp "${new_group}" "${path_file}"
 }
