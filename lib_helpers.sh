@@ -149,6 +149,30 @@ function banner_base {
 }
 
 
+function banner_base_new {
+    # $1: colours like "clr_bold clr_green" or "clr_red"
+    # $2: banner_text
+    # usage :
+    # banner_base "clr_bold clr_green" "this is a test with${IFS}two lines !"
+
+    local color="${1}"
+    local banner_text=${2}
+    local msg_array=( ${2} )
+    ${color} " "
+    ${color} " "
+    local sep="********************************************************************************"
+    ${color} "${sep}"
+
+    local line
+      for line in "${msg_array[@]}"; do
+          ${color} "* ${line}"
+      done
+
+    ${color} "${sep}"
+}
+
+
+
 function banner {
     # $1: banner_text
     # usage :
