@@ -299,11 +299,12 @@ function call_function_from_commandline {
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args="${3}"
+    local call_args[0]=""
+    read -r -a call_args <<< "${@}"
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            "${call_args}"
+            "${call_args[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
@@ -311,6 +312,5 @@ function call_function_from_commandline {
 }
 
 
-
 ## make it possible to call functions without source include
-call_function_from_commandline "${0}" "${1}" "${@}"
+call_function_from_commandline "${0}" "${@}"
