@@ -79,7 +79,6 @@ function tests {
 	clr_green "no tests in ${0}"
 }
 
-
 if [[ $(is_lib_bash_installed) == "True" ]]; then
     source_lib_color
     if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
@@ -95,3 +94,6 @@ else
     install_lib_bash
 fi
 
+
+## make it possible to call functions without source include
+call_function_from_commandline "${0}" "${@}"
