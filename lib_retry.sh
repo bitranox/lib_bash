@@ -4,8 +4,20 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
 }
 
-
 include_dependencies
+
+
+function assert_equal {
+	# $1 : test
+	# $2 : expected
+	local test="${1}"
+	local expected="${2}"
+	local result=$(eval ${1})
+
+	if [[ "${result}" != "${expected}" ]]; then
+		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
+	fi
+	}
 
 
 function fail {
@@ -70,18 +82,22 @@ function call_function_from_commandline {
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args[0]=""
+    local call_args=( )
     read -r -a call_args <<< "${@}"
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            "${call_args[@]:1}"
+            eval "${call_args[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
     fi
 }
 
+
+function tests {
+	clr_green "no tests in ${0}"
+}
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"

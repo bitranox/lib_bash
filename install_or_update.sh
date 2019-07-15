@@ -46,19 +46,18 @@ function install_lib_bash {
 
 
 function restart_calling_script {
-    local caller_command=("$@")
-    if [ ${#caller_command[@]} -eq 0 ]; then
-        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@restart_calling_script: no caller command - exit 0"; fi
+    local caller_command=("${@}")
+    if [[ ${#caller_command[@]} -eq 0 ]]; then
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: no caller command - exit 0"; fi
         # no parameters passed
         exit 0
     else
         # parameters passed, running the new Version of the calling script
-        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@restart_calling_script: calling command : ${@}"; fi
-        "${caller_command[@]}"
-        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash\install_or_update.sh@restart_calling_script: after calling command : ${@} - exiting with 100"; fi
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: calling command : ${@}"; fi
+        eval "${caller_command[@]}"
+        if [[ "${bitranox_debug}" == "True" ]]; then clr_blue "lib_bash_install\install_or_update.sh@restart_calling_script: after calling command : ${@} - exiting with 100"; fi
         exit 100
     fi
-
 }
 
 
@@ -76,6 +75,9 @@ function update_lib_bash {
 }
 
 
+function tests {
+	clr_green "no tests in ${0}"
+}
 
 
 if [[ $(is_lib_bash_installed) == "True" ]]; then

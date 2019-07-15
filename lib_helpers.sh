@@ -8,6 +8,19 @@ function include_dependencies {
 include_dependencies
 
 
+function assert_equal {
+	# $1 : test
+	# $2 : expected
+	local test="${1}"
+	local expected="${2}"
+	local result=$(eval ${1})
+
+	if [[ "${result}" != "${expected}" ]]; then
+		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
+	fi
+	}
+
+
 function get_own_script_name {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
@@ -98,6 +111,13 @@ function is_str1_in_str2 {
     else
         echo "True"
     fi
+}
+
+
+function tests_is_str1_in_str2 {
+	assert_equal "is_str1_in_str2 \"a\" \"aaa\"" "True"
+	assert_equal "is_str1_in_str2 \"a a\" \"aaa aaa\"" "True"
+	assert_equal "is_str1_in_str2 \"a b\" \"aaa aaa\"" "False"
 }
 
 
@@ -293,23 +313,28 @@ function check_if_bash_function_is_declared {
     declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
 }
 
-
 function call_function_from_commandline {
     # $1 : library_name ("${0}")
     # $2 : function_name ("${1}")
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args[0]=""
+    local call_args=( )
     read -r -a call_args <<< "${@}"
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            "${call_args[@]:1}"
+            eval "${call_args[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
     fi
+}
+
+
+function tests {
+	# clr_green "no tests in ${0}"
+	tests_is_str1_in_str2
 }
 
 
