@@ -198,10 +198,10 @@ function reboot {
 function get_is_package_installed {
     # $1: package name
     local package_name=$1
-    if [[ $(dpkg -l ${package_name} 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "un" ]]; then
-        echo "False"
-    else
+    if [[ $(dpkg -l ${package_name} 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "ii" ]]; then
         echo "True"
+    else
+        echo "False"
     fi
 }
 
@@ -287,18 +287,29 @@ function get_is_hetzner_virtual_server {
 }
 
 
-## make it possible to call functions without source include
-# Check if the function exists (bash specific)
-if [[ ! -z "$1" ]]
-    then
-        if declare -f "${1}" > /dev/null
-        then
-          # call arguments verbatim
-          "$@"
+function check_if_bash_function_is_declared {
+    # $1 : function name
+    local function_name="${1}"
+    declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
+}
+
+function call_function_from_commandline {
+    # $1 : library_name ("${0}")
+    # $2 : function_name ("${1}")
+    # $3 : call_args ("${@}")
+    local library_name="${1}"
+    local function_name="${2}"
+    local call_args="${3}"
+
+    if [[ ! -z ${function_name} ]]; then
+        if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
+            "${call_args}"
         else
-          # Show a helpful error
-          function_name="${1}"
-          library_name="${0}"
-          fail "\"${function_name}\" is not a known function name of \"${library_name}\""
+            fail "${function_name} is not a known function name of ${library_name}"
         fi
-	fi
+    fi
+}
+
+
+## make it possible to call functions without source include
+call_function_from_commandline "${0}" "${1}" "${@}"

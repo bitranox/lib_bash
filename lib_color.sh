@@ -183,18 +183,28 @@ function fail {
   exit 1
 }
 
-## make it possible to call functions without source include
-# Check if the function exists (bash specific)
-if [[ ! -z "$1" ]]
-    then
-        if declare -f "${1}" > /dev/null
-        then
-          # call arguments verbatim
-          "$@"
+function check_if_bash_function_is_declared {
+    # $1 : function name
+    local function_name="${1}"
+    declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
+}
+
+function call_function_from_commandline {
+    # $1 : library_name ("${0}")
+    # $2 : function_name ("${1}")
+    # $3 : call_args ("${@}")
+    local library_name="${1}"
+    local function_name="${2}"
+    local call_args="${3}"
+
+    if [[ ! -z ${function_name} ]]; then
+        if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
+            "${call_args}"
         else
-          # Show a helpful error
-          function_name="${1}"
-          library_name="${0}"
-          fail "\"${function_name}\" is not a known function name of \"${library_name}\""
+            fail "${function_name} is not a known function name of ${library_name}"
         fi
-	fi
+    fi
+}
+
+
+call_function_from_commandline "${0}" "${1}" "${@}"
