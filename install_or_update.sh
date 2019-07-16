@@ -24,7 +24,7 @@ function debug {
 
     if [[ "${should_debug}" == "True" ]]; then clr_blue "\
     **************************************************************************************************************${IFS}\
-    File          : lib_bash/install_or_update.sh${IFS}\
+    File          : ${script_name}${IFS}\
     Function      : ${FUNCNAME[ 1 ]}${IFS}\
     Caller        : ${FUNCNAME[ 2 ]}${IFS}\
     Debug Message : ${debug_message}${IFS}\
