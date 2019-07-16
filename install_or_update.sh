@@ -116,8 +116,7 @@ if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
             debug "${debug_lib_bash}" "call restart_calling_script $* returned with exit code ${?}"
 
         else
-            # debug "${debug_lib_bash}" "lib_bash is up to date"
-            echo "lib_bash is up to date"
+            debug "${debug_lib_bash}" "lib_bash is up to date"
         fi
     else
         install_lib_bash
