@@ -9,7 +9,7 @@ function test_loop {
 
         ./install_or_update.sh
 
-        files_to_test=( $(sudo ls "${my_dir}"/*.sh ) )
+        files_to_test=( "$(sudo ls "${my_dir}"/*.sh )" )
         for actual_file_to_test in "${files_to_test[@]}"
         do
             source "${actual_file_to_test}"
