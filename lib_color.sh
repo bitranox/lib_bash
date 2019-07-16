@@ -196,8 +196,7 @@ function call_function_from_commandline {
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args_array=( "$@" )
-    echo "${call_args_array[@]}"
+    local call_args_array=("$@")
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
