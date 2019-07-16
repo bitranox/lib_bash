@@ -156,7 +156,7 @@ function call_function_from_commandline {
 
 
 function tests {
-	clr_green "no tests in ${0}"
+	clr_green "no tests in $(get_own_script_name)"
 }
 
 

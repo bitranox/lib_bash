@@ -210,7 +210,8 @@ function call_function_from_commandline {
 
 
 function tests {
-	clr_dump
+	dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
+    # clr_dump
 }
 
 
