@@ -2,11 +2,17 @@
 
 # --exclude=CODE1,CODE2..  Exclude types of warnings
 
-shellcheck --shell=bash --color=always \
-    --exclude=SC1091 \
-     ./*.sh
+function shell_check {
+
+    # exclude Codes :
+    # SC1091 not following external sources
+    shellcheck --shell=bash --color=always \
+        --exclude=SC1091 \
+         ./*.sh
 
 
+}
 
-# exclude Codes :
-# SC1091 not following external sources
+if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
+    shell_check
+fi
