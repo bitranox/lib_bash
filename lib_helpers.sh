@@ -48,8 +48,8 @@ function debug {
     fi
 
     if [[ "${should_debug}" == "True" ]]; then clr_blue "\
-    **************************************************************************************************************${IFS}\
-    File          : ${script_name}, ${0}, ${BASH_SOURCE[0]}, ${BASH_SOURCE[1]}, ${BASH_SOURCE[2]} {IFS}\
+    ** DEBUG *****************************************************************************************************${IFS}\
+    File          : ${script_name}{IFS}\
     Function      : ${FUNCNAME[ 1 ]}${IFS}\
     Caller        : ${FUNCNAME[ 2 ]}${IFS}\
     Debug Message : ${debug_message}${IFS}\
@@ -63,12 +63,20 @@ function assert_equal {
 	local test="${1}"
 	local expected="${2}"
 	local result=$(eval ${1})
+	local script_name=$( get_own_script_name )
 
-	if [[ "${result}" != "${expected}" ]]; then
-		clr_reverse clr_cyan  "File     : $0"
-		clr_cyan "Test     : ${test}${IFS}Result   : ${result}${IFS}Expected : ${expected}"
-		clr_red "***********************************************************************************************"
-	fi
+	if [[ "${result}" != "${expected}" ]]; then clr_red "\
+    ** ASSERT ****************************************************************************************************"
+	clr_reverse clr_cyan "\
+	File     : ${script_name}"
+	clr_cyan "\
+    Function : ${FUNCNAME[ 1 ]}${IFS}\
+    Caller   : ${FUNCNAME[ 2 ]}${IFS}\
+	Test     : ${test}${IFS}\
+	Result   : ${result}${IFS}\
+	Expected : ${expected}"
+	clr_red "\
+	**************************************************************************************************************"; fi
 }
 
 
