@@ -12,7 +12,7 @@ function test_loop {
         files_to_test=( $(sudo ls "${my_dir}"/*.sh ) )
         for actual_file_to_test in "${files_to_test[@]}"
         do
-            source ${actual_file_to_test}
+            source "${actual_file_to_test}"
             tests
         done
     done
