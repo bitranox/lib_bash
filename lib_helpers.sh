@@ -65,7 +65,7 @@ function assert_equal {
 	local result=$(eval ${1})
 	local script_name=$( get_own_script_name )
 
-	if [[ "${result}" != "${expected}" ]]; then clr_red "\
+	if [[ "${result}" != "${expected}" ]]; then clr_blue "\
     ** ASSERT ****************************************************************************************************"
 	clr_reverse clr_cyan "\
 	File     : ${script_name}"
