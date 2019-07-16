@@ -62,7 +62,7 @@ function is_lib_bash_up_to_date {
 }
 
 function install_lib_bash {
-    debug "${debug_lib_bash}" "installing lib_bash"
+    clr_green "installing lib_bash"
     $(which sudo) rm -fR /usr/local/lib_bash
     $(which sudo) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
@@ -87,7 +87,7 @@ function restart_calling_script {
 
 
 function update_lib_bash {
-    debug "${debug_lib_bash}" "updating lib_bash"
+    clr_green "updating lib_bash"
     (
         # create a subshell to preserve current directory
         cd /usr/local/lib_bash
