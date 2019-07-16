@@ -5,7 +5,7 @@ function test_loop {
     local files_to_test=( )
     local actual_file_to_test=""
 
-    while [[ 1=1 ]]; do
+    while true; do
 
         ./install_or_update.sh
 
