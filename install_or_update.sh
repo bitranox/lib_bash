@@ -81,7 +81,7 @@ function restart_calling_script {
     else
         # parameters passed, running the new Version of the calling script
         debug "${debug_lib_bash}" "calling command : $*"
-        ${caller_command[@]}
+        "${caller_command[@]}"
         debug "${debug_lib_bash}" "after calling command $* : exiting with 100"
         exit 100
     fi
