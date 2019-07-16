@@ -163,8 +163,8 @@ function repair_user_permissions {
 
 
 function is_str1_in_str2 {
-    # $1: search_string
-    # $1: haystack
+    # $1: str1
+    # $1: str2
     local str1="${1}"
     local str2="${2}"
     if [[ $(echo "$str2}" | grep -c "${str1}" ) == "0" ]]; then
