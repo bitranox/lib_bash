@@ -408,7 +408,7 @@ function call_function_from_commandline {
 
 
 function tests {
-	dummy_test 2>/dev/null || clr_green "no tests in $(get_own_script_name) (helpers)"
+	dummy_test 2>/dev/null || clr_green "no tests in $(get_own_script_name)"
 	# test_banner_base
 	# tests_is_str1_in_str2
 	# test_get_sudo

@@ -102,7 +102,7 @@ function update_lib_bash {
 
 
 function tests {
-    dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]} (install)"
+    dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
 }
 
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced

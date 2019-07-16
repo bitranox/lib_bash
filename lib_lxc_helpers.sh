@@ -156,7 +156,7 @@ function call_function_from_commandline {
 
 
 function tests {
-	dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]} (lxc_helpers)"
+	dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
 
 }
 
