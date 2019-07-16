@@ -6,7 +6,7 @@
 #
 
 
-CLR_ESC="\033["
+CLR_ESC="\\033["
 
 # All these variables has a function with the same name, but in lower case.
 #
@@ -76,16 +76,16 @@ function clr_layer
                 CLR_STACK=$ARG
             else
                 # if the argument is function, apply it
-                if [ -n "$ARG" ] && fn_exists $ARG; then
+                if [ -n "$ARG" ] && fn_exists "$ARG"; then
                     #continue to pass switches through recursion
-                    CLR_STACK=$($ARG "$CLR_STACK" $CLR_SWITCHES)
+                    CLR_STACK=$($ARG "$CLR_STACK" "$CLR_SWITCHES")
                 fi
             fi
         fi
     done
 
     # pass stack and color var to escape function
-    clr_escape "$CLR_STACK" $1;
+    clr_escape "$CLR_STACK" "$1";
 }
 
 # General function to wrap string with escape sequence(s).
@@ -94,7 +94,7 @@ function clr_escape
 {
     local result="$1"
     until [ -z "${2:-}" ]; do
-	if ! [ $2 -ge 0 -a $2 -le 47 ] 2>/dev/null; then
+	if ! [ "$2" -ge 0 ] && [ "$2" -le 47 ] 2>/dev/null; then
 	    echo "clr_escape: argument \"$2\" is out of range" >&2 && return 1
 	fi
         result="${CLR_ESC}${2}m${result}${CLR_ESC}${CLR_RESET}m"
@@ -135,16 +135,16 @@ function clr_dump
 {
     local T='gYw'
 
-    echo -e "\n                 40m     41m     42m     43m     44m     45m     46m     47m";
+    echo -e "\\n                 40m     41m     42m     43m     44m     45m     46m     47m";
 
     for FGs in '   0m' '   1m' '  30m' '1;30m' '  31m' '1;31m' \
                '  32m' '1;32m' '  33m' '1;33m' '  34m' '1;34m' \
                '  35m' '1;35m' '  36m' '1;36m' '  37m' '1;37m';
     do
         FG=${FGs// /}
-        echo -en " $FGs \033[$FG  $T  "
+        echo -en " $FGs \\033[$FG  $T  "
         for BG in 40m 41m 42m 43m 44m 45m 46m 47m; do
-            echo -en " \033[$FG\033[$BG  $T  \033[0m";
+            echo -en " \\033[$FG\\033[$BG  $T  \\033[0m";
         done
         echo;
     done
@@ -186,7 +186,7 @@ function fail {
 function check_if_bash_function_is_declared {
     # $1 : function name
     local function_name="${1}"
-    declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
+    declare -F "${function_name}" &>/dev/null && echo "True" || echo "False"
 }
 
 
@@ -196,11 +196,12 @@ function call_function_from_commandline {
     # $3 : call_args ("${@}")
     local library_name="${1}"
     local function_name="${2}"
-    local call_args_array=("${@}")
+    local call_args_array=( "$@" )
+    echo "${call_args_array[@]}"
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            eval "${call_args_array[@]:1}"
+            "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
@@ -209,7 +210,7 @@ function call_function_from_commandline {
 
 
 function tests {
-	clr_green "no tests in ${0}"
+	clr_dump
 }
 
 

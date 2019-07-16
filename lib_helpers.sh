@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# export bitranox_debug_global=False
+export bitranox_debug_global="${bitranox_debug_global}"
 export debug_lib_bash="False"
 
 function include_dependencies {
@@ -41,7 +41,9 @@ function debug {
     # $2: debug_message
     local should_debug="${1}"
     local debug_message="${2}"
-    local script_name=$( get_own_script_name )
+
+    local script_name=""
+    script_name=$(get_own_script_name)
 
     if [[ "${bitranox_debug_global}" == "True" ]]; then
         should_debug="True"
@@ -62,8 +64,12 @@ function assert_equal {
 	# $2 : expected
 	local test="${1}"
 	local expected="${2}"
-	local result=$(eval ${1})
-	local script_name=$( get_own_script_name )
+
+	local script_name=""
+    local result=""
+
+    script_name=$(get_own_script_name)
+    result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then clr_blue "\
     ** ASSERT ****************************************************************************************************"
@@ -80,6 +86,18 @@ function assert_equal {
 }
 
 
+function get_sudo {
+    # on some platforms we dont have sudo
+    # returns the command for sudo or nothing
+    command -v sudo 2>/dev/null
+}
+
+function test_get_sudo {
+    assert_equal "get_sudo" "/usr/bin/sudo"
+}
+
+
+
 function get_log_file_name {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
@@ -87,10 +105,16 @@ function get_log_file_name {
     # returns the name of the logfile : ${HOME}/log_usr_local_lib_<...>_001_000_<...>.log
     local script_name="${1}"
     local bash_source="${2}"
-    local own_script_name_full=$(get_own_script_name "${script_name}" "${bash_source}")
-    local own_script_name_wo_extension=${own_script_name_full%.*}
-    local own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
-    local log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
+    local own_script_name_full=""
+    local own_script_name_wo_extension=""
+    local own_script_name_wo_extension_dashed=""
+    local log_file_name=""
+
+    own_script_name_full=$(get_own_script_name "${script_name}" "${bash_source}")
+    own_script_name_wo_extension=${own_script_name_full%.*}
+    own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
+    log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
+
     echo "${log_file_name}"
 }
 
@@ -99,7 +123,8 @@ function get_user_from_fileobject {
     # $1: File or Directory
     # returns user
     local path_file="${1}"
-    local user=$(stat -c "%U$" "${path_file}")
+    local user=""
+    user=$(stat -c "%U$" "${path_file}")
     echo "${user}"
 }
 
@@ -107,7 +132,8 @@ function get_group_from_fileobject {
     # $1: File or Directory
     # returns group
     local path_file="${1}"
-    local group=$(stat -c "%G" "${path_file}")
+    local group=""
+    group=$(stat -c "%G" "${path_file}")
     echo "${group}"
 }
 
@@ -115,10 +141,10 @@ function get_group_from_fileobject {
 function add_user_as_sudoer {
     # $1 : username
     local username="${1}"
-    $(which sudo) adduser "${username}"
-    $(which sudo) usermod -aG sudo "${username}"
-    $(which sudo) chown -R /home/"${username}"
-    $(which sudo) chgrp -R /home/"${username}"
+    "$(get_sudo)" adduser "${username}"
+    "$(get_sudo)" usermod -aG sudo "${username}"
+    "$(get_sudo)" chown -R /home/"${username}"
+    "$(get_sudo)" chgrp -R /home/"${username}"
 }
 
 
@@ -129,8 +155,8 @@ function repair_user_permissions {
     for user_name in "${user_array[@]}"; do
         echo "${user_name}"
         if [[ -d /home/"${user_name}" ]]; then
-          $(which sudo) chown -R "${user_name}" /home/"${user_name}"
-          $(which sudo) chgrp -R "${user_name}" /home/"${user_name}"
+          "$(get_sudo)" chown -R "${user_name}" /home/"${user_name}"
+          "$(get_sudo)" chgrp -R "${user_name}" /home/"${user_name}"
         fi
     done
 }
@@ -163,7 +189,8 @@ function fail {
 
 
 function get_linux_release_name {
-    local linux_release_name=`lsb_release --codename | cut -f2`
+    local linux_release_name=""
+    linux_release_name=$(lsb_release --codename | cut -f2)
     echo "${linux_release_name}"
 }
 
@@ -173,33 +200,10 @@ function banner_base {
     # usage :
     # banner_base "clr_bold clr_green" "this is a test with${IFS}two lines !"
 
-    local color=$1
-    local banner_text=$2
-    ${color} " "
-    ${color} " "
-    local sep="********************************************************************************"
-    ${color} "${sep}"
-
-    local line
-    while IFS=$'\n' read -ra message; do
-      for line in "${message[@]}"; do
-          ${color} "* ${line}"
-      done
-    done <<< "${banner_text}"
-
-    ${color} "${sep}"
-}
-
-
-function banner_base_test {
-    # $1: colours like "clr_bold clr_green" or "clr_red"
-    # $2: banner_text
-    # usage :
-    # banner_base "clr_bold clr_green" "this is a test with${IFS}two lines !"
-
     local color="${1}"
-    local banner_text=${2}
-    local msg_array=( ${2} )
+    local banner_text="${2}"
+    local msg_array=( )
+    mapfile -t msg_array <<< "${2}"  # if it's multiple lines, each of which should be an element
     ${color} " "
     ${color} " "
     local sep="********************************************************************************"
@@ -211,6 +215,13 @@ function banner_base_test {
       done
 
     ${color} "${sep}"
+}
+
+
+function test_banner_base {
+    # banner_base clr_green "one line banner_base_test"
+    # banner_base clr_green "two line ${IFS}banner_base_test"
+    echo "diabled" &>/dev/null
 }
 
 
@@ -238,11 +249,11 @@ function linux_update {
     # update / upgrade linux and clean / autoremove
     clr_bold clr_green " "
     clr_bold clr_green "Linux Update"
-    retry $(which sudo) apt-get update
-    retry $(which sudo) apt-get upgrade -y
-    retry $(which sudo) apt-get dist-upgrade -y
-    retry $(which sudo) apt-get autoclean -y
-    retry $(which sudo) apt-get autoremove -y
+    retry "$(get_sudo)" apt-get update
+    retry "$(get_sudo)" apt-get upgrade -y
+    retry "$(get_sudo)" apt-get dist-upgrade -y
+    retry "$(get_sudo)" apt-get autoclean -y
+    retry "$(get_sudo)" apt-get autoremove -y
 }
 
 
@@ -252,7 +263,7 @@ function wait_for_enter {
         then
             banner "${1}"
         fi
-    read -p "Enter to continue, Cntrl-C to exit: "
+    read -r -p "Enter to continue, Cntrl-C to exit: "
 }
 
 
@@ -269,7 +280,7 @@ function wait_for_enter_warning {
 function reboot {
     clr_bold clr_green " "
     clr_bold clr_green "Rebooting"
-    $(which sudo) shutdown -r now
+    "$(get_sudo)" shutdown -r now
 }
 
 
@@ -296,14 +307,14 @@ function backup_file {
         local user=$(get_user_from_fileobject "${path_file}")
         local group=$(get_group_from_fileobject "${path_file}")
 
-        $(which sudo) cp -f "${path_file}" "${path_file}.backup"
-        $(which sudo) chown "${user}" "${path_file}.backup"
-        $(which sudo) chgrp "${group}" "${path_file}.backup"
+        "$(get_sudo)" cp -f "${path_file}" "${path_file}.backup"
+        "$(get_sudo)" chown "${user}" "${path_file}.backup"
+        "$(get_sudo)" chgrp "${group}" "${path_file}.backup"
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            $(which sudo) cp -f "${path_file}" "${path_file}.original"
-            $(which sudo) chown "${user}" "${path_file}.original"
-            $(which sudo) chgrp "${group}" "${path_file}.original"
+            "$(get_sudo)" cp -f "${path_file}" "${path_file}.original"
+            "$(get_sudo)" chown "${user}" "${path_file}.original"
+            "$(get_sudo)" chgrp "${group}" "${path_file}.original"
         fi
     fi
 }
@@ -315,7 +326,7 @@ function remove_file {
 
     # if <file> exist
     if [[ -f "${1}" ]]; then
-        $(which sudo) rm -f "${1}"
+        "$(get_sudo)" rm -f "${1}"
     fi
 }
 
@@ -351,13 +362,13 @@ function replace_or_add_lines_containing_string_in_file {
 
     if [[ $((number_of_lines_found)) > 0 ]]; then
         # replace lines if there
-        $(which sudo) sed -i "/${search_string}/c\\${new_line}" "${path_file}"
+        "$(get_sudo)" sed -i "/${search_string}/c\\${new_line}" "${path_file}"
     else
         # add line if not there
-        $(which sudo) sh -c "echo \"${new_line}\" >> ${path_file}"
+        "$(get_sudo)" sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
-    $(which sudo) chown ${user} "${path_file}"
-    $(which sudo) chgrp ${group} "${path_file}"
+    "$(get_sudo)" chown ${user} "${path_file}"
+    "$(get_sudo)" chgrp ${group} "${path_file}"
 }
 
 
@@ -387,7 +398,7 @@ function call_function_from_commandline {
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            eval "${call_args_array[@]:1}"
+            ${call_args_array[@]:1}
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
@@ -397,8 +408,11 @@ function call_function_from_commandline {
 
 
 function tests {
-	# clr_green "no tests in ${0}"
+	dummy_test 2>/dev/null || clr_green "no tests in ${0}"
+	test_banner_base
 	tests_is_str1_in_str2
+	test_get_sudo
+
 }
 
 

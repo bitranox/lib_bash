@@ -147,7 +147,7 @@ function call_function_from_commandline {
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            eval "${call_args_array[@]:1}"
+            ${call_args_array[@]:1}
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi

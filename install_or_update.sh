@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# export bitranox_debug_global=False
+export bitranox_debug_global="${bitranox_debug_global}"  # set to True for global Debug
 export debug_lib_bash="False"
 
 
@@ -45,15 +45,17 @@ if [[ $(is_lib_bash_installed) == "True" ]]; then
 fi
 
 function set_lib_bash_permissions {
-    $(which sudo) chmod -R 0755 /usr/local/lib_bash
-    $(which sudo) chmod -R +x /usr/local/lib_bash/*.sh
-    $(which sudo) chown -R root /usr/local/lib_bash || $(which sudo) chown -R ${USER} /usr/local/lib_bash  || echo "giving up set owner" # there is no user root on travis
-    $(which sudo) chgrp -R root /usr/local/lib_bash || $(which sudo) chgrp -R ${USER} /usr/local/lib_bash  || echo "giving up set group" # there is no user root on travis
+    $(command -v sudo 2>/dev/null) chmod -R 0755 /usr/local/lib_bash
+    $(command -v sudo 2>/dev/null) chmod -R +x /usr/local/lib_bash/*.sh
+    $(command -v sudo 2>/dev/null) chown -R root /usr/local/lib_bash || $(command -v sudo 2>/dev/null) chown -R "${USER}" /usr/local/lib_bash  || echo "giving up set owner" # there is no user root on travis
+    $(command -v sudo 2>/dev/null) chgrp -R root /usr/local/lib_bash || $(command -v sudo 2>/dev/null) chgrp -R "${USER}" /usr/local/lib_bash  || echo "giving up set group" # there is no user root on travis
 }
 
 function is_lib_bash_up_to_date {
-    local git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
-    local git_local_hash=$( $(which sudo) cat /usr/local/lib_bash/.git/refs/heads/master)
+    local git_remote_hash=""
+    local git_local_hash=""
+    git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
+    git_local_hash=$( $(command -v sudo 2>/dev/null) cat /usr/local/lib_bash/.git/refs/heads/master)
     if [[ "${git_remote_hash}" == "${git_local_hash}" ]]; then
         echo "True"
     else
@@ -63,8 +65,8 @@ function is_lib_bash_up_to_date {
 
 function install_lib_bash {
     clr_green "installing lib_bash"
-    $(which sudo) rm -fR /usr/local/lib_bash
-    $(which sudo) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
+    $(command -v sudo 2>/dev/null) rm -fR /usr/local/lib_bash
+    $(command -v sudo 2>/dev/null) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
     source_lib_color
 }
@@ -78,9 +80,9 @@ function restart_calling_script {
         exit 0
     else
         # parameters passed, running the new Version of the calling script
-        debug "${debug_lib_bash}" "calling command : ${@}"
+        debug "${debug_lib_bash}" "calling command : $*"
         eval "${caller_command[@]}"
-        debug "${debug_lib_bash}" "after calling command ${@} : exiting with 100"
+        debug "${debug_lib_bash}" "after calling command $* : exiting with 100"
         exit 100
     fi
 }
@@ -90,9 +92,9 @@ function update_lib_bash {
     clr_green "updating lib_bash"
     (
         # create a subshell to preserve current directory
-        cd /usr/local/lib_bash
-        $(which sudo) git fetch --all  > /dev/null 2>&1
-        $(which sudo) git reset --hard origin/master  > /dev/null 2>&1
+        cd /usr/local/lib_bash || fail "error in update_lib_bash"
+        $(command -v sudo 2>/dev/null) git fetch --all  > /dev/null 2>&1
+        $(command -v sudo 2>/dev/null) git reset --hard origin/master  > /dev/null 2>&1
         set_lib_bash_permissions
     )
     debug "${debug_lib_bash}" "lib_bash update complete"
@@ -103,15 +105,15 @@ function tests {
     clr_green "no tests in lib_bash/install_or_update"
 }
 
-if [[ "${0}" == "${BASH_SOURCE}" ]]; then    # if the script is not sourced
+if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
     if [[ $(is_lib_bash_installed) == "True" ]]; then
         source_lib_color
         if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
             debug "${debug_lib_bash}" "lib_bash is not up to date"
             update_lib_bash
-            debug "${debug_lib_bash}" "call restart_calling_script ${@}"
+            debug "${debug_lib_bash}" "call restart_calling_script $*"
             restart_calling_script  "${@}"
-            debug "${debug_lib_bash}" "call restart_calling_script ${@} returned with exit code ${?}"
+            debug "${debug_lib_bash}" "call restart_calling_script $* returned with exit code ${?}"
 
         else
             debug "${debug_lib_bash}" "lib_bash is up to date"
