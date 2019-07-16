@@ -64,7 +64,7 @@ function is_lib_bash_up_to_date {
 }
 
 function install_lib_bash {
-    clr_green "installing lib_bash"
+    echo "installing lib_bash"
     $(command -v sudo 2>/dev/null) rm -fR /usr/local/lib_bash
     $(command -v sudo 2>/dev/null) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
@@ -81,7 +81,7 @@ function restart_calling_script {
     else
         # parameters passed, running the new Version of the calling script
         debug "${debug_lib_bash}" "calling command : $*"
-        eval "${caller_command[@]}"
+        ${caller_command[@]}
         debug "${debug_lib_bash}" "after calling command $* : exiting with 100"
         exit 100
     fi
