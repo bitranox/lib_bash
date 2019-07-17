@@ -16,6 +16,7 @@ function test_loop {
         do
             "$(get_sudo)" "${actual_file_to_test}"
         done
+        ./shellcheck.sh
         clr_green "test ok in 1 $(get_own_script_name "${BASH_SOURCE[0]}")"
         sleep 1
     done
