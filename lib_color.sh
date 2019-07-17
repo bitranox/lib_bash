@@ -5,7 +5,6 @@
 # Manual see https://github.com/mercuriev/bash_colors
 #
 
-
 CLR_ESC="\\033["
 
 # All these variables has a function with the same name, but in lower case.
@@ -131,6 +130,9 @@ function clr_cyanb           { clr_layer $CLR_CYANB "$@";           }
 function clr_whiteb          { clr_layer $CLR_WHITEB "$@";          }
 
 # Outputs colors table
+
+# This shellcheck directive only applies to this function
+# shellcheck disable=SC2016
 function clr_dump
 {
     local T='gYw'
@@ -151,7 +153,9 @@ function clr_dump
 
     echo
     clr_bold "    Code     Function           Variable"
+
     echo \
+
 '    0        clr_reset          $CLR_RESET
     1        clr_bold           $CLR_BOLD
     2        clr_bright         $CLR_BRIGHT
@@ -183,6 +187,11 @@ function fail {
   exit 1
 }
 
+function nofail {
+  clr_bold clr_red "${1}"
+}
+
+
 function check_if_bash_function_is_declared {
     # $1 : function name
     local function_name="${1}"
@@ -206,13 +215,6 @@ function call_function_from_commandline {
         fi
     fi
 }
-
-
-function tests {
-	dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
-    # clr_dump
-}
-
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"

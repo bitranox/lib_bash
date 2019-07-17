@@ -3,26 +3,30 @@
 export bitranox_debug_global="${bitranox_debug_global}"
 export debug_lib_bash="False"
 
+
+function get_my_dir {
+    local mydir=""
+    mydir="${BASH_SOURCE%/*}"
+    if [[ ! -d "${mydir}" ]]; then mydir="${PWD}"; fi
+    echo "${mydir}"
+}
+
+
 function include_dependencies {
-    source /usr/local/lib_bash/lib_color.sh
+    local mydir=""
+    mydir="$(get_my_dir)"
+    source "${mydir}/lib_color.sh"
 }
 
 include_dependencies
 
 
 function get_own_script_name {
-    # $1: script_name "${0}"
-    # $2: bash_source "${BASH_SOURCE}"
-    # returns the name of the current script, even if it is sourced
-    local script_name="${1}"
-    local bash_source="${2}"
-
-    if [[ "${script_name}" != "${bash_source}" ]]; then
-        echo "${bash_source}"
-    else
-        echo "${script_name}"
-    fi
+    # $1: bash_source, usually "${BASH_SOURCE}"
+    local bash_source="${1}"
+    readlink -f "${bash_source}"
 }
+
 
 function is_script_sourced {
     # $1: script_name "${0}"
@@ -43,7 +47,7 @@ function debug {
     local debug_message="${2}"
 
     local script_name=""
-    script_name=$(get_own_script_name)
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
 
     if [[ "${bitranox_debug_global}" == "True" ]]; then
         should_debug="True"
@@ -68,7 +72,7 @@ function assert_equal {
 	local script_name=""
     local result=""
 
-    script_name=$(get_own_script_name)
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
     result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then clr_blue "\
@@ -76,8 +80,6 @@ function assert_equal {
 	clr_reverse clr_cyan "\
 	File     : ${script_name}"
 	clr_cyan "\
-    Function : ${FUNCNAME[ 1 ]}${IFS}\
-    Caller   : ${FUNCNAME[ 2 ]}${IFS}\
 	Test     : ${test}${IFS}\
 	Result   : ${result}${IFS}\
 	Expected : ${expected}"
@@ -92,11 +94,6 @@ function get_sudo {
     command -v sudo 2>/dev/null
 }
 
-function test_get_sudo {
-    assert_equal "get_sudo" "/usr/bin/sudo"
-}
-
-
 
 function get_log_file_name {
     # $1: script_name "${0}"
@@ -110,7 +107,7 @@ function get_log_file_name {
     local own_script_name_wo_extension_dashed=""
     local log_file_name=""
 
-    own_script_name_full=$(get_own_script_name "${script_name}" "${bash_source}")
+    own_script_name_full="$(get_own_script_name "${BASH_SOURCE[0]}")"
     own_script_name_wo_extension=${own_script_name_full%.*}
     own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
     log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
@@ -187,6 +184,10 @@ function fail {
   exit 1
 }
 
+function nofail {
+  clr_bold clr_red "${1}"
+}
+
 
 function get_linux_release_name {
     local linux_release_name=""
@@ -200,22 +201,12 @@ function get_linux_release_number {
     echo "${linux_release_number}"
 }
 
-function test_get_linux_release_number {
-    assert_equal "get_linux_release_number" "19.04"
-}
-
-
 
 function get_linux_release_number_major {
     local linux_release_number_major=""
-    linux_release_number_major="$(echo $(get_linux_release_number) | cut -d "." -f 1)"
+    linux_release_number_major="$(get_linux_release_number | cut -d "." -f 1)"
     echo "${linux_release_number_major}"
 }
-
-function test_get_linux_release_number_major {
-    assert_equal "get_linux_release_number_major" "19"
-}
-
 
 
 
@@ -240,13 +231,6 @@ function banner_base {
       done
 
     ${color} "${sep}"
-}
-
-
-function test_banner_base {
-    # banner_base clr_green "one line banner_base_test"
-    # banner_base clr_green "two line ${IFS}banner_base_test"
-    echo "diabled" &>/dev/null
 }
 
 
@@ -298,7 +282,7 @@ function wait_for_enter_warning {
         then
             banner_warning "${1}"
         fi
-    read -p "Enter to continue, Cntrl-C to exit: "
+    read -r -p "Enter to continue, Cntrl-C to exit: "
 }
 
 
@@ -312,7 +296,7 @@ function reboot {
 function get_is_package_installed {
     # $1: package name
     local package_name=$1
-    if [[ $(dpkg -l "${package_name}" 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "ii" ]]; then
+    if [[ $(dpkg -l "${package_name}" 2> /dev/null | grep "${package_name}" | cut -f 1 -d " ") == "ii" ]]; then
         echo "True"
     else
         echo "False"
@@ -329,8 +313,9 @@ function backup_file {
     local path_file="${1}"
 
     if [[ -f ${path_file} ]]; then
-        local user=$(get_user_from_fileobject "${path_file}")
-        local group=$(get_group_from_fileobject "${path_file}")
+        local user group
+        user=$(get_user_from_fileobject "${path_file}")
+        group=$(get_group_from_fileobject "${path_file}")
 
         "$(get_sudo)" cp -f "${path_file}" "${path_file}.backup"
         "$(get_sudo)" chown "${user}" "${path_file}.backup"
@@ -361,10 +346,12 @@ function get_prepend_auto_configuration_message_to_line {
     # $2: the comment character, usually "#" or ";"
     # usage: get_prepend_auto_configuration_message_to_line "test" "#"
     # output: # auto configured by bitranox at yyyy-mm-dd HH:MM:SS\ntest
-    local line="${1}"
-    local comment_char="${2}"
-    local datetime=$(date '+%Y-%m-%d %H:%M:%S')
-    local new_line="${comment_char} auto configured by bitranox scripts at ${datetime}\n${line}"
+    local line comment_char datetime new_line
+
+    line="${1}"
+    comment_char="${2}"
+    datetime=$(date '+%Y-%m-%d %H:%M:%S')
+    new_line="${comment_char} auto configured by bitranox configmagick scripts at ${datetime}\\n${line}"
     echo "${new_line}"
 }
 
@@ -374,26 +361,27 @@ function replace_or_add_lines_containing_string_in_file {
     # $2 : search string
     # $3 : new line to replace
     # $4 : comment_char in that file
+    local path_file search_string new_line comment_char user group number_of_lines_found
 
-    local path_file="${1}"
-    local search_string="${2}"
-    local new_line="${3}"
-    local comment_char="${4}"
-    local user=$(get_user_from_fileobject "${path_file}")
-    local group=$(get_group_from_fileobject "${path_file}")
-    local number_of_lines_found=$(cat "${path_file}" | grep -c "${search_string}")
+    path_file="${1}"
+    search_string="${2}"
+    new_line="${3}"
+    comment_char="${4}"
+    user=$(get_user_from_fileobject "${path_file}")
+    group=$(get_group_from_fileobject "${path_file}")
+    number_of_lines_found="$(grep -c "${search_string}" "${path_file}")"
 
     new_line=$(get_prepend_auto_configuration_message_to_line "${new_line}" "${comment_char}")
 
-    if [[ $((number_of_lines_found)) > 0 ]]; then
+    if [[ $((number_of_lines_found)) -gt 0 ]]; then
         # replace lines if there
         "$(get_sudo)" sed -i "/${search_string}/c\\${new_line}" "${path_file}"
     else
         # add line if not there
         "$(get_sudo)" sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
-    "$(get_sudo)" chown ${user} "${path_file}"
-    "$(get_sudo)" chgrp ${group} "${path_file}"
+    "$(get_sudo)" chown "${user}" "${path_file}"
+    "$(get_sudo)" chgrp "${group}" "${path_file}"
 }
 
 
@@ -409,7 +397,7 @@ function get_is_hetzner_virtual_server {
 function check_if_bash_function_is_declared {
     # $1 : function name
     local function_name="${1}"
-    declare -F ${function_name} &>/dev/null && echo "True" || echo "False"
+    declare -F "${function_name}" &>/dev/null && echo "True" || echo "False"
 }
 
 
@@ -423,22 +411,11 @@ function call_function_from_commandline {
 
     if [[ ! -z ${function_name} ]]; then
         if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
-            ${call_args_array[@]:1}
+            "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
         fi
     fi
-}
-
-
-
-function test {
-	# dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
-	# test_banner_base
-	tests_is_str1_in_str2
-	test_get_sudo
-	test_get_linux_release_number
-	test_get_linux_release_number_major
 }
 
 

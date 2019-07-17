@@ -8,11 +8,10 @@ function shell_check {
     # SC1091 not following external sources
     shellcheck --shell=bash --color=always \
         --exclude=SC1091 \
-         ./*.sh
+        --exclude=SC1090 \
+         ../*.sh
 
 
 }
 
-if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
-    shell_check
-fi
+shell_check
