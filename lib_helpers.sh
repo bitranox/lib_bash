@@ -17,6 +17,7 @@ function include_dependencies {
     # shellcheck disable=SC2164
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
+    source "${my_dir}/lib_retry.sh"
 }
 
 include_dependencies
