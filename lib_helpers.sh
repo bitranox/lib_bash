@@ -5,7 +5,7 @@ export debug_lib_bash="False"
 
 
 function get_my_dir {
-    local mydir=""
+    local mydir
     mydir="${BASH_SOURCE%/*}"
     if [[ ! -d "${mydir}" ]]; then mydir="${PWD}"; fi
     echo "${mydir}"
