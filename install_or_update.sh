@@ -44,10 +44,15 @@ function set_lib_bash_permissions {
     local user mydir
     user="$(printenv USER)"
     mydir="$(get_my_dir)"
-    "$(command -v sudo 2>/dev/null)" chmod -R 0755 "${mydir}"
-    "$(command -v sudo 2>/dev/null)" chmod -R +x "${mydir}"/*.sh
-    $(command -v sudo 2>/dev/null) chown -R root "${mydir}" || "$(command -v sudo 2>/dev/null)" chown -R "${user}" "{mydir}"  || echo "giving up set owner" # there is no user root on travis
-    $(command -v sudo 2>/dev/null) chgrp -R root "${mydir}" || "$(command -v sudo 2>/dev/null)" chgrp -R "${user}" "{mydir}"  || echo "giving up set group" # there is no user root on travis
+    set_lib_bash_permissions
+    echo "set_lib_bash_permissions : chmod ${mydir}/*.sh"
+    echo "set_lib_bash_permissions : mydir ${mydir}"
+    echo "set_lib_bash_permissions : readlink: $(readlink -f "${mydir}")"
+
+    "$(command -v sudo 2>/dev/null)" chmod -R 0755 "/usr/local/lib_bash"
+    "$(command -v sudo 2>/dev/null)" chmod -R +x "/usr/local/lib_bash/*.sh"
+    "$(command -v sudo 2>/dev/null)" chown -R root "/usr/local/lib_bash" || "$(command -v sudo 2>/dev/null)" chown -R "${user}" "/usr/local/lib_bash" || echo "giving up set owner" # there is no user root on travis
+    "$(command -v sudo 2>/dev/null)" chgrp -R root "/usr/local/lib_bash" || "$(command -v sudo 2>/dev/null)" chgrp -R "${user}" "/usr/local/lib_bash" || echo "giving up set group" # there is no user root on travis
 }
 
 function is_lib_bash_up_to_date {
