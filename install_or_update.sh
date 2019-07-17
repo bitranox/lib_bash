@@ -14,7 +14,7 @@ function get_my_dir {
 
 function include_dependencies {
     local mydir
-    mydir "$(get_my_dir)"
+    mydir="$(get_my_dir)"
     source "${mydir}/lib_helpers.sh"
 }
 
