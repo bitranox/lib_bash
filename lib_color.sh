@@ -5,8 +5,10 @@
 # Manual see https://github.com/mercuriev/bash_colors
 #
 
-# call the update script
-if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
+# call the update script if nout sourced
+if [[ "${0}" == "${BASH_SOURCE}" ]] && [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
+
+
 
 CLR_ESC="\\033["
 
