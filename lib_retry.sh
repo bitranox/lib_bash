@@ -1,6 +1,8 @@
 #!/bin/bash
 
-[[ -d "${BASH_SOURCE%/*" ]] && "${BASH_SOURCE%/*}"./install_or_update.sh || "${PWD}"./install_or_update.sh
+
+# call the update script
+if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh fi
 
 
 function get_my_dir {

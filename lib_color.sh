@@ -5,8 +5,8 @@
 # Manual see https://github.com/mercuriev/bash_colors
 #
 
-[[ -d "${BASH_SOURCE%/*" ]] && "${BASH_SOURCE%/*}"./install_or_update.sh || "${PWD}"./install_or_update.sh
-
+# call the update script
+if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh fi
 
 
 CLR_ESC="\\033["
