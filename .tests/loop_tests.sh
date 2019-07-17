@@ -9,7 +9,7 @@ function test_loop {
 
     while true; do
 
-        files_to_test=( $(sudo ls ./test_*.sh ) )
+        files_to_test=($(ls ./test_*.sh))
         for actual_file_to_test in "${files_to_test[@]}"
         do
             "${actual_file_to_test}"

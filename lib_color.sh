@@ -197,10 +197,10 @@ function nofail {
 }
 
 
-function check_if_bash_function_is_declared {
+function is_bash_function_declared {
     # $1 : function name
     local function_name="${1}"
-    declare -F "${function_name}" &>/dev/null && echo "True" || echo "False"
+    declare -F "${function_name}" &>/dev/null && return 0 || return 1
 }
 
 
@@ -213,7 +213,7 @@ function call_function_from_commandline {
     local call_args_array=("$@")
 
     if [[ ! -z ${function_name} ]]; then
-        if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
+        if [[ $(is_bash_function_declared "${function_name}") ]]; then
             "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"

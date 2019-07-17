@@ -5,7 +5,7 @@ export debug_lib_bash="False"
 
 
 # call the update script if nout sourced
-if [[ "${0}" == "${BASH_SOURCE}" ]] && [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
+if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
 
 
 function get_my_dir {
@@ -32,31 +32,19 @@ function get_own_script_name {
 }
 
 
-function is_script_sourced_new {
-    # $1: script_name "${0}"
-    # $2: bash_source "${BASH_SOURCE}"
-    local script_name="${1}"
-    local bash_source="${2}"
-    if [[ "${script_name}" != "${bash_source}" ]]; then
-        return true
-    else
-        return false
-    fi
-}
-
-
-
 function is_script_sourced {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
     local script_name="${1}"
     local bash_source="${2}"
     if [[ "${script_name}" != "${bash_source}" ]]; then
-        echo "True"
+        return 0
     else
-        echo "False"
+        return 1
     fi
 }
+
+
 
 function debug {
     # $1: should_debug: True/False
@@ -81,6 +69,33 @@ function debug {
 }
 
 
+
+function assert_output_failed {
+	# $1 : test
+	# $2 : expected
+	# $3 : expected
+    local script_name result test expected result
+
+	local test="${1}"
+	local expected="${2}"
+	local result="${3}"
+
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+
+	clr_blue "\
+    ** ASSERT ****************************************************************************************************"
+	clr_reverse clr_cyan "\
+	File     : ${script_name}"
+	clr_cyan "\
+	Test     : ${test}${IFS}\
+	Result   : ${result}${IFS}\
+	Expected : ${expected}"
+	clr_red "\
+	**************************************************************************************************************"
+}
+
+
+
 function assert_equal {
 	# $1 : test
 	# $2 : expected
@@ -93,17 +108,58 @@ function assert_equal {
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
     result=$(eval "${1}")
 
-	if [[ "${result}" != "${expected}" ]]; then clr_blue "\
-    ** ASSERT ****************************************************************************************************"
-	clr_reverse clr_cyan "\
-	File     : ${script_name}"
-	clr_cyan "\
-	Test     : ${test}${IFS}\
-	Result   : ${result}${IFS}\
-	Expected : ${expected}"
-	clr_red "\
-	**************************************************************************************************************"; fi
+	if [[ "${result}" != "${expected}" ]]; then
+	    assert_output_failed "${test}" "${expected}" "${result}"
+	    fi
 }
+
+
+function assert_return_code {
+	# $1 : test
+	# $2 : expected
+	local test expected script_name result
+	test="${1}"
+	expected="${2}"
+
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    eval "${1}"
+    result="${?}"
+
+	if [[ "${result}" -ne "${expected}" ]]; then
+	    assert_output_failed "${test}" "return code = ${expected}" "return code ${result}"
+	    fi
+}
+
+
+function assert_pass {
+	# $1 : test
+	local test expected script_name result
+	test="${1}"
+
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    eval "${1}"
+    result="${?}"
+
+	if [[ "${result}" -ne 0 ]]; then
+	    assert_output_failed "${test}" "return code = 0" "return code ${result}"
+	    fi
+}
+
+function assert_fail {
+	# $1 : test
+	local test script_name result
+	test="${1}"
+
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    eval "${1}"
+    result="${?}"
+
+	if [[ "${result}" -eq 0 ]]; then
+	    assert_output_failed "${test}" "return code > 0" "return code ${result}"
+	    fi
+}
+
+
 
 
 function get_sudo {
@@ -183,9 +239,9 @@ function is_str1_in_str2 {
     local str1="${1}"
     local str2="${2}"
     if [[ $(echo "$str2}" | grep -c "${str1}" ) == "0" ]]; then
-        echo "False"
+        return 1
     else
-        echo "True"
+        return 0
     fi
 }
 
@@ -304,7 +360,7 @@ function reboot {
 }
 
 
-function get_is_package_installed {
+function is_package_installed {
     # $1: package name
     local package_name=$1
     if [[ $(dpkg -l "${package_name}" 2> /dev/null | grep "${package_name}" | cut -f 1 -d " ") == "ii" ]]; then
@@ -396,19 +452,19 @@ function replace_or_add_lines_containing_string_in_file {
 }
 
 
-function get_is_hetzner_virtual_server {
+function is_hetzner_virtual_server {
     if [[ $(grep -c "Hetzner_vServer" /sys/class/dmi/id/product_family) != "0" ]]; then
-        echo "True"
+        return 0
     else
-        echo "False"
+        return 1
     fi
 }
 
 
-function check_if_bash_function_is_declared {
+function is_bash_function_declared {
     # $1 : function name
     local function_name="${1}"
-    declare -F "${function_name}" &>/dev/null && echo "True" || echo "False"
+    declare -F "${function_name}" &>/dev/null && return 0 || return 1
 }
 
 
@@ -421,7 +477,7 @@ function call_function_from_commandline {
     local call_args_array=("${@}")
 
     if [[ ! -z ${function_name} ]]; then
-        if [[ $(check_if_bash_function_is_declared "${function_name}") == "True" ]]; then
+        if [[ $(is_bash_function_declared "${function_name}") ]]; then
             "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"
