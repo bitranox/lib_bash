@@ -87,8 +87,8 @@ if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
     if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
         debug "${debug_lib_bash}" "lib_bash is not up to date"
         update_lib_bash
-        source "${0}"   # source ourself
-        exit 0          # exit the old instance
+        source "$(readlink -f "${BASH_SOURCE}")"      # source ourself
+        exit 0                                        # exit the old instance
     else
         debug "${debug_lib_bash}" "lib_bash is up to date"
     fi

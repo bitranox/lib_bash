@@ -16,6 +16,7 @@ function test {
     assert_equal "get_linux_release_number_major" "19"
 	assert_equal "get_is_package_installed apt" "True"
     # assert_equal "get_prepend_auto_configuration_message_to_line test" "auto configured by bitranox configmagick scripts at 2019-07-17 12:53:05\\ntest"
+    assert_equal "is_script_sourced_new" ""
 
 }
 

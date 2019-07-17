@@ -31,6 +31,20 @@ function get_own_script_name {
 }
 
 
+function is_script_sourced_new {
+    # $1: script_name "${0}"
+    # $2: bash_source "${BASH_SOURCE}"
+    local script_name="${1}"
+    local bash_source="${2}"
+    if [[ "${script_name}" != "${bash_source}" ]]; then
+        return true
+    else
+        return false
+    fi
+}
+
+
+
 function is_script_sourced {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
