@@ -5,6 +5,10 @@
 # Manual see https://github.com/mercuriev/bash_colors
 #
 
+[[ -d "${BASH_SOURCE%/*" ]] && "${BASH_SOURCE%/*}"./install_or_update.sh || "${PWD}"./install_or_update.sh
+
+
+
 CLR_ESC="\\033["
 
 # All these variables has a function with the same name, but in lower case.
