@@ -364,9 +364,9 @@ function is_package_installed {
     # $1: package name
     local package_name=$1
     if [[ $(dpkg -l "${package_name}" 2> /dev/null | grep "${package_name}" | cut -f 1 -d " ") == "ii" ]]; then
-        echo "True"
+        return 0
     else
-        echo "False"
+        return 1
     fi
 }
 
