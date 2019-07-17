@@ -11,13 +11,18 @@ export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
 
 
-function get_my_dir {
+function get_my_dir_old {
     local mydir
     mydir="${BASH_SOURCE%/*}"
     if [[ ! -d "${mydir}" ]]; then mydir="${PWD}"; fi
     echo "${mydir}"
 }
 
+
+# this function will get overwritten by other imports, so we need to define it after importing other libraries !
+function get_my_dir {
+    if [[ -d "${BASH_SOURCE%/*}" ]]; then echo "${BASH_SOURCE%/*}"; else echo "${PWD}"; fi
+}
 
 function include_dependencies {
     local mydir=""
