@@ -5,7 +5,8 @@
 # Manual see https://github.com/mercuriev/bash_colors
 #
 
-export SUDO_ASKPASS="$(command -v ssh-askpass)"
+sudo_askpass="$(command -v ssh-askpass)"
+export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
 
 export bitranox_debug_global="${bitranox_debug_global}"  # set to True for global Debug
