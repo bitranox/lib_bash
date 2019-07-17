@@ -477,7 +477,7 @@ function call_function_from_commandline {
     local call_args_array=("${@}")
 
     if [[ ! -z ${function_name} ]]; then
-        if [[ $(is_bash_function_declared "${function_name}") ]]; then
+        if is_bash_function_declared "${function_name}"; then
             "${call_args_array[@]:1}"
         else
             fail "${function_name} is not a known function name of ${library_name}"

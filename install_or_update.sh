@@ -37,9 +37,9 @@ function is_lib_bash_up_to_date {
     git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
     git_local_hash=$( $(command -v sudo 2>/dev/null) cat /usr/local/lib_bash/.git/refs/heads/master)
     if [[ "${git_remote_hash}" == "${git_local_hash}" ]]; then
-        echo "True"
+        return 0
     else
-        echo "False"
+        return 1
     fi
 }
 
@@ -84,7 +84,7 @@ function update_lib_bash {
 
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
     set_lib_bash_permissions
-    if [[ $(is_lib_bash_up_to_date) == "False" ]]; then
+    if ! is_lib_bash_up_to_date; then
         debug "${debug_lib_bash}" "lib_bash is not up to date"
         update_lib_bash
         source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
