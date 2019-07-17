@@ -3,6 +3,8 @@
 # export bitranox_debug_global=False
 # export debug_lib_bash="False"
 
+[[ -d "${BASH_SOURCE%/*" ]] && "${BASH_SOURCE%/*}"./install_or_update.sh || "${PWD}"./install_or_update.sh
+
 
 function get_my_dir {
     local mydir
