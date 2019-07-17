@@ -1,7 +1,10 @@
 #!/bin/bash
 
+export SUDO_ASKPASS="$(command -v ssh-askpass)"
+export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
+
 export bitranox_debug_global="${bitranox_debug_global}"
-export debug_lib_bash="False"
+# export debug_lib_bash="False"
 
 
 # call the update script if nout sourced
