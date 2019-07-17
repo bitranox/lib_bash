@@ -47,7 +47,7 @@ function set_lib_bash_permissions {
     set_lib_bash_permissions
     echo "set_lib_bash_permissions : chmod ${mydir}/*.sh"
     echo "set_lib_bash_permissions : mydir ${mydir}"
-    echo "set_lib_bash_permissions : readlink: $(readlink -f "${mydir}")"
+    # echo "set_lib_bash_permissions : readlink: $(readlink -f "${mydir}")"
 
     "$(command -v sudo 2>/dev/null)" chmod -R 0755 "/usr/local/lib_bash"
     "$(command -v sudo 2>/dev/null)" chmod -R +x "/usr/local/lib_bash/*.sh"
