@@ -190,9 +190,34 @@ function fail {
 
 function get_linux_release_name {
     local linux_release_name=""
-    linux_release_name=$(lsb_release --codename | cut -f2)
+    linux_release_name=$(lsb_release -c -s)
     echo "${linux_release_name}"
 }
+
+function get_linux_release_number {
+    local linux_release_number=""
+    linux_release_number="$(lsb_release -r -s)"
+    echo "${linux_release_number}"
+}
+
+function test_get_linux_release_number {
+    assert_equal "get_linux_release_number" "19.04"
+}
+
+
+
+function get_linux_release_number_major {
+    local linux_release_number_major=""
+    linux_release_number_major="$(echo $(get_linux_release_number) | cut -d "." -f 1)"
+    echo "${linux_release_number_major}"
+}
+
+function test_get_linux_release_number_major {
+    assert_equal "get_linux_release_number_major" "19"
+}
+
+
+
 
 function banner_base {
     # $1: colours like "clr_bold clr_green" or "clr_red"
@@ -407,11 +432,13 @@ function call_function_from_commandline {
 
 
 
-function tests {
-	dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
+function test {
+	# dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
 	# test_banner_base
-	# tests_is_str1_in_str2
-	# test_get_sudo
+	tests_is_str1_in_str2
+	test_get_sudo
+	test_get_linux_release_number
+	test_get_linux_release_number_major
 }
 
 
