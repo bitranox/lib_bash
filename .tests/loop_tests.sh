@@ -14,7 +14,7 @@ function test_loop {
         do
             "${actual_file_to_test}"
         done
-        clr_green "test ok in 1 $(get_own_script_name "${BASH_SOURCE}")"
+        clr_green "test ok in 1 $(get_own_script_name "${BASH_SOURCE[0]}")"
     done
 }
 

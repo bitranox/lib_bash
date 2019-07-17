@@ -190,13 +190,6 @@ function is_str1_in_str2 {
 }
 
 
-function tests_is_str1_in_str2 {
-	assert_equal "is_str1_in_str2 \"a\" \"aaa\"" "True"
-	assert_equal "is_str1_in_str2 \"a a\" \"aaa aaa\"" "True"
-	assert_equal "is_str1_in_str2 \"a b\" \"aaa aaa\"" "False"
-}
-
-
 function fail {
   clr_bold clr_red "${1}" >&2
   exit 1
