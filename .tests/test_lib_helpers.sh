@@ -21,8 +21,7 @@ function test {
     assert_fail "is_hetzner_virtual_server"
     assert_pass "../lib_helpers.sh is_package_installed apt"  # call verbatim
     assert_fail "../lib_helpers.sh is_package_installed unknown-package-0815"  # call verbatim
-    assert_equal "echo \"printenv user: $(printenv USER)\"" "${USER}"
-
+    assert_equal "echo \"printenv USER: $(printenv USER)\" : $USER" "printenv USER: $USER : $USER"  # check if env user is the same as the Variable $USER
 
 }
 test
