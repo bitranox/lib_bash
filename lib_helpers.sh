@@ -287,7 +287,7 @@ function reboot {
 function get_is_package_installed {
     # $1: package name
     local package_name=$1
-    if [[ $(dpkg -l ${package_name} 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "ii" ]]; then
+    if [[ $(dpkg -l "${package_name}" 2> /dev/null | grep ${package_name} | cut -f 1 -d " ") == "ii" ]]; then
         echo "True"
     else
         echo "False"
@@ -373,7 +373,7 @@ function replace_or_add_lines_containing_string_in_file {
 
 
 function get_is_hetzner_virtual_server {
-    if [[ $(cat /sys/class/dmi/id/product_family | grep -c "Hetzner_vServer") != "0" ]]; then
+    if [[ $(grep -c "Hetzner_vServer" /sys/class/dmi/id/product_family) != "0" ]]; then
         echo "True"
     else
         echo "False"
