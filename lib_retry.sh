@@ -11,17 +11,11 @@ export bitranox_debug_global="${bitranox_debug_global}"  # set to True for globa
 export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug in lib_bash
 
 
-function get_my_dir {
-    local mydir
-    mydir="${BASH_SOURCE%/*}"
-    if [[ ! -d "$mydir" ]]; then mydir="$PWD"; fi
-    echo "$mydir"
-}
-
 function include_dependencies {
-    local mydir
-    mydir="$(get_my_dir)"
-    source "$mydir/lib_helpers.sh"
+    local my_dir
+    # shellcheck disable=SC2164
+    my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+    source "${my_dir}/lib_helpers.sh"
 }
 
 include_dependencies

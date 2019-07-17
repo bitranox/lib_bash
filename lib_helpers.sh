@@ -12,15 +12,11 @@ export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"/install_or_update.sh else "${PWD}"/install_or_update.sh ; fi
 
 
-# this function will get overwritten by other imports, so we need to define it after importing other libraries !
-function get_my_dir {
-    if [[ -d "${BASH_SOURCE%/*}" ]]; then echo "${BASH_SOURCE%/*}"; else echo "${PWD}"; fi
-}
-
 function include_dependencies {
-    local mydir=""
-    mydir="$(get_my_dir)"
-    source "${mydir}/lib_color.sh"
+    local my_dir
+    # shellcheck disable=SC2164
+    my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+    source "${my_dir}/lib_color.sh"
 }
 
 include_dependencies
