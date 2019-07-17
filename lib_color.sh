@@ -6,8 +6,7 @@
 #
 
 # call the update script
-if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh fi
-
+if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh ; fi
 
 CLR_ESC="\\033["
 

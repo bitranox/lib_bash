@@ -3,8 +3,9 @@
 export bitranox_debug_global="${bitranox_debug_global}"
 export debug_lib_bash="False"
 
+
 # call the update script
-if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh fi
+if [[ -d "${BASH_SOURCE%/*}" ]]; then "${BASH_SOURCE%/*}"./install_or_update.sh else "${PWD}"./install_or_update.sh ; fi
 
 
 function get_my_dir {
