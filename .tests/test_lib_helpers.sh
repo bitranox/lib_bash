@@ -19,8 +19,9 @@ function test {
     # assert_equal "get_prepend_auto_configuration_message_to_line test" "auto configured by bitranox configmagick scripts at 2019-07-17 12:53:05\\ntest"
     assert_fail "is_script_sourced"
     assert_fail "is_hetzner_virtual_server"
-
-
+    assert_pass "../lib_helpers.sh is_package_installed apt"  # call verbatim
+    assert_fail "../lib_helpers.sh is_package_installed unknown-package-0815"  # call verbatim
+    assert_equal "echo \"printenv user: $(printenv USER)\"" "${USER}"
 
 
 }

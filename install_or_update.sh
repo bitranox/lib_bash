@@ -20,6 +20,25 @@ function include_dependencies {
 
 include_dependencies
 
+function get_octal_permission {
+    # $1: file or directory
+    # returns 755 or thatever code
+    local file="$1"
+    stat -c "%a" "$file"
+}
+
+function is_permission {
+    # $1: file or directory
+    # $2: permission with 3 digits
+    local file="$1"
+    local permission="$2"
+    if [[ "$(get_octal_permission "$file")" -eq "$permission" ]]; then
+        exit 0
+    else
+        exit 1
+    fi
+}
+
 
 function set_lib_bash_permissions {
     local user mydir

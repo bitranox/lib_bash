@@ -2,6 +2,8 @@
 
 source ../lib_helpers.sh
 
+export SUDO_ASKPASS="$(command -v ssh-askpass)"
+
 function test_loop {
     # local my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     local files_to_test=( )
