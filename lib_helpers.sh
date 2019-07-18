@@ -112,6 +112,26 @@ function assert_equal {
 }
 
 
+
+function assert_contains {
+	# $1 : test
+	# $2 : expected
+	local test="${1}"
+	local expected="${2}"
+
+	local script_name=""
+    local result=""
+
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    result=$(eval "${1}")
+
+	if [[ "${result}" != *"${expected}"* ]]; then
+	    assert_output_failed "${test}" "*${expected}*" "${result}"
+	    fi
+}
+
+
+
 function assert_return_code {
 	# $1 : test
 	# $2 : expected
