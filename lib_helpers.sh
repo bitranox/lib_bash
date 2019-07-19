@@ -179,11 +179,10 @@ function assert_fail {
 
 
 
-
-function get_sudo {
-    # on some platforms we dont have sudo
-    # returns the command for sudo or nothing
-    command -v sudo 2>/dev/null
+function cmd {
+    # returns the command if present
+    # $1 : the command
+    command -v "${1}" 2>/dev/null
 }
 
 
@@ -230,10 +229,10 @@ function get_group_from_fileobject {
 function add_user_as_sudoer {
     # $1 : username
     local username="${1}"
-    "$(get_sudo)" adduser "${username}"
-    "$(get_sudo)" usermod -aG sudo "${username}"
-    "$(get_sudo)" chown -R /home/"${username}"
-    "$(get_sudo)" chgrp -R /home/"${username}"
+    "$(cmd "sudo")" adduser "${username}"
+    "$(cmd "sudo")" usermod -aG sudo "${username}"
+    "$(cmd "sudo")" chown -R /home/"${username}"
+    "$(cmd "sudo")" chgrp -R /home/"${username}"
 }
 
 
@@ -244,8 +243,8 @@ function repair_user_permissions {
     for user_name in "${user_array[@]}"; do
         echo "${user_name}"
         if [[ -d /home/"${user_name}" ]]; then
-          "$(get_sudo)" chown -R "${user_name}" /home/"${user_name}"
-          "$(get_sudo)" chgrp -R "${user_name}" /home/"${user_name}"
+          "$(cmd "sudo")" chown -R "${user_name}" /home/"${user_name}"
+          "$(cmd "sudo")" chgrp -R "${user_name}" /home/"${user_name}"
         fi
     done
 }
@@ -343,11 +342,11 @@ function linux_update {
     # update / upgrade linux and clean / autoremove
     clr_bold clr_green " "
     clr_bold clr_green "Linux Update"
-    retry "$(get_sudo)" apt-get update
-    retry "$(get_sudo)" apt-get upgrade -y
-    retry "$(get_sudo)" apt-get dist-upgrade -y
-    retry "$(get_sudo)" apt-get autoclean -y
-    retry "$(get_sudo)" apt-get autoremove -y
+    retry "$(cmd "sudo")" apt-get update
+    retry "$(cmd "sudo")" apt-get upgrade -y
+    retry "$(cmd "sudo")" apt-get dist-upgrade -y
+    retry "$(cmd "sudo")" apt-get autoclean -y
+    retry "$(cmd "sudo")" apt-get autoremove -y
 }
 
 
@@ -374,7 +373,7 @@ function wait_for_enter_warning {
 function reboot {
     clr_bold clr_green " "
     clr_bold clr_green "Rebooting"
-    "$(get_sudo)" shutdown -r now
+    "$(cmd "sudo")" shutdown -r now
 }
 
 
@@ -402,14 +401,14 @@ function backup_file {
         user=$(get_user_from_fileobject "${path_file}")
         group=$(get_group_from_fileobject "${path_file}")
 
-        "$(get_sudo)" cp -f "${path_file}" "${path_file}.backup"
-        "$(get_sudo)" chown "${user}" "${path_file}.backup"
-        "$(get_sudo)" chgrp "${group}" "${path_file}.backup"
+        "$(cmd "sudo")" cp -f "${path_file}" "${path_file}.backup"
+        "$(cmd "sudo")" chown "${user}" "${path_file}.backup"
+        "$(cmd "sudo")" chgrp "${group}" "${path_file}.backup"
         # if <file>.original does NOT exist
         if [[ ! -f "${1}.original" ]]; then
-            "$(get_sudo)" cp -f "${path_file}" "${path_file}.original"
-            "$(get_sudo)" chown "${user}" "${path_file}.original"
-            "$(get_sudo)" chgrp "${group}" "${path_file}.original"
+            "$(cmd "sudo")" cp -f "${path_file}" "${path_file}.original"
+            "$(cmd "sudo")" chown "${user}" "${path_file}.original"
+            "$(cmd "sudo")" chgrp "${group}" "${path_file}.original"
         fi
     fi
 }
@@ -421,7 +420,7 @@ function remove_file {
 
     # if <file> exist
     if [[ -f "${1}" ]]; then
-        "$(get_sudo)" rm -f "${1}"
+        "$(cmd "sudo")" rm -f "${1}"
     fi
 }
 
@@ -460,13 +459,13 @@ function replace_or_add_lines_containing_string_in_file {
 
     if [[ $((number_of_lines_found)) -gt 0 ]]; then
         # replace lines if there
-        "$(get_sudo)" sed -i "/${search_string}/c\\${new_line}" "${path_file}"
+        "$(cmd "sudo")" sed -i "/${search_string}/c\\${new_line}" "${path_file}"
     else
         # add line if not there
-        "$(get_sudo)" sh -c "echo \"${new_line}\" >> ${path_file}"
+        "$(cmd "sudo")" sh -c "echo \"${new_line}\" >> ${path_file}"
     fi
-    "$(get_sudo)" chown "${user}" "${path_file}"
-    "$(get_sudo)" chgrp "${group}" "${path_file}"
+    "$(cmd "sudo")" chown "${user}" "${path_file}"
+    "$(cmd "sudo")" chgrp "${group}" "${path_file}"
 }
 
 

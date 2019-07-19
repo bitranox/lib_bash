@@ -14,7 +14,6 @@ function test {
 	assert_pass "is_str1_in_str2 \"a a\" \"aaa aaa\""
 	assert_fail "is_str1_in_str2 \"a b\" \"aaa aaa\""
 
-    assert_equal "get_sudo" "/usr/bin/sudo"
     assert_equal "get_linux_release_number" "19.04"
     assert_equal "get_linux_release_number_major" "19"
 	assert_pass "is_package_installed apt"
