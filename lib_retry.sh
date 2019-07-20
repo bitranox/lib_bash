@@ -37,8 +37,7 @@ function retry {
   delay=5
   while true; do
 	command_str="${*}"
-    # "${@}" && break || {
-    eval "${command_str}" || {
+    "$@" && break || {
       if [[ ${n} -lt ${max} ]]; then
         ((n++))
         clr_bold clr_red "Command \"${command_str}\" failed. Attempt ${n}/${max}:"
