@@ -91,12 +91,12 @@ function is_valid_command {
 
 function create_assert_failed_message {
 
-	# $1 : test
+	# $1 : test_command
 	# $2 : expected
 	# $3 : expected
-    local script_name result test expected result
+    local script_name result test_command expected result
 
-	test="${1}"
+	test_command="${1}"
 	expected="${2}"
 	result="${3}"
 
@@ -107,9 +107,9 @@ function create_assert_failed_message {
 	clr_reverse clr_cyan "\
 	File     : ${script_name}"
 	clr_cyan "\
-	Test     : ${test}${IFS}\
-	Result   : \"${result}\"${IFS}\
-	Expected : \"${expected}\""
+	Test     : ${test_command}${IFS}\
+	Result   : ${result}${IFS}\
+	Expected : ${expected}"
 	clr_red "\
 	**************************************************************************************************************"
 }
@@ -117,90 +117,90 @@ function create_assert_failed_message {
 
 
 function check_assert_command_defined {
-    local test expected result function_name
-  	# $1 : test
+    local test_command expected result function_name
+  	# $1 : test_command
 	# $2 : expected
-	test="${1}"
+	test_command="${1}"
 	expected="${2}"
-    function_name="$(echo "${test}" | cut -d " " -f 1)"
+    function_name="$(echo "${test_command}" | cut -d " " -f 1)"
 
     if ! is_valid_command "${function_name}"; then
         result="command \"${function_name}\" is not a declared function or a valid internal or external command "
-        create_assert_failed_message "${test}" "${expected}" "${result}"
+        create_assert_failed_message "${test_command}" "${expected}" "${result}"
         return 1
     fi
 }
 
 
 function assert_equal {
-	# $1 : test
+	# $1 : test_command
 	# $2 : expected
-	local test expected result
+	local test_command expected result
 
-	test="${1}"
+	test_command="${1}"
 	expected="${2}"
-    check_assert_command_defined "${test}" "${expected}" || return 0
+    check_assert_command_defined "${test_command}" "${expected}" || return 0
     result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then
-	    create_assert_failed_message "${test}" "${expected}" "${result}"
+	    create_assert_failed_message "${test_command}" "\"${expected}\"" "\"${result}\""
     fi
 }
 
 
 
 function assert_contains {
-	# $1 : test
+	# $1 : test_command
 	# $2 : expected
-	local test expected result
-	test="${1}"
+	local test_command expected result
+	test_command="${1}"
 	expected="${2}"
-    check_assert_command_defined "${test}" "*${expected}*" || return 0
+    check_assert_command_defined "${test_command}" "*${expected}*" || return 0
     result=$(eval "${1}")
 
 	if [[ "${result}" != *"${expected}"* ]]; then
-	    create_assert_failed_message "${test}" "*${expected}*" "${result}"
+	    create_assert_failed_message "${test_command}" "\"*${expected}*\"" "\"${result}\""
 	    fi
 }
 
 
 
 function assert_return_code {
-	# $1 : test
+	# $1 : test_command
 	# $2 : expected
-	local test expected result
-	test="${1}"
+	local test_command expected result
+	test_command="${1}"
 	expected="${2}"
-    check_assert_command_defined "${test}" "return code = ${expected}" || return 0
+    check_assert_command_defined "${test_command}" "return code = ${expected}" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -ne "${expected}" ]]; then
-	    create_assert_failed_message "${test}" "return code = ${expected}" "return code ${result}"
+	    create_assert_failed_message "${test_command}" "return code = ${expected}" "return code = ${result}"
     fi
 }
 
 
 function assert_pass {
-	# $1 : test
-	local test result
-	test="${1}"
-    check_assert_command_defined "${test}" "return code = 0" || return 0
+	# $1 : test_command
+	local test_command result
+	test_command="${1}"
+    check_assert_command_defined "${test_command}" "return code = 0" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -ne 0 ]]; then
-	    create_assert_failed_message "${test}" "return code = 0" "return code ${result}"
+	    create_assert_failed_message "${test_command}" "return code = 0" "return code = ${result}"
     fi
 }
 
 function assert_fail {
-	# $1 : test
-	local test result
-	test="${1}"
-    check_assert_command_defined "${test}" "return code > 0" || return 0
+	# $1 : test_command
+	local test_command result
+	test_command="${1}"
+    check_assert_command_defined "${test_command}" "return code > 0" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -eq 0 ]]; then
-	    create_assert_failed_message "${test}" "return code > 0" "return code ${result}"
+	    create_assert_failed_message "${test_command}" "return code > 0" "return code = ${result}"
     fi
 }
 
@@ -216,7 +216,7 @@ function cmd {
 function get_log_file_name {
     # $1: script_name "${0}"
     # $2: bash_source "${BASH_SOURCE}"
-    # usage : test=$(get_log_file_name "${0}" "${BASH_SOURCE}")
+    # usage : test_logfile=$(get_log_file_name "${0}" "${BASH_SOURCE}")
     # returns the name of the logfile : ${HOME}/log_usr_local_lib_<...>_001_000_<...>.log
     local script_name="${1}"
     local bash_source="${2}"
@@ -359,7 +359,7 @@ function banner_base {
 function banner {
     # $1: banner_text
     # usage :
-    # banner "this is a test wit '${IFS}'two lines !"
+    # banner "this is a test with '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_green" "${banner_text}"
@@ -369,7 +369,7 @@ function banner {
 function banner_warning {
     # $1: banner_text
     # usage :
-    # banner "this is a test wit '${IFS}'two lines !"
+    # banner "this is a test with '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_red" "${banner_text}"

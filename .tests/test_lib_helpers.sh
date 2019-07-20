@@ -3,7 +3,7 @@
 source ../lib_helpers.sh
 
 
-function test {
+function run_tests {
 	# dummy_test 2>/dev/null || clr_green "no tests in ${BASH_SOURCE[0]}"
     # banner_base clr_green "one line banner_base_test"
     # banner_base clr_green "two line ${IFS}banner_base_test"
@@ -27,4 +27,5 @@ function test {
     assert_equal "echo \"printenv USER: $(printenv USER)\" : $USER" "printenv USER: $USER : $USER"  # check if env user is the same as the Variable $USER
 
 }
-test
+
+run_tests
