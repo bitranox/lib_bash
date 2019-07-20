@@ -67,8 +67,16 @@ function debug {
 }
 
 
+function is_bash_function_declared {
+    # $1 : function name
+    local function_name="${1}"
+    declare -F "${function_name}" &>/dev/null && return 0 || return 1
+}
+
+
 
 function assert_output_failed {
+
 	# $1 : test
 	# $2 : expected
 	# $3 : expected
@@ -102,6 +110,9 @@ function assert_equal {
 
 	local script_name=""
     local result=""
+
+    is_bash_function_declared "$(echo "${test}" | cut -d " " -f 1)" || fail "function not declared"
+
 
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
     result=$(eval "${1}")
@@ -475,13 +486,6 @@ function is_hetzner_virtual_server {
     else
         return 1
     fi
-}
-
-
-function is_bash_function_declared {
-    # $1 : function name
-    local function_name="${1}"
-    declare -F "${function_name}" &>/dev/null && return 0 || return 1
 }
 
 
