@@ -75,16 +75,16 @@ function is_bash_function_declared {
 
 
 
-function _assert_message {
+function create_assert_failed_message {
 
 	# $1 : test
 	# $2 : expected
 	# $3 : expected
     local script_name result test expected result
 
-	local test="${1}"
-	local expected="${2}"
-	local result="${3}"
+	test="${1}"
+	expected="${2}"
+	result="${3}"
 
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
 
@@ -101,25 +101,33 @@ function _assert_message {
 }
 
 
+function check_assert_function_defined {
+    local test expected result function_name
+  	# $1 : test
+	# $2 : expected
+	test="${1}"
+	expected="${2}"
+    function_name="$(echo "${test}" | cut -d " " -f 1)"
+    if ! is_bash_function_declared "${function_name}"; then
+        result="function ${function_name} is not declared "
+        create_assert_failed_message "${test}" "${expected}" "${result}"
+    fi
+}
+
 
 function assert_equal {
 	# $1 : test
 	# $2 : expected
-	local test="${1}"
-	local expected="${2}"
+	local test expected result
 
-	local script_name=""
-    local result=""
-
-    is_bash_function_declared "$(echo "${test}" | cut -d " " -f 1)" || fail "function not declared"
-
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+	test="${1}"
+	expected="${2}"
+    check_assert_function_defined "${test}" "${expected}"
     result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then
-	    _assert_message "${test}" "${expected}" "${result}"
-	    fi
+	    create_assert_failed_message "${test}" "${expected}" "${result}"
+    fi
 }
 
 
@@ -127,17 +135,14 @@ function assert_equal {
 function assert_contains {
 	# $1 : test
 	# $2 : expected
-	local test="${1}"
-	local expected="${2}"
-
-	local script_name=""
-    local result=""
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+	local test expected result
+	test="${1}"
+	expected="${2}"
+    check_assert_function_defined "${test}" "*${expected}*"
     result=$(eval "${1}")
 
 	if [[ "${result}" != *"${expected}"* ]]; then
-	    _assert_message "${test}" "*${expected}*" "${result}"
+	    create_assert_failed_message "${test}" "*${expected}*" "${result}"
 	    fi
 }
 
@@ -146,46 +151,40 @@ function assert_contains {
 function assert_return_code {
 	# $1 : test
 	# $2 : expected
-	local test expected script_name result
+	local test expected result
 	test="${1}"
 	expected="${2}"
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    check_assert_function_defined "${test}" "return code = ${expected}"
     eval "${1}"
     result="${?}"
-
 	if [[ "${result}" -ne "${expected}" ]]; then
-	    _assert_message "${test}" "return code = ${expected}" "return code ${result}"
-	    fi
+	    create_assert_failed_message "${test}" "return code = ${expected}" "return code ${result}"
+    fi
 }
 
 
 function assert_pass {
 	# $1 : test
-	local test expected script_name result
+	local test result
 	test="${1}"
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    check_assert_function_defined "${test}" "return code = 0"
     eval "${1}"
     result="${?}"
-
 	if [[ "${result}" -ne 0 ]]; then
-	    _assert_message "${test}" "return code = 0" "return code ${result}"
-	    fi
+	    create_assert_failed_message "${test}" "return code = 0" "return code ${result}"
+    fi
 }
 
 function assert_fail {
 	# $1 : test
-	local test script_name result
+	local test result
 	test="${1}"
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+    check_assert_function_defined "${test}" "return code > 0"
     eval "${1}"
     result="${?}"
-
 	if [[ "${result}" -eq 0 ]]; then
-	    _assert_message "${test}" "return code > 0" "return code ${result}"
-	    fi
+	    create_assert_failed_message "${test}" "return code > 0" "return code ${result}"
+    fi
 }
 
 
