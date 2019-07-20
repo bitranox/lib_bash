@@ -39,7 +39,7 @@ function is_permission {
 
 
 function set_lib_bash_permissions {
-    local user mydir
+    local user
     user="$(printenv USER)"
     $(command -v sudo 2>/dev/null) chmod -R 0755 /usr/local/lib_bash
     $(command -v sudo 2>/dev/null) chmod -R +x /usr/local/lib_bash/*.sh
