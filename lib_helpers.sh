@@ -68,10 +68,24 @@ function debug {
 
 
 function is_bash_function_declared {
+    # checks if the function is declared
     # $1 : function name
     local function_name="${1}"
     declare -F "${function_name}" &>/dev/null && return 0 || return 1
 }
+
+function is_valid_command {
+    #
+    # $1 : any bash internal commad, external command or function name
+    local command
+    command="${1}"
+
+    if [[ "$(type -t "${command}")" == "builtin" ]]; then return 0; fi  # builtin command
+    if is_bash_function_declared "${command}"; then return 0; fi        # declared function
+    if [[ -n "$(type -p "${command}")" ]]; then return 0; fi            # external command
+    return 1
+}
+
 
 
 
@@ -101,15 +115,17 @@ function create_assert_failed_message {
 }
 
 
-function check_assert_function_defined {
+
+function check_assert_command_defined {
     local test expected result function_name
   	# $1 : test
 	# $2 : expected
 	test="${1}"
 	expected="${2}"
     function_name="$(echo "${test}" | cut -d " " -f 1)"
-    if ! is_bash_function_declared "${function_name}"; then
-        result="function ${function_name} is not declared "
+
+    if ! is_valid_command "${function_name}"; then
+        result="command \"${function_name}\" is not a declared function or a valid internal or external command "
         create_assert_failed_message "${test}" "${expected}" "${result}"
         return 1
     fi
@@ -123,7 +139,7 @@ function assert_equal {
 
 	test="${1}"
 	expected="${2}"
-    check_assert_function_defined "${test}" "${expected}" || return 0
+    check_assert_command_defined "${test}" "${expected}" || return 0
     result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then
@@ -139,7 +155,7 @@ function assert_contains {
 	local test expected result
 	test="${1}"
 	expected="${2}"
-    check_assert_function_defined "${test}" "*${expected}*" || return 0
+    check_assert_command_defined "${test}" "*${expected}*" || return 0
     result=$(eval "${1}")
 
 	if [[ "${result}" != *"${expected}"* ]]; then
@@ -155,7 +171,7 @@ function assert_return_code {
 	local test expected result
 	test="${1}"
 	expected="${2}"
-    check_assert_function_defined "${test}" "return code = ${expected}" || return 0
+    check_assert_command_defined "${test}" "return code = ${expected}" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -ne "${expected}" ]]; then
@@ -168,7 +184,7 @@ function assert_pass {
 	# $1 : test
 	local test result
 	test="${1}"
-    check_assert_function_defined "${test}" "return code = 0" || return 0
+    check_assert_command_defined "${test}" "return code = 0" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -ne 0 ]]; then
@@ -180,7 +196,7 @@ function assert_fail {
 	# $1 : test
 	local test result
 	test="${1}"
-    check_assert_function_defined "${test}" "return code > 0" || return 0
+    check_assert_command_defined "${test}" "return code > 0" || return 0
     eval "${1}"
     result="${?}"
 	if [[ "${result}" -eq 0 ]]; then
@@ -244,6 +260,7 @@ function get_home_directory_from_username {
     local username homedirectory
     username="${1}"
     homedirectory="$(eval echo "~${username}")"
+    echo "${homedirectory}"
 }
 
 
