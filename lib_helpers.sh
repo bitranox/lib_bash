@@ -237,6 +237,16 @@ function get_group_from_fileobject {
 }
 
 
+function get_home_directory_from_username {
+    # gets the home directory of a different user
+    # without impersonating that user
+    # $1: username
+    local username
+    username="${1}"
+    eval echo "~${username}"
+}
+
+
 function add_user_as_sudoer {
     # $1 : username
     local username="${1}"
