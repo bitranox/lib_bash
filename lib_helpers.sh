@@ -75,7 +75,7 @@ function is_bash_function_declared {
 
 
 
-function assert_output_failed {
+function _assert_message {
 
 	# $1 : test
 	# $2 : expected
@@ -118,7 +118,7 @@ function assert_equal {
     result=$(eval "${1}")
 
 	if [[ "${result}" != "${expected}" ]]; then
-	    assert_output_failed "${test}" "${expected}" "${result}"
+	    _assert_message "${test}" "${expected}" "${result}"
 	    fi
 }
 
@@ -137,7 +137,7 @@ function assert_contains {
     result=$(eval "${1}")
 
 	if [[ "${result}" != *"${expected}"* ]]; then
-	    assert_output_failed "${test}" "*${expected}*" "${result}"
+	    _assert_message "${test}" "*${expected}*" "${result}"
 	    fi
 }
 
@@ -155,7 +155,7 @@ function assert_return_code {
     result="${?}"
 
 	if [[ "${result}" -ne "${expected}" ]]; then
-	    assert_output_failed "${test}" "return code = ${expected}" "return code ${result}"
+	    _assert_message "${test}" "return code = ${expected}" "return code ${result}"
 	    fi
 }
 
@@ -170,7 +170,7 @@ function assert_pass {
     result="${?}"
 
 	if [[ "${result}" -ne 0 ]]; then
-	    assert_output_failed "${test}" "return code = 0" "return code ${result}"
+	    _assert_message "${test}" "return code = 0" "return code ${result}"
 	    fi
 }
 
@@ -184,7 +184,7 @@ function assert_fail {
     result="${?}"
 
 	if [[ "${result}" -eq 0 ]]; then
-	    assert_output_failed "${test}" "return code > 0" "return code ${result}"
+	    _assert_message "${test}" "return code > 0" "return code ${result}"
 	    fi
 }
 
