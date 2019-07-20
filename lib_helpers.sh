@@ -95,7 +95,7 @@ function create_assert_failed_message {
 	clr_cyan "\
 	Test     : ${test}${IFS}\
 	Result   : \"${result}\"${IFS}\
-	Expected : ${expected}"
+	Expected : \"${expected}\""
 	clr_red "\
 	**************************************************************************************************************"
 }
