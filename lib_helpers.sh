@@ -241,9 +241,9 @@ function get_home_directory_from_username {
     # gets the home directory of a different user
     # without impersonating that user
     # $1: username
-    local username
+    local username homedirectory
     username="${1}"
-    eval echo "~${username}"
+    homedirectory="$(eval echo "~${username}")"
 }
 
 
