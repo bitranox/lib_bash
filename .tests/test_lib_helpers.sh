@@ -1,5 +1,6 @@
 #!/bin/bash
 
+../install_or_update.sh
 source ../lib_helpers.sh
 
 
