@@ -15,10 +15,10 @@ function test_loop {
         files_to_test=($(ls ./test_*.sh))
         for actual_file_to_test in "${files_to_test[@]}"
         do
-            "$(cmd "sudo")" "${actual_file_to_test}"
+            "${actual_file_to_test}"
         done
         ./shellcheck.sh
-        clr_green "test ok in 1 $(get_own_script_name "${BASH_SOURCE[0]}")"
+        clr_green "test ok in $(get_own_script_name "${BASH_SOURCE[0]}")"
         sleep 1
     done
 }

@@ -86,7 +86,6 @@ function update_lib_bash {
         $(command -v sudo 2>/dev/null) git fetch --all  > /dev/null 2>&1
         $(command -v sudo 2>/dev/null) git reset --hard origin/master  > /dev/null 2>&1
         set_lib_bash_permissions
-        lib_bash_is_up_to_date_in_this_session="True"
     )
     debug "${debug_lib_bash}" "lib_bash update complete"
 }
