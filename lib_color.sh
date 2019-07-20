@@ -12,6 +12,11 @@ export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46
 export bitranox_debug_global="${bitranox_debug_global}"  # set to True for global Debug
 export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug in lib_bash
 
+# call the update script if nout sourced and not already done in that session
+if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
+    "${BASH_SOURCE%/*}"/install_or_update.sh || "${PWD}"/install_or_update.sh
+    lib_bash_is_up_to_date_in_this_session="True"
+fi
 
 
 CLR_ESC="\\033["
