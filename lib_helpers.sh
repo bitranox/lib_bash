@@ -88,7 +88,7 @@ function create_assert_failed_message {
 
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
 
-	clr_blue "\
+	clr_red "\
     ** ASSERT ****************************************************************************************************"
 	clr_reverse clr_cyan "\
 	File     : ${script_name}"
