@@ -10,8 +10,7 @@ function test {
 	assert_pass "../lib_helpers.sh is_package_installed apt"  # call verbatim -  we also get updates here
 	assert_fail "../lib_helpers.sh is_package_installed unknown-package-0815"  # call verbatim
 
-	assert_pass "is_str1_in_str2 \"a\
-	" \"aaa\""
+	assert_pass "is_str1_in_str2 \"a\" \"aaa\""
 	assert_pass "is_str1_in_str2 \"a a\" \"aaa aaa\""
 	assert_fail "is_str1_in_str2 \"a b\" \"aaa aaa\""
 
