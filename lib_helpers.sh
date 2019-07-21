@@ -4,10 +4,6 @@ sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
 
-export bitranox_debug_global="${bitranox_debug_global}"  # set to True for global Debug
-export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug in lib_bash
-
-
 # call the update script if nout sourced and not already done in that session
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
     "${BASH_SOURCE%/*}"/install_or_update.sh || "${PWD}"/install_or_update.sh
@@ -50,19 +46,14 @@ function is_script_sourced {
 function debug {
     # $1: should_debug: True/False
     # $2: debug_message
-    local should_debug="${1}"
-    local debug_message="${2}"
-
-    local script_name=""
+    local should_debug debug_message script_name
+    should_debug="${1}"
+    debug_message="${2}"
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
-
-    if [[ "${bitranox_debug_global}" == "True" ]]; then
-        should_debug="True"
-    fi
 
     if [[ "${should_debug}" == "True" ]]; then clr_blue "\
     ** DEBUG *****************************************************************************************************${IFS}\
-    File          : ${script_name}{IFS}\
+    File          : ${script_name}${IFS}\
     Function      : ${FUNCNAME[ 1 ]}${IFS}\
     Caller        : ${FUNCNAME[ 2 ]}${IFS}\
     Debug Message : ${debug_message}${IFS}\
