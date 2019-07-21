@@ -7,19 +7,17 @@ function shell_check {
     # exclude Codes :
     # SC1091 not following external sources
 
-    # shellcheck the tests
+    # check the tests
     shellcheck --shell=bash --color=always \
         --exclude=SC1091 \
         --exclude=SC1090 \
          ./*.sh
 
-    # shellcheck the thing
+    # check the thing
     shellcheck --shell=bash --color=always \
         --exclude=SC1091 \
         --exclude=SC1090 \
          ../*.sh
-
-
 }
 
 shell_check

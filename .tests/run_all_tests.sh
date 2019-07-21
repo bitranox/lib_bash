@@ -21,6 +21,6 @@ function run_all_tests {
     sleep 1
 }
 
-if [[ "${0}" == "${BASH_SOURCE}" ]]; then    # if the script is not sourced
+if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
     run_all_tests
 fi
