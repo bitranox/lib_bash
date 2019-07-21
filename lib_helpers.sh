@@ -51,13 +51,15 @@ function debug {
     debug_message="${2}"
     script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
 
-    if [[ "${should_debug}" == "True" ]]; then clr_blue "\
-    ** DEBUG *****************************************************************************************************${IFS}\
-    File          : ${script_name}${IFS}\
-    Function      : ${FUNCNAME[ 1 ]}${IFS}\
-    Caller        : ${FUNCNAME[ 2 ]}${IFS}\
-    Debug Message : ${debug_message}${IFS}\
-    **************************************************************************************************************"; fi
+    if [[ "${should_debug}" == "True" ]]; then
+        clr_blue "\
+        ** DEBUG *****************************************************************************************************${IFS}\
+        File          : ${script_name}${IFS}\
+        Function      : ${FUNCNAME[ 1 ]}${IFS}\
+        Caller        : ${FUNCNAME[ 2 ]}${IFS}\
+        Debug Message : ${debug_message}${IFS}\
+        **************************************************************************************************************"
+    fi
 }
 
 
