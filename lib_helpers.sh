@@ -63,6 +63,19 @@ function debug {
 }
 
 
+function wait_for_file_to_be_created {
+    # $1: file_name
+    local file_name
+    file_name="${1}"
+    while [[ ! -f "${file_name}" ]]; do
+        clr_blue "wait for ${file_name} to be created"
+        sleep 1
+    done
+    sleep 1
+}
+
+
+
 function is_bash_function_declared {
     # checks if the function is declared
     # $1 : function name
