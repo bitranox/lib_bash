@@ -74,8 +74,9 @@ function install_lib_bash {
 
 
 function update_lib_bash {
-    clr_green "updating lib_bash"
+
     (
+        clr_green "updating lib_bash"
         # create a subshell to preserve current directory
         cd /usr/local/lib_bash || fail "error in update_lib_bash"
         $(command -v sudo 2>/dev/null) git fetch --all  > /dev/null 2>&1
