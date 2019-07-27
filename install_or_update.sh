@@ -4,11 +4,6 @@ sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
 
-export bitranox_debug_global="${bitranox_debug_global}"  # set to True for global Debug
-export debug_lib_bash="${debug_lib_bash}"                # set to True for Debug in lib_bash
-
-
-
 function include_dependencies {
     local my_dir
     # shellcheck disable=SC2164
@@ -87,21 +82,17 @@ function update_lib_bash {
         $(command -v sudo 2>/dev/null) git reset --hard origin/master  > /dev/null 2>&1
         set_lib_bash_permissions
     )
-    debug "${debug_lib_bash}" "lib_bash update complete"
 }
 
 
 
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
 
-    if ! is_lib_bash_installed; then install_lib_bash ; fi
+    if ! is_lib_bash_installed; then install_lib_bash ; fi  # if it is just downloaded and not installed at the right place
 
     if ! is_lib_bash_up_to_date; then
-        debug "${debug_lib_bash}" "lib_bash is not up to date"
         update_lib_bash
         source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
         exit 0                                           # exit the old instance
-    else
-        debug "${debug_lib_bash}" "lib_bash is up to date"
     fi
 fi
