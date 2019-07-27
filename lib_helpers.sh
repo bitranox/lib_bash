@@ -435,6 +435,45 @@ function is_package_installed {
 }
 
 
+function install_package_if_not_present {
+    #$1: package
+    #$2: silent  # will install silenty when "True"
+    local package silent
+    package="${1}"
+    silent="${2}"
+    if ! is_package_installed "${package}"; then
+        if [[ "${silent}" == "True" ]]; then
+            retry_nofail "$(cmd "sudo")" apt-get install ${package} -y  > /dev/null 2>&1
+            if ! is_package_installed "${package}"; then
+               fail "Installing ${package} failed"
+            fi
+        else
+            retry "$(cmd "sudo")" apt-get install ${package} -y
+        fi
+    fi
+}
+
+
+function uninstall_package_if_present {
+    #$1: package
+    #$2: silent  # will install silenty when "True"
+    local package silent
+    package="${1}"
+    silent="${2}"
+
+    if is_package_installed ${package}; then
+        if [[ "${silent}" == "True" ]]; then
+            retry_nofail "$(cmd "sudo")" apt-get purge ${package} -y > /dev/null 2>&1
+            if is_package_installed "${package}"; then
+               fail "Uninstalling ${package} failed"
+            fi
+        else
+            retry "$(cmd "sudo")" apt-get purge ${package} -y
+        fi
+    fi
+}
+
+
 function backup_file {
     # $1 : <file>
     # copies <file> to <file>.backup
