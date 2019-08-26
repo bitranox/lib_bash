@@ -16,7 +16,7 @@ function run_all_tests {
     do
         "${actual_file_to_test}"
     done
-    shellcheck.sh
+    ./shellcheck.sh
     clr_green "test ok in $(get_own_script_name "${BASH_SOURCE[0]}")"
     sleep 1
 }
