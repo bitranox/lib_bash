@@ -350,7 +350,12 @@ function banner_base {
     local color="${1}"
     local banner_text="${2}"
     local msg_array=( )
-    mapfile -t msg_array <<< "${2}"  # if it's multiple lines, each of which should be an element
+    # mapfile is not supported on OSX !
+    # mapfile -t msg_array <<< "${2}"  # if it's multiple lines, each of which should be an element
+    while IFS= read -r line; do
+        msg_array+=("$line")
+    done < <("${2}")
+
     ${color} " "
     ${color} " "
     local sep="********************************************************************************"
