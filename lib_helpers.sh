@@ -354,7 +354,7 @@ function banner_base {
     # mapfile -t msg_array <<< "${2}"  # if it's multiple lines, each of which should be an element
     while IFS= read -r line; do
         msg_array+=("$line")
-    done < <("${2}")
+    done <<< "${2}"
 
     ${color} " "
     ${color} " "
