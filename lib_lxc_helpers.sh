@@ -91,7 +91,7 @@ function lxc_wait_until_internet_connected {
 function lxc_startup {
     # parameter: $1 = container_name
     local container_name=$1
-    banner_level "Container ${container_name}: Startup"
+    banner "Container ${container_name}: Startup"
     lxc start "${container_name}"
     lxc_wait_until_machine_running "${container_name}"
 }
@@ -100,7 +100,7 @@ function lxc_startup {
 function lxc_shutdown {
     # parameter: $1 = container_name
     local container_name=$1
-    banner_level "Container ${container_name}: Shutdown"
+    banner "Container ${container_name}: Shutdown"
     lxc_exec "${container_name}" "sudo shutdown now"
     lxc_wait_until_machine_stopped "${container_name}"
 }
@@ -109,7 +109,7 @@ function lxc_shutdown {
 function lxc_reboot {
     # parameter: $1 = container_name
     local container_name=$1
-    banner_level "Container ${container_name}: Rebooting"
+    banner "Container ${container_name}: Rebooting"
     lxc_shutdown "${container_name}"
     sleep 1
     lxc_startup "${container_name}"
