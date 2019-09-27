@@ -370,10 +370,10 @@ function banner_base {
 }
 
 
-function banner {
+function banner_level {
     # $1: banner_text
     # usage :
-    # banner "this is a test with '${IFS}'two lines !"
+    # banner_level "this is a test with '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_green" "${banner_text}"
@@ -383,7 +383,7 @@ function banner {
 function banner_warning {
     # $1: banner_text
     # usage :
-    # banner "this is a test with '${IFS}'two lines !"
+    # banner_level "this is a test with '${IFS}'two lines !"
 
     local banner_text=$1
     banner_base "clr_bold clr_red" "${banner_text}"
@@ -403,17 +403,17 @@ function linux_update {
 
 
 function wait_for_enter {
-    # wait for enter - first parameter will be showed in a banner if present
+    # wait for enter - first parameter will be showed in a banner_level if present
     if [[ ! -z "$1" ]] ;
         then
-            banner "${1}"
+            banner_level "${1}"
         fi
     read -r -p "Enter to continue, Cntrl-C to exit: "
 }
 
 
 function wait_for_enter_warning {
-    # wait for enter - first parameter will be showed in a red banner if present
+    # wait for enter - first parameter will be showed in a red banner_level if present
     if [[ ! -z "$1" ]] ;
         then
             banner_warning "${1}"
