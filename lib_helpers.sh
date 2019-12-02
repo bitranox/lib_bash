@@ -85,7 +85,7 @@ function is_bash_function_declared {
 
 function is_valid_command {
     #
-    # $1 : any bash internal commad, external command or function name
+    # $1 : any bash internal command, external command or function name
     local command
     command="${1}"
 
