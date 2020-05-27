@@ -8,6 +8,7 @@ function include_dependencies {
     local my_dir
     # shellcheck disable=SC2164
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+    # shellcheck disable=SC1090
     source "${my_dir}/lib_helpers.sh"
 }
 
