@@ -442,7 +442,7 @@ function is_package_installed {
 
 function install_package_if_not_present {
     #$1: package
-    #$2: silent  # will install silenty when "True"
+    #$2: silent  # will install silently when "True"
     local package silent
     package="${1}"
     silent="${2}"
