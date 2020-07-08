@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Resources : https://devhints.io/bash
+#
+
 sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
@@ -20,6 +23,13 @@ function include_dependencies {
 }
 
 include_dependencies
+
+
+function is_ok() {
+    # for easy use : if is_ok; then ...
+    # also preserves the returncode
+    return $?
+}
 
 
 function get_own_script_name {
@@ -201,6 +211,7 @@ function assert_pass {
     fi
 }
 
+
 function assert_fail {
 	# $1 : test_command
 	local test_command result
@@ -212,7 +223,6 @@ function assert_fail {
 	    create_assert_failed_message "${test_command}" "return code > 0" "return code = ${result}"
     fi
 }
-
 
 
 function cmd {
