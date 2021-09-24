@@ -4,7 +4,7 @@ sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of (ssh-askpass:25930): dbind-WARNING **: 18:46:12.019: Couldn't register with accessibility bus: Did not receive a reply.
 
-# call the update script if nout sourced and not already done in that session
+# call the update script if not sourced and not already done in that session
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
     "${BASH_SOURCE%/*}"/install_or_update.sh || "${PWD}"/install_or_update.sh
     lib_bash_is_up_to_date_in_this_session="True"
