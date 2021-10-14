@@ -16,7 +16,7 @@ function include_dependencies {
 }
 include_dependencies
 
-echo "Hello World"
+clr_blue "Hello World"
 
 read -rp "Finished, press any key to continue... " -n1 -s
 
