@@ -76,15 +76,21 @@ function install_lib_bash {
 
 
 function update_lib_bash {
-
-    (
         clr_green "updating lib_bash"
         # create a subshell to preserve current directory
         cd /usr/local/lib_bash || fail "error in update_lib_bash"
         $(command -v sudo 2>/dev/null) git fetch --all  > /dev/null 2>&1
         $(command -v sudo 2>/dev/null) git reset --hard origin/master  > /dev/null 2>&1
         set_lib_bash_permissions
-    )
+}
+
+
+function update_lib_bash_if_needed {
+        if ! is_lib_bash_up_to_date; then
+          update_lib_bash
+          source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
+          exit 0                                           # exit the old instance
+        fi
 }
 
 
@@ -92,10 +98,5 @@ function update_lib_bash {
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]]; then    # if the script is not sourced
 
     if ! is_lib_bash_installed; then install_lib_bash ; fi  # if it is just downloaded and not installed at the right place
-
-    if ! is_lib_bash_up_to_date; then
-        update_lib_bash
-        source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
-        exit 0                                           # exit the old instance
-    fi
+    update_lib_bash_if_needed
 fi
