@@ -14,14 +14,14 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_retry.sh
     source /usr/local/lib_bash/lib_helpers.sh
     source /usr/local/lib_bash/install_or_update.sh
+    if ! is_lib_bash_up_to_date; then
+      update_lib_bash
+      source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
+      exit 0                                           # exit the old instance
+    fi
 }
 include_dependencies
 
-if ! is_lib_bash_up_to_date; then
-  update_lib_bash
-  source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
-  exit 0                                           # exit the old instance
-fi
 
 clr_green "Hello World"
 clr_red   "Hello World"
