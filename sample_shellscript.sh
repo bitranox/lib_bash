@@ -16,9 +16,9 @@ function include_dependencies {
 }
 include_dependencies
 
-clr_blue "Hello World"
+clr_green "Hello World"
 
 read -rp "Finished, press any key to continue... " -n1 -s
-
+echo ""
 cd "${MY_PATH}" || exit 1
 exit 0
