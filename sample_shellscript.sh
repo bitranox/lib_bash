@@ -13,6 +13,7 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_color.sh
     source /usr/local/lib_bash/lib_retry.sh
     source /usr/local/lib_bash/lib_helpers.sh
+    update_lib_bash
 }
 include_dependencies
 
