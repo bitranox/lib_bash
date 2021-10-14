@@ -16,7 +16,7 @@ include_dependencies
 
 function get_octal_permission {
     # $1: file or directory
-    # returns 755 or thatever code
+    # returns 755 or whatever code
     local file="$1"
     stat -c "%a" "$file"
 }
@@ -54,7 +54,7 @@ function is_lib_bash_installed {
 }
 
 
-# this checks the install directory version - but it might be installed for testing somewere else - that will not be updated.
+# this checks the install directory version - but it might be installed for testing somewhere else - that will not be updated.
 function is_lib_bash_up_to_date {
     local git_remote_hash git_local_hash
     git_remote_hash=$(git --no-pager ls-remote --quiet https://github.com/bitranox/lib_bash.git | grep HEAD | awk '{print $1;}' )
@@ -66,13 +66,13 @@ function is_lib_bash_up_to_date {
     fi
 }
 
+
 function install_lib_bash {
     echo "installing lib_bash"
     $(command -v sudo 2>/dev/null) rm -fR /usr/local/lib_bash
     $(command -v sudo 2>/dev/null) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
     set_lib_bash_permissions
 }
-
 
 
 function update_lib_bash {
