@@ -16,7 +16,12 @@ function include_dependencies {
     source /usr/local/lib_bash/install_or_update.sh
 }
 include_dependencies
-update_lib_bash_if_needed
+
+if ! is_lib_bash_up_to_date; then
+  update_lib_bash
+  source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
+  exit 0                                           # exit the old instance
+fi
 
 clr_green "Hello World"
 clr_red   "Hello World"
