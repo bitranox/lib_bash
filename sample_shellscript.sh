@@ -26,6 +26,7 @@ include_dependencies
 clr_green "Hello World"
 clr_red   "Hello World"
 clr_blue   "Hello World"
+clr_yellow "Hello World"
 
 read -rp "Finished, press any key to continue... " -n1 -s
 echo ""
