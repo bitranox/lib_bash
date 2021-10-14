@@ -14,9 +14,9 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_retry.sh
     source /usr/local/lib_bash/lib_helpers.sh
     source /usr/local/lib_bash/install_or_update.sh
-    update_lib_bash_if_needed
 }
 include_dependencies
+update_lib_bash_if_needed
 
 clr_green "Hello World"
 clr_red   "Hello World"
