@@ -14,12 +14,19 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_retry.sh
     source /usr/local/lib_bash/lib_helpers.sh
     source /usr/local/lib_bash/install_or_update.sh
-    if ! is_lib_bash_up_to_date; then
-      update_lib_bash
-      # shellcheck disable=SC1090
-      source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
-      exit 0                                           # exit the old instance
+
+    # call the update script if not sourced and not already done in that session
+    if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
+        "${BASH_SOURCE%/*}"/install_or_update.sh || "${PWD}"/install_or_update.sh
+        lib_bash_is_up_to_date_in_this_session="True"
     fi
+
+    # if ! is_lib_bash_up_to_date; then
+    #   update_lib_bash
+    ## shellcheck disable=SC1090
+    #   source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
+    #   exit 0                                           # exit the old instance
+    # fi
 }
 include_dependencies
 
