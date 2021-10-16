@@ -14,7 +14,7 @@ default_actions
 
 # call the update script if not sourced and not already done in that session
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
-    "${BASH_SOURCE%/*}"/install_or_update.sh || "${PWD}"/install_or_update.sh
+    /usr/local/lib_bash/install_or_update.sh
     lib_bash_is_up_to_date_in_this_session="True"
 fi
 

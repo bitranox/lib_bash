@@ -19,14 +19,6 @@ function include_dependencies {
         /usr/local/lib_bash/install_or_update.sh
         lib_bash_is_up_to_date_in_this_session="True"
     fi
-
-
-    # if ! is_lib_bash_up_to_date; then
-    #   update_lib_bash
-    ## shellcheck disable=SC1090
-    #   source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
-    #   exit 0                                           # exit the old instance
-    # fi
 }
 include_dependencies
 
