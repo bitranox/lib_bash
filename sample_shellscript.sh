@@ -14,7 +14,6 @@ function include_dependencies {
     source /usr/local/lib_bash/lib_retry.sh
     source /usr/local/lib_bash/lib_helpers.sh
     source /usr/local/lib_bash/install_or_update.sh
-
     # call the update script if not sourced and not already done in that session
     if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
         /usr/local/lib_bash/install_or_update.sh
