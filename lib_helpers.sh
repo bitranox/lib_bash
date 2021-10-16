@@ -24,7 +24,6 @@ function include_dependencies {
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
 }
-
 include_dependencies
 
 
