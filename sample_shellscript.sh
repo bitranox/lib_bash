@@ -21,19 +21,13 @@ function include_dependencies {
       source "$(readlink -f "${BASH_SOURCE[0]}")"      # source ourself
       exit 0                                           # exit the old instance
     fi
-
-    # if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
-    #     /usr/local/lib_bash/install_or_update.sh
-    #     lib_bash_is_up_to_date_in_this_session="True"
-    # fi
 }
 include_dependencies
-
 
 clr_green "Hello World"
 clr_red   "Hello World"
 clr_blue  "Hello World"
-# clr_cyan  "Hello World"
+clr_cyan  "Hello World"
 
 read -rp "Finished, press any key to continue... " -n1 -s
 echo ""
