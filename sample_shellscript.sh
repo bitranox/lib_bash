@@ -21,6 +21,7 @@ function include_dependencies {
         lib_bash_is_up_to_date_in_this_session="True"
     fi
 
+
     # if ! is_lib_bash_up_to_date; then
     #   update_lib_bash
     ## shellcheck disable=SC1090
