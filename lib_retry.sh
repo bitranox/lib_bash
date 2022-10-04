@@ -7,7 +7,7 @@ export NO_AT_BRIDGE=1  # get rid of ssh-askpass:25930 dbind-WARNING
 }
 default_actions
 
-# call the update script if nout sourced and not already done in that session
+# call the update script if not sourced and not already done in that session
 if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
     /usr/local/lib_bash/install_or_update.sh
     lib_bash_is_up_to_date_in_this_session="True"
