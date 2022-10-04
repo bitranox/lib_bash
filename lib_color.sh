@@ -222,7 +222,7 @@ function call_function_from_commandline {
     local function_name="${2}"
     local call_args_array=("$@")
 
-    if [[ ! -z ${function_name} ]]; then
+    if [[ -n ${function_name} ]]; then
         if is_bash_function_declared "${function_name}" ; then
             "${call_args_array[@]:1}"
         else

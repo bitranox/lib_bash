@@ -421,7 +421,7 @@ function linux_update {
 
 function wait_for_enter {
     # wait for enter - first parameter will be showed in a banner if present
-    if [[ ! -z "$1" ]] ;
+    if [[ -n "$1" ]] ;
         then
             banner "${1}"
         fi
@@ -431,7 +431,7 @@ function wait_for_enter {
 
 function wait_for_enter_warning {
     # wait for enter - first parameter will be showed in a red banner if present
-    if [[ ! -z "$1" ]] ;
+    if [[ -n "$1" ]] ;
         then
             banner_warning "${1}"
         fi
@@ -594,7 +594,7 @@ function call_function_from_commandline {
     local function_name="${2}"
     local call_args_array=("${@}")
 
-    if [[ ! -z ${function_name} ]]; then
+    if [[ -n ${function_name} ]]; then
         if is_bash_function_declared "${function_name}"; then
             "${call_args_array[@]:1}"
         else
