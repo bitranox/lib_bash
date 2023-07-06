@@ -658,5 +658,6 @@ function lib_bash_get_hostname_short {
     echo "${hostname_short}"
 }
 
+
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
