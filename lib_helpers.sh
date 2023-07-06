@@ -425,7 +425,7 @@ function wait_for_enter {
         then
             banner "${1}"
         fi
-    read -r -p "Enter to continue, Cntrl-C to exit: "
+    read -rp "Enter to continue, Cntrl-C to exit: "
 }
 
 
@@ -435,7 +435,7 @@ function wait_for_enter_warning {
         then
             banner_warning "${1}"
         fi
-    read -r -p "Enter to continue, Cntrl-C to exit: "
+    read -rp "Enter to continue, Cntrl-C to exit: "
 }
 
 
