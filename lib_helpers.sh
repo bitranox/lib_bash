@@ -457,6 +457,19 @@ function is_package_installed {
 }
 
 
+function  is_program_available {
+    # checkt ob ein programm verfügbar ist.
+    # nicht für interne bash commands wie "ls"
+    # $1: the program name to check
+    local program_to_check="${1}"
+    if [[ $(which "${program_to_check}") == "" ]]; then
+      return 1
+    else
+      return 0
+    fi
+}
+
+
 function install_package_if_not_present {
     #$1: package
     #$2: silent  # will install silently when "True"
@@ -612,11 +625,16 @@ function beep {
 function  lib_bash_split {
     # $1 input
     # $2 separator ; the separator must not be <">
-    # $3 index
-    local str_input="${1}"
-    local str_separator="${2}"
-    local num_index="${3}"
-    echo "${str_input}" | python3 -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[${num_index}])"
+    # $3 index; - can be also -1 like in python
+    if is_program_available python3; then
+        local str_input="${1}"
+        local str_separator="${2}"
+        local num_index="${3}"
+        echo "${str_input}" | python3 -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[${num_index}])"
+    else
+        fail "python3 needs to be installed in order to use the function lib_bash_split"
+        exit 1
+    fi
 }
 
 

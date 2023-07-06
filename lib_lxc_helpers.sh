@@ -143,3 +143,4 @@ function lxc_replace_or_add_lines_containing_string_in_file {
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
+
