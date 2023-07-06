@@ -616,7 +616,7 @@ function  lib_bash_split {
     local str_input="${1}"
     local str_separator="${2}"
     local num_index="${3}"
-    echo "${str_input}" | python -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[\"${num_index}\"])"
+    echo "${str_input}" | python -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[${num_index}])"
 }
 
 
