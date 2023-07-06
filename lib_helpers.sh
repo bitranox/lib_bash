@@ -609,6 +609,17 @@ function beep {
 }
 
 
+function  lib_bash_split {
+    # $1 input
+    # $2 separator ; the separator must not be <">
+    # $3 index
+    local str_input="${1}"
+    local str_separator="${2}"
+    local num_index="${3}"
+    echo "${str_input}" | python -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[\"${num_index}\"])"
+}
+
+
 function  lib_bash_lsplit {
     # $1 input
     # $2 separator
@@ -631,11 +642,13 @@ function  lib_bash_lower {
 
 function lib_bash_get_hostname_short {
     local hostname_short
-    # hostname_short=$(cut -d. -f1 <<< "${HOSTNAME}")
-    hostname_short=$(lib_bash_lsplit "${HOSTNAME}" ".")
+    # hostname_short=$(lib_bash_lsplit "${HOSTNAME}" ".")
+    hostname_short=$(lib_bash_split "${HOSTNAME}" "." "0")
     echo "${hostname_short}"
 }
 
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
+
+}
