@@ -609,5 +609,18 @@ function beep {
 }
 
 
+function  lib_bash_upper {
+    # $1 input
+    local str_input="${1}"
+    echo "${str_input^^}"
+}
+
+function  lib_bash_lower {
+    # $1 input
+    local str_input="${1}"
+    echo "${str_input,,}"
+}
+
+
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
