@@ -620,19 +620,12 @@ function  lib_bash_split {
 }
 
 
-function  lib_bash_lsplit {
-    # $1 input
-    # $2 separator
-    local str_input="${1}"
-    local str_separator="${2}"
-    cut -d"${str_separator}" -f1 <<< "${str_input}"
-}
-
 function  lib_bash_upper {
     # $1 input
     local str_input="${1}"
     echo "${str_input^^}"
 }
+
 
 function  lib_bash_lower {
     # $1 input
@@ -640,9 +633,9 @@ function  lib_bash_lower {
     echo "${str_input,,}"
 }
 
+
 function lib_bash_get_hostname_short {
     local hostname_short
-    # hostname_short=$(lib_bash_lsplit "${HOSTNAME}" ".")
     hostname_short=$(lib_bash_split "${HOSTNAME}" "." "0")
     echo "${hostname_short}"
 }
