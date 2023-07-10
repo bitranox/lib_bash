@@ -140,6 +140,17 @@ function lxc_replace_or_add_lines_containing_string_in_file {
     fi
 }
 
+function  lxc_file_exist {
+    # $1 = container_name
+    # $2 = File
+    local container_name="${1}"
+    local path_file="${2}"
+    if lxc_exec "${container_name}" "ls ${2}"; then
+      return 0
+    else
+      return 1
+    fi
+}
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
