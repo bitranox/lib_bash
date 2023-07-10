@@ -145,7 +145,7 @@ function  lxc_file_exist {
     # $2 = File
     local container_name="${1}"
     local path_file="${2}"
-    if lxc_exec "${container_name}" "ls ${2}"; then
+    if lxc_exec "${container_name}" "ls ${2}" 2>/dev/null; then
       return 0
     else
       return 1
