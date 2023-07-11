@@ -409,11 +409,23 @@ function banner_warning {
 
 function linux_update {
     # update / upgrade linux and clean / autoremove
-    clr_bold clr_green " "
-    clr_bold clr_green "Linux Update"
+    # clr_bold clr_green " "
+    # clr_bold clr_green "Linux Update"
+    # retry "$(cmd "sudo")" apt-get update
+    # retry "$(cmd "sudo")" apt-get upgrade -y
+    # retry "$(cmd "sudo")" apt-get dist-upgrade -y
+    # retry "$(cmd "sudo")" apt-get autoclean -y
+    # retry "$(cmd "sudo")" apt-get autoremove -y
+
     retry "$(cmd "sudo")" apt-get update
+    retry "$(cmd "sudo")" dpkg --configure -a
+    retry "$(cmd "sudo")" apt-get --fix-broken install -y
     retry "$(cmd "sudo")" apt-get upgrade -y
     retry "$(cmd "sudo")" apt-get dist-upgrade -y
+    retry "$(cmd "sudo")" apt-get autoclean -y
+    retry "$(cmd "sudo")" apt-get autoremove -y
+    # installiere zurückgehaltene Pakete
+    retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get install -y
     retry "$(cmd "sudo")" apt-get autoclean -y
     retry "$(cmd "sudo")" apt-get autoremove -y
 }
