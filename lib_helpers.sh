@@ -663,7 +663,7 @@ function  lib_bash_file_exist {
     # $1 = Path to File or Directory
     local path_file="${1}"
     # shellcheck disable=SC2086
-    if "test -f \"${path_file}\""; then
+    if [[ -f "${path_file}" ]]; then
       return 0
     else
       return 1
