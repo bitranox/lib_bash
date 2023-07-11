@@ -146,9 +146,8 @@ function  lxc_file_exist {
     # $2 = Path to File or Directory
     local container_name="${1}"
     local path_file="${2}"
-    # if lxc_exec "${container_name}" "ls ${2} &>/dev/null"; then
     # shellcheck disable=SC2086
-    if lxc_exec "${container_name}" "test -f \\"${2}\\""; then
+    if lxc_exec "${container_name}" "test -f \\"${path_file}\\""; then
       return 0
     else
       return 1

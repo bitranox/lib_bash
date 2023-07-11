@@ -659,5 +659,17 @@ function lib_bash_get_hostname_short {
 }
 
 
+function  lib_bash_file_exist {
+    # $1 = Path to File or Directory
+    local path_file="${1}"
+    # shellcheck disable=SC2086
+    if "test -f \\"${path_file}\\""; then
+      return 0
+    else
+      return 1
+    fi
+}
+
+
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
