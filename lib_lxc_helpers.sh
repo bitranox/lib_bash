@@ -136,16 +136,17 @@ function lxc_replace_or_add_lines_containing_string_in_file {
         lxc exec "${container_name}" -- sh -c "sudo sed -i \"/${search_string}/c\\\\${new_line}\" ${path_file}"
     else
         # add line if not there
+        # shellcheck disable=SC2086
         lxc exec "${container_name}" -- sh -c "sudo sh -c \"echo \\"${new_line}\\" >> ${path_file}\""
     fi
 }
 
 function  lxc_file_exist {
     # $1 = container_name
-    # $2 = File
+    # $2 = Path to File or Directory
     local container_name="${1}"
     local path_file="${2}"
-    if lxc_exec "${container_name}" "ls ${2} 2>/dev/null"; then
+    if lxc_exec "${container_name}" "ls ${2} &>/dev/null"; then
       return 0
     else
       return 1
