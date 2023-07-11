@@ -141,13 +141,13 @@ function lxc_replace_or_add_lines_containing_string_in_file {
     fi
 }
 
-function  lxc_file_exist {
+function  lxc_path_exist {
     # $1 = container_name
     # $2 = Path to File or Directory
     local container_name="${1}"
     local path_file="${2}"
     # shellcheck disable=SC2086
-    if lxc_exec "${container_name}" "test -f \\"${path_file}\\""; then
+    if lxc_exec "${container_name}" "test -e \\"${path_file}\\""; then
       return 0
     else
       return 1

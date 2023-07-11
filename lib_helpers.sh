@@ -659,11 +659,11 @@ function lib_bash_get_hostname_short {
 }
 
 
-function  lib_bash_file_exist {
+function  lib_bash_path_exist {
     # $1 = Path to File or Directory
     local path_file="${1}"
     # shellcheck disable=SC2086
-    if [[ -f "${path_file}" ]]; then
+    if [[ -e "${path_file}" ]]; then
       return 0
     else
       return 1
