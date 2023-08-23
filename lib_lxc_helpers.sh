@@ -147,7 +147,8 @@ function  lxc_path_exist {
     local container_name="${1}"
     local path_file="${2}"
     # shellcheck disable=SC2086
-    if lxc_exec "${container_name}" "test -e \\"${path_file}\\""; then
+    # if lxc_exec "${container_name}" "test -e \\"${path_file}\\""; then
+    if lxc_exec "${container_name}" "test -e ${path_file}"; then
       return 0
     else
       return 1
