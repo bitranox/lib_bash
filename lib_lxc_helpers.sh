@@ -40,7 +40,7 @@ function lxc_update {
     retry lxc_exec "${container_name}" "sudo apt-get upgrade -y"
     retry lxc_exec "${container_name}" "sudo apt-get dist-upgrade -y"
     retry lxc_exec "${container_name}" "sudo apt-get autoclean -y"
-    retry lxc_exec "${container_name}" "sudo apt-get autoremove -y"
+    retry lxc_exec "${container_name}" "sudo apt-get autoremove --purge -y"
 }
 
 

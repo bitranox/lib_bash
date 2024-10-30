@@ -414,11 +414,11 @@ function linux_update {
     retry "$(cmd "sudo")" apt-get upgrade -y
     retry "$(cmd "sudo")" apt-get dist-upgrade -y
     retry "$(cmd "sudo")" apt-get autoclean -y
-    retry "$(cmd "sudo")" apt-get autoremove -y
+    retry "$(cmd "sudo")" apt-get autoremove --purge -y
     # installiere zurückgehaltene Pakete
     retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get install -y
     retry "$(cmd "sudo")" apt-get autoclean -y
-    retry "$(cmd "sudo")" apt-get autoremove -y
+    retry "$(cmd "sudo")" apt-get autoremove --purge -y
 }
 
 
