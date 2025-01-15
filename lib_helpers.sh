@@ -408,18 +408,29 @@ function banner_warning {
 
 
 function linux_update {
+    # Update the list of available packages from the repositories
     retry "$(cmd "sudo")" apt-get update
+    # Configure any packages that were unpacked but not yet configured
     retry "$(cmd "sudo")" dpkg --configure -a
+    # Attempt to fix broken dependencies and install missing packages
     retry "$(cmd "sudo")" apt-get --fix-broken install -y
-    retry "$(cmd "sudo")" apt-get upgrade -y
-    retry "$(cmd "sudo")" apt-get dist-upgrade -y
+    # Upgrade all installed packages while keeping existing configuration files
+    retry "$(cmd "sudo")" apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    # Perform a distribution upgrade, which can include installing or removing packages
+    # This also keeps existing configuration files
+    retry "$(cmd "sudo")" apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
+    # Clean up the local repository of retrieved package files to free up space
     retry "$(cmd "sudo")" apt-get autoclean -y
+    # Remove unnecessary packages and purge their configuration files
     retry "$(cmd "sudo")" apt-get autoremove --purge -y
-    # installiere zurückgehaltene Pakete
+    # Install any packages that are marked as upgradable but were held back
     retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get install -y
+    # Repeat cleaning up of the package files after additional installations
     retry "$(cmd "sudo")" apt-get autoclean -y
+    # Repeat removal of unnecessary packages after additional installations
     retry "$(cmd "sudo")" apt-get autoremove --purge -y
 }
+
 
 
 function wait_for_enter {
