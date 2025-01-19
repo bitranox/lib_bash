@@ -72,8 +72,13 @@ function is_lib_bash_up_to_date {
 
 function install_lib_bash {
     echo "installing lib_bash"
-    $(command -v sudo 2>/dev/null) rm -fR /usr/local/lib_bash
-    $(command -v sudo 2>/dev/null) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
+    (
+      # shellcheck disable=SC2164
+      cd ~
+      $(command -v sudo 2>/dev/null) rm -fR /usr/local/lib_bash
+      $(command -v sudo 2>/dev/null) git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash > /dev/null 2>&1
+    )
+    cd . # re-read directory
     set_lib_bash_permissions
 }
 
