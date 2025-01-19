@@ -754,23 +754,33 @@ function logc {
 
 function lib_bash_send_email {
     # Description:
-    # This function sends an email with a subject, content (from a file), and optional attachments.
+    # This function sends an email to a specified recipient with a subject, content (from a file), and optional attachments.
+    # Example :
+    # lib_bash_send_email "recipient@example.com" "Subject of the Email" "/path/to/body_file.txt" "/path/to/attachment1" "/path/to/attachment2"
+
+    local recipient="$1"  # The destination email address
+    local subject="$2"    # The subject of the email
+    local body_file="$3"  # File containing the email body
+    # all remaining parameters are attachments
+
+    # Validate the recipient email address
+    if [[ -z "$recipient" ]]; then
+        log_err "lib_bash_send_email: Recipient email address is missing."
+        return 1
+    fi
 
     # Validate the subject
-    if [[ -z "$1" ]]; then
+    if [[ -z "$subject" ]]; then
         log_err "lib_bash_send_email: Subject is missing."
         return 1
     fi
 
-    local subject="$1"  # The subject of the email
-    local body_file="$2"   # File containing the email body
-
-    if [[ $# -lt 2 ]]; then
-        log_err "lib_bash_send_email: Insufficient arguments provided. A subject and body_file are required."
+    if [[ $# -lt 3 ]]; then
+        log_err "lib_bash_send_email: Insufficient arguments provided. A recipient, subject, and body_file are required."
         return 1
     fi
 
-    shift 2  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
+    shift 3  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
     local attachments=("$@")
 
     # Validate the number and size of attachments to avoid performance issues
@@ -808,16 +818,16 @@ function lib_bash_send_email {
     while [[ $attempt -le $max_retries ]]; do
         if [[ ${#attachments[@]} -gt 0 ]]; then
             # Sending with attachments
-            mutt -s "${subject}" -a "${attachments[@]}" -- "${EMAIL}" < "${body_file}" && \
+            mutt -s "${subject}" -a "${attachments[@]}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
             } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
         else
             # Sending without attachments
-            mutt -s "${subject}" -- "${EMAIL}" < "${body_file}" && \
+            mutt -s "${subject}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
-            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}"
+            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}."
         fi
 
         local backoff=$((2 ** attempt))
@@ -825,10 +835,9 @@ function lib_bash_send_email {
         ((attempt++))
     done
 
-    log_err "lib_bash_send_email: failed to send email after $max_retries attempts: ${subject}"
+    log_err "lib_bash_send_email: Failed to send email after $max_retries attempts: ${subject}."
     return 1
 }
-
 
 ########################################################################################################################################################
 # PREPEND TEXT TO FILE
