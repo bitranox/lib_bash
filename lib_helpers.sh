@@ -668,7 +668,7 @@ function  lib_bash_lower {
 
 function lib_bash_get_hostname_short {
     local hostname_short
-    hostname_short=$(lib_bash_split "${HOSTNAME}" "." "0")
+    hostname_short="$(hostname -s)"
     echo "${hostname_short}"
 }
 
@@ -684,6 +684,175 @@ function  lib_bash_path_exist {
     fi
 }
 
+########################################################################################################################################################
+# LOGGING
+########################################################################################################################################################
+function log {
+  local message="${1}"
+  local bold="${2}"
+  local logline
+
+  # Process each line in the message
+  while IFS= read -r line; do
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
+    [[ "${bold}" == "bold" ]] && clr_bold clr_green "${logline}" || clr_green "${logline}"
+    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+  done <<< "${message}"
+}
+
+
+
+function log_err {
+  local message
+  local logline
+  message="${1}"
+
+  # Process each line in the message
+  while IFS= read -r line; do
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ERROR [EE]: ${line}"
+    clr_bold clr_cyan "${logline}"
+    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
+  done <<< "${message}"
+}
+
+function logc {
+  # Log the output of a command with support for error handling.
+  # Arguments:
+  #   1: output (required) - Text to log.
+  #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
+  #   3: log_type (optional) - "ERR" to force error logging, even if exit_code is 0.
+
+  local output="${1}"          # Output to be logged.
+  local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
+  local log_type="${3:-}"      # Log type, default to empty if not provided.
+
+  # Return if output is empty.
+  if [[ -z "${output}" ]]; then
+    return 0
+  fi
+
+  # Log the exit code if it indicates an error.
+  if [[ ${exit_code} -ne 0 ]]; then
+    log_err "Exit code: ${exit_code}"
+  fi
+
+  # Log the output based on the log type or exit code.
+  if [[ "${log_type}" == "ERR" ]] || [[ ${exit_code} -ne 0 ]]; then
+    log_err "${output}"
+  else
+    log "${output}"
+  fi
+}
+
+########################################################################################################################################################
+# SEND EMAIL
+########################################################################################################################################################
+
+function lib_bash_send_email {
+    # Description:
+    # This function sends an email with a subject, content (from a file), and optional attachments.
+
+    # Validate the subject
+    if [[ -z "$1" ]]; then
+        log_err "lib_bash_send_email: Subject is missing."
+        return 1
+    fi
+
+    local subject="$1"  # The subject of the email
+    local body_file="$2"   # File containing the email body
+
+    if [[ $# -lt 2 ]]; then
+        log_err "lib_bash_send_email: Insufficient arguments provided. A subject and body_file are required."
+        return 1
+    fi
+
+    shift 2  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
+    local attachments=("$@")
+
+    # Validate the number and size of attachments to avoid performance issues
+
+    # Validate the body file
+    if [[ -z "${body_file}" ]]; then
+        log_err "lib_bash_send_email: body_file is missing."
+        return 1
+    fi
+
+    if [[ ! -f "${body_file}" || ! -r "${body_file}" ]]; then
+        log_err "lib_bash_send_email: body_file ${body_file} does not exist or is not readable."
+        return 1
+    fi
+
+    # Validate attachments (if any)
+    for attachment in "${attachments[@]}"; do
+        # Handle filenames with spaces or special characters
+        if [[ ! -f "${attachment}" || ! -r "${attachment}" ]]; then
+            log_err "lib_bash_send_email: Attachment ${attachment} does not exist or is not readable."
+            return 1
+        fi
+    done
+
+    if ! command -v mutt &> /dev/null; then
+        # Provide alternative instructions if 'mutt' is not available
+        log_err "lib_bash_send_email: 'mutt' command not found. Please install it before proceeding."
+        return 1
+    fi
+
+    # Send email with retry logic
+    local max_retries=3
+    local attempt=1
+
+    while [[ $attempt -le $max_retries ]]; do
+        if [[ ${#attachments[@]} -gt 0 ]]; then
+            # Sending with attachments
+            mutt -s "${subject}" -a "${attachments[@]}" -- "${EMAIL}" < "${body_file}" && \
+            {
+                return 0
+            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
+        else
+            # Sending without attachments
+            mutt -s "${subject}" -- "${EMAIL}" < "${body_file}" && \
+            {
+                return 0
+            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}"
+        fi
+
+        local backoff=$((2 ** attempt))
+        sleep $backoff
+        ((attempt++))
+    done
+
+    log_err "lib_bash_send_email: failed to send email after $max_retries attempts: ${subject}"
+    return 1
+}
+
+
+########################################################################################################################################################
+# PREPEND TEXT TO FILE
+########################################################################################################################################################
+
+lib_bash_prepend_text_to_file() {
+    local text="${1}"   # The text to prepend (first argument of the function)
+    local file="${2}"   # The target file (second argument of the function)
+
+    # Safety check: Does the file exist?
+    if [[ ! -f "${file}" ]]; then
+        log_err "lib_bash_prepend_text_to_file: File '${file}' does not exist."
+        return 1
+    fi
+
+    # Safety check: Is the file readable?
+    if [[ ! -r "${file}" ]]; then
+        log_err "lib_bash_prepend_text_to_file: File '${file}' is not readable."
+        return 1
+    fi
+
+    # Prepend the text to the file
+    echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
+}
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
