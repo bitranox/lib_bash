@@ -418,7 +418,7 @@ function linux_update {
     # Configure any packages that were unpacked but not yet configured
     retry dpkg --configure -a
     # Attempt to fix broken dependencies and install missing packages
-    retry apt-get --fix-broken install -y
+    retry apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold"
     # Upgrade all installed packages while keeping existing configuration files
     retry apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Perform a distribution upgrade, which can include installing or removing packages
@@ -430,7 +430,7 @@ function linux_update {
     retry apt-get autoremove --purge -y
     # Install any packages that are marked as upgradable but were held back
     # upgrade instead of install not to mark it as manually installed
-    retry apt list --upgradeable | grep "/" | cut -f1 -d"/" | xargs apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    retry apt list --upgradeable | grep "/" | cut -f1 -d"/" | xargs -n 1 apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Repeat cleaning up of the package files after additional installations
     retry apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
@@ -453,12 +453,12 @@ function reinstall_keep_marking {
     # Check if the package is marked as manually installed
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
-      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
-      apt-mark manual ${pkg}
+      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      apt-mark manual "${pkg}"
     else
       # Reinstall the package and re-mark it as automatically installed
-      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
-      apt-mark auto ${pkg}
+      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      apt-mark auto "${pkg}"
     fi
   done
 }
