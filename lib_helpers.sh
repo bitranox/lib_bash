@@ -433,7 +433,7 @@ function linux_update {
 }
 
 # Function to reinstall a list of packages while preserving their original marking (manual or auto)
-function reinstall_packages_keep_marking {
+function reinstall {
   local packages="${1}" # Accepts a space-separated list of package names as a single argument
   local pkg             # Variable to iterate over each package in the list
 
