@@ -424,7 +424,8 @@ function linux_update {
     # Remove unnecessary packages and purge their configuration files
     retry "$(cmd "sudo")" apt-get autoremove --purge -y
     # Install any packages that are marked as upgradable but were held back
-    retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get install -y -o Dpkg::Options::="--force-confold"
+    # upgrade instead of install not to mark it as manually installed
+    retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Repeat cleaning up of the package files after additional installations
     retry "$(cmd "sudo")" apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
