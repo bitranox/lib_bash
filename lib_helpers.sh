@@ -447,17 +447,18 @@ function reinstall_keep_marking {
   local packages="${1}" # Accepts a space-separated list of package names as a single argument
   local pkg             # Variable to iterate over each package in the list
 
+  exit_if_not_is_root
   # Loop through each package in the provided list
   for pkg in ${packages}; do
     # Check if the package is marked as manually installed
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
-      sudo apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
-      sudo apt-mark manual ${pkg}
+      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
+      apt-mark manual ${pkg}
     else
       # Reinstall the package and re-mark it as automatically installed
-      sudo apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
-      sudo apt-mark auto ${pkg}
+      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
+      apt-mark auto ${pkg}
     fi
   done
 }
