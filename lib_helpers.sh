@@ -908,7 +908,7 @@ function is_root {
 
 function exit_if_not_is_root {
 if ! is_root; then
-    echo "You need to run this script as root."
+    echo "lib_bash: You need to run this script or function as root."
     exit 1
 fi
 }
