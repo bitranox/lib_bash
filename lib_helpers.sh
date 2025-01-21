@@ -412,28 +412,29 @@ function banner_warning {
 # 2025-01-21
 
 function linux_update {
+    exit_if_not_is_root
     # Update the list of available packages from the repositories
-    retry "$(cmd "sudo")" apt-get update
+    retry apt-get update
     # Configure any packages that were unpacked but not yet configured
-    retry "$(cmd "sudo")" dpkg --configure -a
+    retry dpkg --configure -a
     # Attempt to fix broken dependencies and install missing packages
-    retry "$(cmd "sudo")" apt-get --fix-broken install -y
+    retry apt-get --fix-broken install -y
     # Upgrade all installed packages while keeping existing configuration files
-    retry "$(cmd "sudo")" apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    retry apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Perform a distribution upgrade, which can include installing or removing packages
     # This also keeps existing configuration files
-    retry "$(cmd "sudo")" apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
+    retry apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
     # Clean up the local repository of retrieved package files to free up space
-    retry "$(cmd "sudo")" apt-get autoclean -y
+    retry apt-get autoclean -y
     # Remove unnecessary packages and purge their configuration files
-    retry "$(cmd "sudo")" apt-get autoremove --purge -y
+    retry apt-get autoremove --purge -y
     # Install any packages that are marked as upgradable but were held back
     # upgrade instead of install not to mark it as manually installed
-    retry "$(cmd "sudo")" apt list --upgradeable | grep "/" | cut -f1 -d"/" | sudo xargs apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    retry apt list --upgradeable | grep "/" | cut -f1 -d"/" | xargs apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Repeat cleaning up of the package files after additional installations
-    retry "$(cmd "sudo")" apt-get autoclean -y
+    retry apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
-    retry "$(cmd "sudo")" apt-get autoremove --purge -y
+    retry apt-get autoremove --purge -y
 }
 
 ########################################################################################################################################################
@@ -873,7 +874,7 @@ function lib_bash_send_email {
 ########################################################################################################################################################
 # 2025-01-21
 
-lib_bash_prepend_text_to_file() {
+function lib_bash_prepend_text_to_file {
     local text="${1}"   # The text to prepend (first argument of the function)
     local file="${2}"   # The target file (second argument of the function)
 
@@ -897,7 +898,7 @@ lib_bash_prepend_text_to_file() {
 # IS ROOT
 ########################################################################################################################################################
 # 2025-01-21
-is_root() {
+function is_root {
     if [[ "${UID}" -ne 0 ]]; then
         return 1
     else
@@ -905,7 +906,12 @@ is_root() {
     fi
 }
 
-
+function exit_if_not_is_root {
+if ! is_root; then
+    echo "You need to run this script as root."
+    exit 1
+fi
+}
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
