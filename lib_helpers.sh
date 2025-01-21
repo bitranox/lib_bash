@@ -432,7 +432,25 @@ function linux_update {
     retry "$(cmd "sudo")" apt-get autoremove --purge -y
 }
 
+# Function to reinstall a list of packages while preserving their original marking (manual or auto)
+function reinstall_packages_keep_marking {
+  local packages="${1}" # Accepts a space-separated list of package names as a single argument
+  local pkg             # Variable to iterate over each package in the list
 
+  # Loop through each package in the provided list
+  for pkg in ${packages}; do
+    # Check if the package is marked as manually installed
+    if apt-mark showmanual | grep -q "^${pkg}$"; then
+      # Reinstall the package and re-mark it as manually installed
+      sudo apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
+      sudo apt-mark manual ${pkg}
+    else
+      # Reinstall the package and re-mark it as automatically installed
+      sudo apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y ${pkg}
+      sudo apt-mark auto ${pkg}
+    fi
+  done
+}
 
 function wait_for_enter {
     # wait for enter - first parameter will be showed in a banner if present
