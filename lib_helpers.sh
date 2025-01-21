@@ -430,7 +430,10 @@ function linux_update {
     retry apt-get autoremove --purge -y
     # Install any packages that are marked as upgradable but were held back
     # upgrade instead of install not to mark it as manually installed
-    retry apt list --upgradeable | grep "/" | cut -f1 -d"/" | xargs -n 1 apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    # retry apt list --upgradeable | grep "/" | cut -f1 -d"/" | xargs -n 1 apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    # apt-get -s is nore stable then apt list
+    # apt-get install --only-upgrade will keep the marking auto/manual
+    retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
     # Repeat cleaning up of the package files after additional installations
     retry apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
