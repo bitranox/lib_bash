@@ -406,6 +406,9 @@ function banner_warning {
     banner_base "clr_bold clr_red" "${banner_text}"
 }
 
+########################################################################################################################################################
+# LINUX UPDATE
+########################################################################################################################################################
 
 function linux_update {
     # Update the list of available packages from the repositories
@@ -431,6 +434,10 @@ function linux_update {
     # Repeat removal of unnecessary packages after additional installations
     retry "$(cmd "sudo")" apt-get autoremove --purge -y
 }
+
+########################################################################################################################################################
+# REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO
+########################################################################################################################################################
 
 # Function to reinstall a list of packages while preserving their original marking (manual or auto)
 function reinstall_keep_marking {
