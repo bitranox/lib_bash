@@ -182,7 +182,7 @@ function linux_update {
     log "Installing phased updates"
 
     while true; do
-      first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u | head -n1 )
+      first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {while(1){getline; if(/^[0-9]/) break; for(i=1;i<=NF;i++) print $i}}' | sort -u | head -n1)
       if [ -z "$first_package_to_update" ]; then
         break
       fi
