@@ -448,27 +448,28 @@ function banner_warning {
 function linux_update {
     exit_if_not_is_root
     # Update the list of available packages from the repositories
+    # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
     log "apt-get update"
-    retry apt-get update
+    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Configure any packages that were unpacked but not yet configured
     log "dpkg --configure -a"
-    retry dpkg --configure -a
+    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Attempt to fix broken dependencies and install missing packages
     log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
-    retry apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold"
+    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Upgrade all installed packages while keeping existing configuration files
     log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    retry apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Perform a distribution upgrade, which can include installing or removing packages
     # This also keeps existing configuration files
     log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    retry apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
+    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Clean up the local repository of retrieved package files to free up space
     log "apt-get autoclean -y"
-    retry apt-get autoclean -y
+    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Remove unnecessary packages and purge their configuration files
     log "apt-get autoremove --purge -y"
-    retry apt-get autoremove --purge -y
+    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}"
     # Forcing Phased Updates : If the package is held back due to a phased update,
     # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
     # it will not mark it as manually installed
@@ -500,11 +501,12 @@ function reinstall_keep_marking {
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"
       apt-mark manual "${pkg}"
     else
       # Reinstall the package and re-mark it as automatically installed
-      apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"
       apt-mark auto "${pkg}"
     fi
   done
@@ -802,6 +804,8 @@ function logc {
   #   1: output (required) - Text to log.
   #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
   #   3: log_type (optional) - "ERR" to force error logging, even if exit_code is 0.
+  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
+  # with single commands : logc "$(echo "test")" $?
 
   local output="${1}"          # Output to be logged.
   local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
