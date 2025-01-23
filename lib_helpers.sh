@@ -181,8 +181,6 @@ function linux_update {
     # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
     log "Installing phased updates"
 
-    # Loop: Phased updates might shift after each reinstall, as dependencies resolve
-    # or newer versions propagate. Re-checking the list ensures all eligible packages are processed.
     while true; do
       first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u | head -n1 )
       if [ -z "$first_package_to_update" ]; then
