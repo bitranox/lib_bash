@@ -431,7 +431,8 @@ function linux_update {
     # Forcing Phased Updates : If the package is held back due to a phased update,
     # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
     # it will not mark it as manually installed
-    retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
+    # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
+    reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
     # Repeat cleaning up of the package files after additional installations
     retry apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
