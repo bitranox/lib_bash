@@ -184,19 +184,12 @@ function linux_update {
     # Loop: Phased updates might shift after each reinstall, as dependencies resolve
     # or newer versions propagate. Re-checking the list ensures all eligible packages are processed.
     while true; do
-      first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {
-          getline
-          while (!/^[0-9]/) {  # Continue until version number lines appear
-              gsub(/ /, "\n")  # Split space-separated pkg names into lines
-              print
-              getline
-          }
-      }' | sort -u | head -n1)
-      [ -z "$first_package_to_update" ] && break
-      # Reinstall while preserving configuration files ("keep markings")
+      first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u | head -n1 )
+      if [ -z "$first_package_to_update" ]; then
+        break
+      fi
       reinstall_keep_marking "${first_package_to_update}"
     done
-
 
     # Repeat cleaning up of the package files after additional installations
     log "apt-get autoclean -y"
