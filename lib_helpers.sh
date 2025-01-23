@@ -34,7 +34,7 @@ function set_default_settings {
     # 4. Handles empty string values (e.g., explicitly set to "")
     # 5. No-op if variables already contain non-empty values
     lib_bash_github_repo="https://github.com/bitranox/lib_bash.git"
-    lib_bash_target_dir="/usr/local/bin_lib_bash"
+    lib_bash_target_dir="/usr/local/lib_bash"
 }
 
 ########################################################################################################################################################
@@ -180,7 +180,7 @@ function linux_update {
     # it will not mark it as manually installed
     # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
     log "Installing phased updates"
-    reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
+    reinstall_keep_marking "$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
     # Repeat cleaning up of the package files after additional installations
     log "apt-get autoclean -y"
     logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
