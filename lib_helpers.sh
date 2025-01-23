@@ -1081,11 +1081,11 @@ function  lib_bash_path_exist {
 function lib_bash_main {
   lib_bash_set_askpass
   set_default_settings
-  source_lib_bash_dependencies
   ## make it possible to call functions without source include
   call_function_from_commandline "${0}" "${@}"
 }
 
 # Initial execution flow
+source_lib_bash_dependencies
 lib_bash_update_myself_if_needed "$@"
 lib_bash_main "$@"
