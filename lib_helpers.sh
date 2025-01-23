@@ -3,6 +3,40 @@
 # Resources : https://devhints.io/bash
 #
 
+########################################################################################################################################################
+# DEFAULT SETTINGS
+########################################################################################################################################################
+# 2025-01-21
+
+function set_default_settings {
+    # Set default logging paths if not already defined or empty
+    # Uses POSIX parameter expansion for safe default assignment
+    # -----------------------------------------------------------
+    # Main application log file (persistent)
+    : "${LIB_BASH_LOGFILE:=/var/log/lib_bash.log}"
+
+    # Temporary log storage (e.g., for session-specific logs)
+    : "${LIB_BASH_LOGFILE_TMP:=/var/log/lib_bash_tmp.log}"
+
+    # Error-specific log file (persistent errors)
+    : "${LIB_BASH_LOGFILE_ERR:=/var/log/lib_bash_err.log}"
+
+    # Temporary error log storage (ephemeral error tracking)
+    : "${LIB_BASH_LOGFILE_ERR_TMP:=/var/log/lib_bash_err_tmp.log}"
+
+    # -----------------------------------------------------------
+    # Technical notes:
+    # 1. The colon (:) is a null command that expands arguments
+    # 2. ${VAR:=DEFAULT} syntax:
+    #    - Sets VAR to DEFAULT if VAR is unset or empty
+    #    - Preserves existing non-empty values
+    # 3. All paths use /var/log/ as default base directory
+    # 4. Handles empty string values (e.g., explicitly set to "")
+    # 5. No-op if variables already contain non-empty values
+}
+
+########################################################################################################################################################
+
 function default_actions {
 sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
@@ -414,28 +448,38 @@ function banner_warning {
 function linux_update {
     exit_if_not_is_root
     # Update the list of available packages from the repositories
+    log "apt-get update"
     retry apt-get update
     # Configure any packages that were unpacked but not yet configured
+    log "dpkg --configure -a"
     retry dpkg --configure -a
     # Attempt to fix broken dependencies and install missing packages
+    log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
     retry apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold"
     # Upgrade all installed packages while keeping existing configuration files
+    log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
     retry apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Perform a distribution upgrade, which can include installing or removing packages
     # This also keeps existing configuration files
+    log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
     retry apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
     # Clean up the local repository of retrieved package files to free up space
+    log "apt-get autoclean -y"
     retry apt-get autoclean -y
     # Remove unnecessary packages and purge their configuration files
+    log "apt-get autoremove --purge -y"
     retry apt-get autoremove --purge -y
     # Forcing Phased Updates : If the package is held back due to a phased update,
     # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
     # it will not mark it as manually installed
     # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
+    log "Installing phased updates"
     reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
     # Repeat cleaning up of the package files after additional installations
+    log "apt-get autoclean -y"
     retry apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
+    log "apt-get autoremove --purge -y"
     retry apt-get autoremove --purge -y
 }
 
@@ -455,6 +499,7 @@ function reinstall_keep_marking {
     # Check if the package is marked as manually installed
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
+      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
       apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
       apt-mark manual "${pkg}"
     else
@@ -915,6 +960,8 @@ if ! is_root; then
     exit 1
 fi
 }
+
+set_default_settings
 
 ## make it possible to call functions without source include
 call_function_from_commandline "${0}" "${@}"
