@@ -33,38 +33,409 @@ function set_default_settings {
     # 3. All paths use /var/log/ as default base directory
     # 4. Handles empty string values (e.g., explicitly set to "")
     # 5. No-op if variables already contain non-empty values
+    lib_bash_github_repo="https://github.com/bitranox/lib_bash.git"
+    lib_bash_target_dir="/usr/local/bin_lib_bash"
 }
 
 ########################################################################################################################################################
+# SET ASKPASS
+########################################################################################################################################################
+# 2025-01-21
 
-function default_actions {
+function lib_bash_set_askpass {
 sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
 export NO_AT_BRIDGE=1  # get rid of ssh-askpass:25930 dbind-WARNING
 }
-default_actions
 
-function  lib_bash_update_myself {
-    local my_dir
-    # shellcheck disable=SC2164
-    my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
-    # call the update script if not sourced and not already done in that session
-    if [[ "${0}" == "${BASH_SOURCE[0]}" ]] && [[ -d "${BASH_SOURCE%/*}" ]] && [[ "${lib_bash_is_up_to_date_in_this_session}" != "True" ]]; then
-        "${my_dir}"/install_or_update.sh
-        lib_bash_is_up_to_date_in_this_session="True"
-    fi
-    }
-lib_bash_update_myself
+########################################################################################################################################################
+# SOURCE LIB BASH DEPENDENCIES
+########################################################################################################################################################
+# 2025-01-21
 
-function include_dependencies {
+function source_lib_bash_dependencies {
     local my_dir
     # shellcheck disable=SC2164
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
 }
-include_dependencies
 
+########################################################################################################################################################
+# UPDATE MYSELF
+########################################################################################################################################################
+# 2025-01-23
+
+# shellcheck disable=SC2155
+declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+# shellcheck disable=SC2155
+declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
+
+# Add commit verification (placeholder - implement proper verification)
+function verify_commit {
+    local commit_hash=$1
+    # Example placeholder - replace with actual verification
+    if [[ -z "$commit_hash" ]]; then
+        log_err "Invalid commit hash!"
+        return 1
+    fi
+    return 0
+}
+
+function is_lib_bash_up_to_date {
+    local git_remote_hash git_local_hash default_branch
+
+    # Safely get default branch
+    default_branch=$(git -C "${LIB_BASH_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
+        log_err "Failed to determine default branch"
+        return 2
+    }
+
+    # Get remote hash
+    git_remote_hash=$(git -C "${LIB_BASH_DIR}" ls-remote origin --heads "${default_branch}" | awk '{print $1}') || {
+        log_err "Failed to get remote hash"
+        return 3
+    }
+
+    # Get local hash
+    git_local_hash=$(git -C "${LIB_BASH_DIR}" rev-parse HEAD) || {
+        log_err "Failed to get local hash"
+        return 4
+    }
+
+    [[ "${git_remote_hash}" == "${git_local_hash}" ]] && return 0
+    return 1
+}
+
+function lib_bash_update_myself {
+    local default_branch
+    (
+        set -eo pipefail
+        cd "${LIB_BASH_DIR}" || exit 99
+
+        # Get default branch
+        default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') || exit 100
+
+        # Fetch updates
+        git fetch --all || exit 101
+
+        # Verify commit
+        verify_commit "origin/${default_branch}" || exit 102
+
+        # Reset to latest
+        git reset --hard "origin/${default_branch}" || exit 103
+    )
+    return $?
+}
+
+function lib_bash_update_myself_if_needed {
+    if ! is_lib_bash_up_to_date; then
+        log "Update available! Performing self-update..."
+        if lib_bash_update_myself; then
+            log "Successfully updated! Restarting..."
+            # Proper argument handling with quoting
+            exec "${BASH}" --noprofile --norc -c \
+                "source '${LIB_BASH_SELF}' && lib_bash_main \"\$@\"" \
+                _ "$@"
+        else
+            local ret=$?
+            log_err "Update failed with error code $ret"
+            return $ret
+        fi
+    fi
+}
+
+########################################################################################################################################################
+# LINUX UPDATE
+########################################################################################################################################################
+# 2025-01-21
+
+function linux_update {
+    exit_if_not_is_root
+    # Update the list of available packages from the repositories
+    # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
+    log "apt-get update"
+    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Configure any packages that were unpacked but not yet configured
+    log "dpkg --configure -a"
+    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Attempt to fix broken dependencies and install missing packages
+    log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
+    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Upgrade all installed packages while keeping existing configuration files
+    log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
+    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Perform a distribution upgrade, which can include installing or removing packages
+    # This also keeps existing configuration files
+    log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
+    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Clean up the local repository of retrieved package files to free up space
+    log "apt-get autoclean -y"
+    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Remove unnecessary packages and purge their configuration files
+    log "apt-get autoremove --purge -y"
+    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Forcing Phased Updates : If the package is held back due to a phased update,
+    # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
+    # it will not mark it as manually installed
+    # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
+    log "Installing phased updates"
+    reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
+    # Repeat cleaning up of the package files after additional installations
+    log "apt-get autoclean -y"
+    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    # Repeat removal of unnecessary packages after additional installations
+    log "apt-get autoremove --purge -y"
+    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+}
+
+########################################################################################################################################################
+# REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO
+########################################################################################################################################################
+# 2025-01-21
+
+# Function to reinstall a list of packages while preserving their original marking (manual or auto)
+function reinstall_keep_marking {
+  local packages="${1}" # Accepts a space-separated list of package names as a single argument
+  local pkg             # Variable to iterate over each package in the list
+
+  exit_if_not_is_root
+  # Loop through each package in the provided list
+  for pkg in ${packages}; do
+    # Check if the package is marked as manually installed
+    if apt-mark showmanual | grep -q "^${pkg}$"; then
+      # Reinstall the package and re-mark it as manually installed
+      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
+      apt-mark manual "${pkg}"
+    else
+      # Reinstall the package and re-mark it as automatically installed
+      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
+      apt-mark auto "${pkg}"
+    fi
+  done
+}
+
+
+########################################################################################################################################################
+# PREPEND TEXT TO FILE
+########################################################################################################################################################
+# 2025-01-21
+
+function lib_bash_prepend_text_to_file {
+    local text="${1}"   # The text to prepend (first argument of the function)
+    local file="${2}"   # The target file (second argument of the function)
+
+    # Safety check: Does the file exist?
+    if [[ ! -f "${file}" ]]; then
+        log_err "lib_bash_prepend_text_to_file: File '${file}' does not exist."
+        return 1
+    fi
+
+    # Safety check: Is the file readable?
+    if [[ ! -r "${file}" ]]; then
+        log_err "lib_bash_prepend_text_to_file: File '${file}' is not readable."
+        return 1
+    fi
+
+    # Prepend the text to the file
+    echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
+}
+
+########################################################################################################################################################
+# IS ROOT
+########################################################################################################################################################
+# 2025-01-21
+function is_root {
+    if [[ "${UID}" -ne 0 ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+function exit_if_not_is_root {
+if ! is_root; then
+    echo "lib_bash: You need to run this script or function as root."
+    exit 1
+fi
+}
+
+
+########################################################################################################################################################
+# LOGGING
+########################################################################################################################################################
+function log {
+  # Log to screen and logfiles
+  # Arguments:
+  #   1: message (required) - Text to log.
+  #   2: options (optional) - "bold" force to log the command output as bold
+  #                           "NO_TTY" to skip output to screen (but still to logfiles)
+  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+  # with single commands : logc "$(echo "test")" $?
+
+  local message="${1}"
+  local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
+  local logline
+
+  # Process each line in the message
+  while IFS= read -r line; do
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
+    if [[ "${options}" != *NO_TTY* ]]; then
+        [[ "${options}" == *bold* ]] && clr_bold clr_green "${logline}" || clr_green "${logline}"
+    fi
+    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+  done <<< "${message}"
+}
+
+function log_err {
+  local message="${1}"
+  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
+  local logline
+
+
+  # Process each line in the message
+  while IFS= read -r line; do
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ERROR [EE]: ${line}"
+    if [[ "${options}" != *NO_TTY* ]]; then
+      clr_bold clr_cyan "${logline}"
+    fi
+    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
+  done <<< "${message}"
+}
+
+function logc {
+  # Log the output of a command with support for error handling.
+  # Arguments:
+  #   1: output (required) - Text to log.
+  #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
+  #   3: options (optional) - "ERR" force to log the command output as error, even if exit_code is 0.
+  #                           "NO_TTY" to skip output to screen (but still to logfiles)
+  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+  # with single commands : logc "$(echo "test")" $?
+
+  local output="${1}"          # Output to be logged.
+  local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
+  local options="${3:-}"       # options, default to "" if not provided.: "ERR","NO_TTY","bold"
+
+  # Return if output is empty.
+  if [[ -z "${output}" ]]; then
+    return 0
+  fi
+
+  # Log the exit code if it indicates an error.
+  if [[ ${exit_code} -ne 0 ]]; then
+    log_err "Exit code: ${exit_code}"
+  fi
+
+  # Log the output based on the log type or exit code.
+  if [[ "${options}" == *ERR* ]] || [[ ${exit_code} -ne 0 ]]; then
+    log_err "${output}" "${options}"
+  else
+    log "${output}" "${options}"
+  fi
+}
+
+########################################################################################################################################################
+# SEND EMAIL
+########################################################################################################################################################
+# 2025-01-21
+
+function lib_bash_send_email {
+    # Description:
+    # This function sends an email to a specified recipient with a subject, content (from a file), and optional attachments.
+    # Example :
+    # lib_bash_send_email "recipient@example.com" "Subject of the Email" "/path/to/body_file.txt" "/path/to/attachment1" "/path/to/attachment2"
+
+    local recipient="$1"  # The destination email address
+    local subject="$2"    # The subject of the email
+    local body_file="$3"  # File containing the email body
+    # all remaining parameters are attachments
+
+    # Validate the recipient email address
+    if [[ -z "$recipient" ]]; then
+        log_err "lib_bash_send_email: Recipient email address is missing."
+        return 1
+    fi
+
+    # Validate the subject
+    if [[ -z "$subject" ]]; then
+        log_err "lib_bash_send_email: Subject is missing."
+        return 1
+    fi
+
+    if [[ $# -lt 3 ]]; then
+        log_err "lib_bash_send_email: Insufficient arguments provided. A recipient, subject, and body_file are required."
+        return 1
+    fi
+
+    shift 3  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
+    local attachments=("$@")
+
+    # Validate the number and size of attachments to avoid performance issues
+
+    # Validate the body file
+    if [[ -z "${body_file}" ]]; then
+        log_err "lib_bash_send_email: body_file is missing."
+        return 1
+    fi
+
+    if [[ ! -f "${body_file}" || ! -r "${body_file}" ]]; then
+        log_err "lib_bash_send_email: body_file ${body_file} does not exist or is not readable."
+        return 1
+    fi
+
+    # Validate attachments (if any)
+    for attachment in "${attachments[@]}"; do
+        # Handle filenames with spaces or special characters
+        if [[ ! -f "${attachment}" || ! -r "${attachment}" ]]; then
+            log_err "lib_bash_send_email: Attachment ${attachment} does not exist or is not readable."
+            return 1
+        fi
+    done
+
+    if ! command -v mutt &> /dev/null; then
+        # Provide alternative instructions if 'mutt' is not available
+        log_err "lib_bash_send_email: 'mutt' command not found. Please install it before proceeding."
+        return 1
+    fi
+
+    # Send email with retry logic
+    local max_retries=3
+    local attempt=1
+
+    while [[ $attempt -le $max_retries ]]; do
+        if [[ ${#attachments[@]} -gt 0 ]]; then
+            # Sending with attachments
+            mutt -s "${subject}" -a "${attachments[@]}" -- "${recipient}" < "${body_file}" && \
+            {
+                return 0
+            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
+        else
+            # Sending without attachments
+            mutt -s "${subject}" -- "${recipient}" < "${body_file}" && \
+            {
+                return 0
+            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}."
+        fi
+
+        local backoff=$((2 ** attempt))
+        sleep $backoff
+        ((attempt++))
+    done
+
+    log_err "lib_bash_send_email: Failed to send email after $max_retries attempts: ${subject}."
+    return 1
+}
+
+########################################################################################################################################################
+# (OLD) HELPERS
+########################################################################################################################################################
 
 function is_ok() {
     # for easy use : if is_ok; then ...
@@ -91,7 +462,6 @@ function is_script_sourced {
         return 1
     fi
 }
-
 
 
 function debug {
@@ -145,8 +515,6 @@ function is_valid_command {
     if [[ -n "$(type -p "${command}")" ]]; then return 0; fi            # external command
     return 1
 }
-
-
 
 
 function create_assert_failed_message {
@@ -440,77 +808,6 @@ function banner_warning {
     banner_base "clr_bold clr_red" "${banner_text}"
 }
 
-########################################################################################################################################################
-# LINUX UPDATE
-########################################################################################################################################################
-# 2025-01-21
-
-function linux_update {
-    exit_if_not_is_root
-    # Update the list of available packages from the repositories
-    # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
-    log "apt-get update"
-    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Configure any packages that were unpacked but not yet configured
-    log "dpkg --configure -a"
-    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Attempt to fix broken dependencies and install missing packages
-    log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Upgrade all installed packages while keeping existing configuration files
-    log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Perform a distribution upgrade, which can include installing or removing packages
-    # This also keeps existing configuration files
-    log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Clean up the local repository of retrieved package files to free up space
-    log "apt-get autoclean -y"
-    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Remove unnecessary packages and purge their configuration files
-    log "apt-get autoremove --purge -y"
-    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Forcing Phased Updates : If the package is held back due to a phased update,
-    # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
-    # it will not mark it as manually installed
-    # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
-    log "Installing phased updates"
-    reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
-    # Repeat cleaning up of the package files after additional installations
-    log "apt-get autoclean -y"
-    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Repeat removal of unnecessary packages after additional installations
-    log "apt-get autoremove --purge -y"
-    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-}
-
-########################################################################################################################################################
-# REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO
-########################################################################################################################################################
-# 2025-01-21
-
-# Function to reinstall a list of packages while preserving their original marking (manual or auto)
-function reinstall_keep_marking {
-  local packages="${1}" # Accepts a space-separated list of package names as a single argument
-  local pkg             # Variable to iterate over each package in the list
-
-  exit_if_not_is_root
-  # Loop through each package in the provided list
-  for pkg in ${packages}; do
-    # Check if the package is marked as manually installed
-    if apt-mark showmanual | grep -q "^${pkg}$"; then
-      # Reinstall the package and re-mark it as manually installed
-      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
-      apt-mark manual "${pkg}"
-    else
-      # Reinstall the package and re-mark it as automatically installed
-      log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
-      apt-mark auto "${pkg}"
-    fi
-  done
-}
 
 function wait_for_enter {
     # wait for enter - first options will be showed in a banner if present
@@ -763,221 +1060,15 @@ function  lib_bash_path_exist {
     fi
 }
 
-########################################################################################################################################################
-# LOGGING
-########################################################################################################################################################
-function log {
-  # Log to screen and logfiles
-  # Arguments:
-  #   1: message (required) - Text to log.
-  #   2: options (optional) - "bold" force to log the command output as bold
-  #                           "NO_TTY" to skip output to screen (but still to logfiles)
-  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-  # with single commands : logc "$(echo "test")" $?
 
-  local message="${1}"
-  local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
-  local logline
-
-  # Process each line in the message
-  while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
-    if [[ "${options}" != *NO_TTY* ]]; then
-        [[ "${options}" == *bold* ]] && clr_bold clr_green "${logline}" || clr_green "${logline}"
-    fi
-    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-  done <<< "${message}"
+function lib_bash_main {
+  lib_bash_set_askpass
+  set_default_settings
+  source_lib_bash_dependencies
+  ## make it possible to call functions without source include
+  call_function_from_commandline "${0}" "${@}"
 }
 
-function log_err {
-  local message="${1}"
-  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
-  local logline
-
-
-  # Process each line in the message
-  while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ERROR [EE]: ${line}"
-    if [[ "${options}" != *NO_TTY* ]]; then
-      clr_bold clr_cyan "${logline}"
-    fi
-    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
-  done <<< "${message}"
-}
-
-function logc {
-  # Log the output of a command with support for error handling.
-  # Arguments:
-  #   1: output (required) - Text to log.
-  #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
-  #   3: options (optional) - "ERR" force to log the command output as error, even if exit_code is 0.
-  #                           "NO_TTY" to skip output to screen (but still to logfiles)
-  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-  # with single commands : logc "$(echo "test")" $?
-
-  local output="${1}"          # Output to be logged.
-  local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
-  local options="${3:-}"       # options, default to "" if not provided.: "ERR","NO_TTY","bold"
-
-  # Return if output is empty.
-  if [[ -z "${output}" ]]; then
-    return 0
-  fi
-
-  # Log the exit code if it indicates an error.
-  if [[ ${exit_code} -ne 0 ]]; then
-    log_err "Exit code: ${exit_code}"
-  fi
-
-  # Log the output based on the log type or exit code.
-  if [[ "${options}" == *ERR* ]] || [[ ${exit_code} -ne 0 ]]; then
-    log_err "${output}" "${options}"
-  else
-    log "${output}" "${options}"
-  fi
-}
-
-########################################################################################################################################################
-# SEND EMAIL
-########################################################################################################################################################
-# 2025-01-21
-
-function lib_bash_send_email {
-    # Description:
-    # This function sends an email to a specified recipient with a subject, content (from a file), and optional attachments.
-    # Example :
-    # lib_bash_send_email "recipient@example.com" "Subject of the Email" "/path/to/body_file.txt" "/path/to/attachment1" "/path/to/attachment2"
-
-    local recipient="$1"  # The destination email address
-    local subject="$2"    # The subject of the email
-    local body_file="$3"  # File containing the email body
-    # all remaining parameters are attachments
-
-    # Validate the recipient email address
-    if [[ -z "$recipient" ]]; then
-        log_err "lib_bash_send_email: Recipient email address is missing."
-        return 1
-    fi
-
-    # Validate the subject
-    if [[ -z "$subject" ]]; then
-        log_err "lib_bash_send_email: Subject is missing."
-        return 1
-    fi
-
-    if [[ $# -lt 3 ]]; then
-        log_err "lib_bash_send_email: Insufficient arguments provided. A recipient, subject, and body_file are required."
-        return 1
-    fi
-
-    shift 3  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
-    local attachments=("$@")
-
-    # Validate the number and size of attachments to avoid performance issues
-
-    # Validate the body file
-    if [[ -z "${body_file}" ]]; then
-        log_err "lib_bash_send_email: body_file is missing."
-        return 1
-    fi
-
-    if [[ ! -f "${body_file}" || ! -r "${body_file}" ]]; then
-        log_err "lib_bash_send_email: body_file ${body_file} does not exist or is not readable."
-        return 1
-    fi
-
-    # Validate attachments (if any)
-    for attachment in "${attachments[@]}"; do
-        # Handle filenames with spaces or special characters
-        if [[ ! -f "${attachment}" || ! -r "${attachment}" ]]; then
-            log_err "lib_bash_send_email: Attachment ${attachment} does not exist or is not readable."
-            return 1
-        fi
-    done
-
-    if ! command -v mutt &> /dev/null; then
-        # Provide alternative instructions if 'mutt' is not available
-        log_err "lib_bash_send_email: 'mutt' command not found. Please install it before proceeding."
-        return 1
-    fi
-
-    # Send email with retry logic
-    local max_retries=3
-    local attempt=1
-
-    while [[ $attempt -le $max_retries ]]; do
-        if [[ ${#attachments[@]} -gt 0 ]]; then
-            # Sending with attachments
-            mutt -s "${subject}" -a "${attachments[@]}" -- "${recipient}" < "${body_file}" && \
-            {
-                return 0
-            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
-        else
-            # Sending without attachments
-            mutt -s "${subject}" -- "${recipient}" < "${body_file}" && \
-            {
-                return 0
-            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}."
-        fi
-
-        local backoff=$((2 ** attempt))
-        sleep $backoff
-        ((attempt++))
-    done
-
-    log_err "lib_bash_send_email: Failed to send email after $max_retries attempts: ${subject}."
-    return 1
-}
-
-########################################################################################################################################################
-# PREPEND TEXT TO FILE
-########################################################################################################################################################
-# 2025-01-21
-
-function lib_bash_prepend_text_to_file {
-    local text="${1}"   # The text to prepend (first argument of the function)
-    local file="${2}"   # The target file (second argument of the function)
-
-    # Safety check: Does the file exist?
-    if [[ ! -f "${file}" ]]; then
-        log_err "lib_bash_prepend_text_to_file: File '${file}' does not exist."
-        return 1
-    fi
-
-    # Safety check: Is the file readable?
-    if [[ ! -r "${file}" ]]; then
-        log_err "lib_bash_prepend_text_to_file: File '${file}' is not readable."
-        return 1
-    fi
-
-    # Prepend the text to the file
-    echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
-}
-
-########################################################################################################################################################
-# IS ROOT
-########################################################################################################################################################
-# 2025-01-21
-function is_root {
-    if [[ "${UID}" -ne 0 ]]; then
-        return 1
-    else
-        return 0
-    fi
-}
-
-function exit_if_not_is_root {
-if ! is_root; then
-    echo "lib_bash: You need to run this script or function as root."
-    exit 1
-fi
-}
-
-set_default_settings
-
-## make it possible to call functions without source include
-call_function_from_commandline "${0}" "${@}"
+# Initial execution flow
+lib_bash_update_myself_if_needed "$@"
+lib_bash_main "$@"
