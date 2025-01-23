@@ -10,7 +10,7 @@
 
 function set_default_settings {
     # Set default logging paths if not already defined or empty
-    # Uses POSIX parameter expansion for safe default assignment
+    # Uses POSIX options expansion for safe default assignment
     # -----------------------------------------------------------
     # Main application log file (persistent)
     : "${LIB_BASH_LOGFILE:=/var/log/lib_bash.log}"
@@ -450,26 +450,26 @@ function linux_update {
     # Update the list of available packages from the repositories
     # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
     log "apt-get update"
-    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Configure any packages that were unpacked but not yet configured
     log "dpkg --configure -a"
-    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Attempt to fix broken dependencies and install missing packages
     log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Upgrade all installed packages while keeping existing configuration files
     log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Perform a distribution upgrade, which can include installing or removing packages
     # This also keeps existing configuration files
     log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Clean up the local repository of retrieved package files to free up space
     log "apt-get autoclean -y"
-    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Remove unnecessary packages and purge their configuration files
     log "apt-get autoremove --purge -y"
-    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}"
+    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Forcing Phased Updates : If the package is held back due to a phased update,
     # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
     # it will not mark it as manually installed
@@ -478,10 +478,10 @@ function linux_update {
     reinstall_keep_marking "$(apt-get -s upgrade | awk '/deferred due to phasing:/ {getline; while (!/^[0-9]/) {gsub(/ /, "\n"); print; getline}}' | sort -u)"
     # Repeat cleaning up of the package files after additional installations
     log "apt-get autoclean -y"
-    retry apt-get autoclean -y
+    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
     # Repeat removal of unnecessary packages after additional installations
     log "apt-get autoremove --purge -y"
-    retry apt-get autoremove --purge -y
+    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
 }
 
 ########################################################################################################################################################
@@ -501,19 +501,19 @@ function reinstall_keep_marking {
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
       apt-mark manual "${pkg}"
     else
       # Reinstall the package and re-mark it as automatically installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"
+      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
       apt-mark auto "${pkg}"
     fi
   done
 }
 
 function wait_for_enter {
-    # wait for enter - first parameter will be showed in a banner if present
+    # wait for enter - first options will be showed in a banner if present
     if [[ -n "$1" ]] ;
         then
             banner "${1}"
@@ -523,7 +523,7 @@ function wait_for_enter {
 
 
 function wait_for_enter_warning {
-    # wait for enter - first parameter will be showed in a red banner if present
+    # wait for enter - first options will be showed in a red banner if present
     if [[ -n "$1" ]] ;
         then
             banner_warning "${1}"
@@ -767,30 +767,41 @@ function  lib_bash_path_exist {
 # LOGGING
 ########################################################################################################################################################
 function log {
+  # Log to screen and logfiles
+  # Arguments:
+  #   1: message (required) - Text to log.
+  #   2: options (optional) - "bold" force to log the command output as bold
+  #                           "NO_TTY" to skip output to screen (but still to logfiles)
+  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+  # with single commands : logc "$(echo "test")" $?
+
   local message="${1}"
-  local bold="${2}"
+  local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
   local logline
 
   # Process each line in the message
   while IFS= read -r line; do
     logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
-    [[ "${bold}" == "bold" ]] && clr_bold clr_green "${logline}" || clr_green "${logline}"
+    if [[ "${options}" != *NO_TTY* ]]; then
+        [[ "${options}" == *bold* ]] && clr_bold clr_green "${logline}" || clr_green "${logline}"
+    fi
     [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
     [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
   done <<< "${message}"
 }
 
-
-
 function log_err {
-  local message
+  local message="${1}"
+  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
   local logline
-  message="${1}"
+
 
   # Process each line in the message
   while IFS= read -r line; do
     logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ERROR [EE]: ${line}"
-    clr_bold clr_cyan "${logline}"
+    if [[ "${options}" != *NO_TTY* ]]; then
+      clr_bold clr_cyan "${logline}"
+    fi
     [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
     [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
     [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
@@ -803,13 +814,14 @@ function logc {
   # Arguments:
   #   1: output (required) - Text to log.
   #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
-  #   3: log_type (optional) - "ERR" to force error logging, even if exit_code is 0.
-  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
+  #   3: options (optional) - "ERR" force to log the command output as error, even if exit_code is 0.
+  #                           "NO_TTY" to skip output to screen (but still to logfiles)
+  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
   # with single commands : logc "$(echo "test")" $?
 
   local output="${1}"          # Output to be logged.
   local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
-  local log_type="${3:-}"      # Log type, default to empty if not provided.
+  local options="${3:-}"       # options, default to "" if not provided.: "ERR","NO_TTY","bold"
 
   # Return if output is empty.
   if [[ -z "${output}" ]]; then
@@ -822,10 +834,10 @@ function logc {
   fi
 
   # Log the output based on the log type or exit code.
-  if [[ "${log_type}" == "ERR" ]] || [[ ${exit_code} -ne 0 ]]; then
-    log_err "${output}"
+  if [[ "${options}" == *ERR* ]] || [[ ${exit_code} -ne 0 ]]; then
+    log_err "${output}" "${options}"
   else
-    log "${output}"
+    log "${output}" "${options}"
   fi
 }
 
