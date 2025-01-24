@@ -1084,4 +1084,4 @@ set_default_settings
 lib_bash_self_update "$@"
 )
 
-MAIN "$@"
+LIB_BASH_MAIN "$@"
