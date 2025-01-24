@@ -1073,8 +1073,8 @@ function MAIN {
 
 # update myself in a subshell
 (
-LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
-LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
+declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
 source_lib_bash_dependencies
 lib_bash_set_askpass
 set_default_settings
