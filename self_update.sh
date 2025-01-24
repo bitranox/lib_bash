@@ -30,21 +30,27 @@ function verify_commit {
 function is_lib_bash_up_to_date {
     local git_remote_hash git_local_hash default_branch
 
+    # Check if the directory is within a Git repository
+    if ! git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        # Not within a Git repository - cannot check for updates
+        return 0
+    fi
+
     # Safely get default branch (suppress stderr)
     default_branch=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
-        log_err "git failed to determine default branch - can not check platform self update"
+        log_err "Failed to determine default branch - ensure you have the latest repository clone."
         return 0
     }
 
     # Get remote hash (suppress stderr)
     git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" 2>/dev/null | awk '{print $1}') || {
-        log_err "git failed to get remote hash - can not check platform self update"
+        log_err "Failed to fetch remote hash - check network and repository access."
         return 0
     }
 
     # Get local hash (suppress stderr)
     git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD 2>/dev/null) || {
-        log_warn "git failed to get local hash - can not check platform self update"
+        log_warn "Failed to retrieve local commit hash - repository may be corrupted."
         return 0
     }
 
