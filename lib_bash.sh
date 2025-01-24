@@ -8,21 +8,35 @@
 ########################################################################################################################################################
 # 2025-01-21
 
+function create_log_dir {
+  local logfile="${1}"
+  local log_dir
+  log_dir=$(dirname "${logfile}")
+  if [ ! -d "${log_dir}" ]; then
+      mkdir -p "${log_dir}"
+  fi
+}
+
 function set_default_settings {
+
     # Set default logging paths if not already defined or empty
     # Uses POSIX options expansion for safe default assignment
     # -----------------------------------------------------------
     # Main application log file (persistent)
-    : "${LIB_BASH_LOGFILE:=/var/log/lib_bash_$(whoami).log}"
+    : "${LIB_BASH_LOGFILE:=/var/log/lib_bash/$(whoami)/lib_bash.log}"
+    create_log_dir "${LIB_BASH_LOGFILE}"
 
     # Temporary log storage (e.g., for session-specific logs)
-    : "${LIB_BASH_LOGFILE_TMP:=/var/log/lib_bash_$(whoami)_tmp.log}"
+    : "${LIB_BASH_LOGFILE_TMP:=/var/log/lib_bash/$(whoami)/lib_bash_tmp.log}"
+    create_log_dir "${LIB_BASH_LOGFILE_TMP}"
 
     # Error-specific log file (persistent errors)
-    : "${LIB_BASH_LOGFILE_ERR:=/var/log/lib_bash_$(whoami)_err.log}"
+    : "${LIB_BASH_LOGFILE_ERR:=/var/log/lib_bash/$(whoami)/lib_bash_err.log}"
+    create_log_dir "${LIB_BASH_LOGFILE_ERR}"
 
     # Temporary error log storage (ephemeral error tracking)
-    : "${LIB_BASH_LOGFILE_ERR_TMP:=/var/log/lib_bash_$(whoami)_err_tmp.log}"
+    : "${LIB_BASH_LOGFILE_ERR_TMP:=/var/log/lib_bash/$(whoami)/lib_bash_err_tmp.log}"
+    create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
 
     # -----------------------------------------------------------
     # Technical notes:
@@ -30,9 +44,10 @@ function set_default_settings {
     # 2. ${VAR:=DEFAULT} syntax:
     #    - Sets VAR to DEFAULT if VAR is unset or empty
     #    - Preserves existing non-empty values
-    # 3. All paths use /var/log/ as default base directory
+    # 3. All paths use /var/log/lib_bash/$(whoami)/ as default base directory
     # 4. Handles empty string values (e.g., explicitly set to "")
     # 5. No-op if variables already contain non-empty values
+    # 6. make sure the user hae rights to write to the log directory
 }
 
 ########################################################################################################################################################
