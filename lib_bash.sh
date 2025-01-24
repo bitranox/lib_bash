@@ -1064,7 +1064,7 @@ function  lib_bash_path_exist {
 
 
 
-function MAIN {
+function LIB_BASH_MAIN {
   source_lib_bash_dependencies
   lib_bash_set_askpass
   set_default_settings
@@ -1076,6 +1076,8 @@ function MAIN {
 (
 # shellcheck disable=SC2034
 LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+# shellcheck disable=SC2034
+LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="LIB_BASH_MAIN"
 source_lib_bash_dependencies
 lib_bash_set_askpass
 set_default_settings
