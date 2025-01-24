@@ -12,6 +12,7 @@ function MAIN {
 if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
     declare -r LIB_BASH_IS_UP_TO_DATE="true" &>/dev/null
     (
+    echo "DEBUG - try to update"
     # shellcheck disable=SC2034
     LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
     # shellcheck disable=SC2034
