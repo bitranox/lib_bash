@@ -72,7 +72,6 @@ function source_lib_bash_dependencies {
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
-    source "${my_dir}/self_update.sh"
 }
 
 #########################################################################################################################################################
