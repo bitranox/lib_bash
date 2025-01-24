@@ -1069,10 +1069,14 @@ function  lib_bash_path_exist {
 
 
 function MAIN {
+  source_lib_bash_dependencies
+  lib_bash_set_askpass
+  set_default_settings
   ## make it possible to call functions without source include
   call_function_from_commandline "${0}" "${@}"
 }
 
+# update myself in a subshell
 (
 LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
 LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
