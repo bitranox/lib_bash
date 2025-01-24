@@ -2,6 +2,7 @@
 ## shellcheck disable=SC2164
 ## shellcheck disable=SC2155
 ## shellcheck disable=SC2034
+echo "source lib_bash.sh from sample_self_updaiting_main_script.sh"
 source /usr/local/lib_bash/lib_bash.sh
 
 function SAMPLE_MAIN {

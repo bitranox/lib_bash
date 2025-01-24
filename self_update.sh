@@ -197,5 +197,6 @@ function lib_bash_self_update {
 
 if ! declare -F "source_lib_bash_dependencies" &>/dev/null; then
     LIB_BASH_DO_NOT_UPDATE="True"
+    echo "source lib_bash.sh from lib_bash_self_update.sh"
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib_bash.sh"
 fi
