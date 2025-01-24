@@ -27,25 +27,25 @@ function is_lib_bash_up_to_date {
     local git_remote_hash git_local_hash default_branch
 
     # Check if the directory is within a Git repository
-    if ! git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if ! git -C "${CALLER_SCRIPT_PATH_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         # Not within a Git repository - cannot check for updates
         return 0
     fi
 
     # Safely get default branch (suppress stderr)
-    default_branch=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
+    default_branch=$(git -C "${CALLER_SCRIPT_PATH_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
         log_err "Failed to determine default branch - ensure you have the latest repository clone."
         return 0
     }
 
     # Get remote hash (suppress stderr)
-    git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" 2>/dev/null | awk '{print $1}') || {
+    git_remote_hash=$(git -C "${CALLER_SCRIPT_PATH_DIR}" ls-remote origin --heads "${default_branch}" 2>/dev/null | awk '{print $1}') || {
         log_err "Failed to fetch remote hash - check network and repository access."
         return 0
     }
 
     # Get local hash (suppress stderr)
-    git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD 2>/dev/null) || {
+    git_local_hash=$(git -C "${CALLER_SCRIPT_PATH_DIR}" rev-parse HEAD 2>/dev/null) || {
         log_warn "Failed to retrieve local commit hash - repository may be corrupted."
         return 0
     }
@@ -58,7 +58,7 @@ function lib_bash_update_myself {
     local default_branch
     (
         set -eo pipefail
-        cd "${LIB_BASH_SELF_UPDATE_SELF_DIR}" || exit 99
+        cd "${CALLER_SCRIPT_PATH_DIR}" || exit 99
 
         # Get default branch
         default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') || exit 100
@@ -127,8 +127,8 @@ function check_self_update_ownership {
 #######################################
 # Validate required dependencies for self-update
 # Globals:
-#   LIB_BASH_SELF_UPDATE_SELF
-#   LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION
+#   CALLER_SCRIPT_PATH
+#   CALLER_SCRIPT_MAIN_FUNCTION
 # Arguments:
 #   None
 # Returns:
@@ -138,8 +138,8 @@ function check_self_update_ownership {
 function _validate_self_update_dependencies {
     # Check required variables
     local missing_vars=()
-    [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" ]] && missing_vars+=("LIB_BASH_SELF_UPDATE_SELF")
-    [[ -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]] && missing_vars+=("LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION")
+    [[ -z "${CALLER_SCRIPT_PATH}" ]] && missing_vars+=("CALLER_SCRIPT_PATH")
+    [[ -z "${CALLER_SCRIPT_MAIN_FUNCTION}" ]] && missing_vars+=("CALLER_SCRIPT_MAIN_FUNCTION")
 
     if (( ${#missing_vars[@]} > 0 )); then
         log_err "Missing required variables: ${missing_vars[*]}"
@@ -147,8 +147,8 @@ function _validate_self_update_dependencies {
     fi
 
     # Check main function existence
-    if ! declare -F "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" >/dev/null; then
-        log_err "Main function not found: ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}"
+    if ! declare -F "${CALLER_SCRIPT_MAIN_FUNCTION}" >/dev/null; then
+        log_err "Main function not found: ${CALLER_SCRIPT_MAIN_FUNCTION}"
         return 1
     fi
 
@@ -157,16 +157,19 @@ function _validate_self_update_dependencies {
 
 #######################################
 # Perform self-update if needed
-# Globals:
-#   LIB_BASH_SELF_UPDATE_SELF
-#   BASH
 # Arguments:
-#   All arguments passed to the script
+#   CALLER_SCRIPT_PATH
+#   CALLER_SCRIPT_MAIN_FUNCTION
+#   All remaining arguments are passed to the script
 # Returns:
 #   Exits script on successful update
 #   Returns error code on failure
 #######################################
 function lib_bash_self_update {
+     local CALLER_SCRIPT_PATH="{$1}"
+     local CALLER_SCRIPT_MAIN_FUNCTION="{$2}"
+     shift 2
+     local CALLER_SCRIPT_ARGS=("$@")
     if ! is_lib_bash_up_to_date; then
         log "Update available! Performing self-update..."
 
@@ -174,18 +177,19 @@ function lib_bash_self_update {
         _validate_self_update_dependencies || return $?
 
         # Verify file ownership
-        check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}" || return $?
+        check_self_update_own
+        ership "${CALLER_SCRIPT_PATH}" || return $?
 
         # Perform update
 
         if lib_bash_update_myself; then
-            log "Successfully updated! Restarting...${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}@${LIB_BASH_SELF_UPDATE_SELF}"
+            log "Successfully updated! Restarting...${CALLER_SCRIPT_MAIN_FUNCTION}@${CALLER_SCRIPT_PATH}"
 
             # Clean restart with updated script
             exec "${BASH}" --noprofile --norc -c \
-                "source '${LIB_BASH_SELF_UPDATE_SELF}' && \
-                '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
-                _ "$@"
+                "source '${CALLER_SCRIPT_PATH}' && \
+                '${CALLER_SCRIPT_MAIN_FUNCTION}' \"\$@\"" \
+                _ "${CALLER_SCRIPT_ARGS[@]}"
         else
             local update_status=$?
             log_err "Update failed with error code: ${update_status}"
