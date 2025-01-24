@@ -252,6 +252,25 @@ function log_err {
   done <<< "${message}"
 }
 
+function log_warn {
+  local message="${1}"
+  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
+  local logline
+
+
+  # Process each line in the message
+  while IFS= read -r line; do
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: WARNING [WW]: ${line}"
+    if [[ "${options}" != *NO_TTY* ]]; then
+      clr_bold clr_yellow "${logline}"
+    fi
+    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
+    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
+  done <<< "${message}"
+}
+
 function logc {
   # Log the output of a command with support for error handling.
   # Arguments:
