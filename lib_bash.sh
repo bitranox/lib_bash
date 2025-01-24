@@ -281,6 +281,7 @@ function log {
   local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
   local logline
 
+  _LIB_BASH_HOSTNAME="$(hostname -s)"
   # Process each line in the message
   while IFS= read -r line; do
     logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
