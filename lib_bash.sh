@@ -1029,52 +1029,36 @@ function is_sourced {
 }
 
 ########################################################################################################################################################
-# SELF-UPDATE CORE LOGIC
+# SELF-UPDATE CORE LOGIC (ADD TO lib_bash.sh)
 ########################################################################################################################################################
 
-function _lib_bash_get_script_dir {
-    SOURCE="${BASH_SOURCE[0]}"
-    while [ -h "$SOURCE" ]; do
-        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-        SOURCE="$(readlink "$SOURCE")"
-        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-    done
-    echo "$(cd -P "$(dirname "$SOURCE")" && pwd)"
+function _lib_bash_restart_parent {
+    # Get parent script path (the script that sourced lib_bash.sh)
+    local parent_script=$(readlink -f "${BASH_SOURCE[-1]}")
+    local script_args=("${@}")
+
+    log "Restarting parent script to apply updates"
+    exec "$BASH" --noprofile --norc "$parent_script" "${script_args[@]}"
+    exit 0
 }
 
-function _lib_bash_check_update {
-    local script_dir=$(_lib_bash_get_script_dir)
+function _lib_bash_self_update {
+    local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
 
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         log "New version available, updating..."
         git -C "$script_dir" fetch --all
-        git -C "$script_dir" reset --hard origin/main &>/dev/null
-        git -C "$script_dir" reset --hard origin/master &>/dev/null
+        git -C "$script_dir" reset --hard origin/main
         git -C "$script_dir" clean -fd
         return 0
     fi
     return 1
 }
 
-function _lib_bash_restart {
-    local main_script
-    local script_args=("$@")
-
-    if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-        # Direct execution mode
-        exec "$BASH" "$0" "${script_args[@]}"
-    else
-        # Sourced mode - find parent script
-        main_script=$(readlink -f "${BASH_SOURCE[-1]}")
-        exec "$BASH" "$main_script" "${script_args[@]}"
-    fi
-    exit 0
-}
-
 ########################################################################################################################################################
-# INITIALIZATION AND UPDATE HANDLING
+# MODIFIED INITIALIZATION (REPLACE EXISTING INIT BLOCK)
 ########################################################################################################################################################
 
 function LIB_BASH_MAIN {
@@ -1082,31 +1066,23 @@ function LIB_BASH_MAIN {
     lib_bash_set_askpass
     set_default_settings
 
-    # Check if we need to restart after update
-    if [[ -n "$LIB_BASH_NEEDS_RESTART" ]]; then
-        unset LIB_BASH_NEEDS_RESTART
-        _lib_bash_restart "$@"
-    fi
-
     if ! is_sourced; then
         call_function_from_commandline "${0}" "${@}"
     fi
 }
 
-# Initialization and update check
-if [[ -z "$LIB_BASH_NO_UPDATE" ]]; then
-    if _lib_bash_check_update; then
-        export LIB_BASH_NEEDS_RESTART=1
+# Self-update and restart logic
+if [[ -z "$LIB_BASH_RESTARTED" ]]; then
+    export LIB_BASH_RESTARTED=1
+    if _lib_bash_self_update; then
         if is_sourced; then
-            return 0
+            # Restart parent script when sourced
+            _lib_bash_restart_parent "$@"
         else
-            _lib_bash_restart "$@"
+            # Restart directly when executed
+            exec "$BASH" --noprofile --norc "$0" "$@"
         fi
     fi
 fi
 
-# Cleanup environment variables
-unset LIB_BASH_NO_UPDATE
-
-# Main execution
 LIB_BASH_MAIN "$@"
