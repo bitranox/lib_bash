@@ -1036,9 +1036,8 @@ function LIB_BASH_MAIN {
 }
 
 # update myself in a subshell - only once per session
-if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
+if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]] && [[ ! -v LIB_BASH_DO_NOT_UPDATE ]]; then
     declare -r LIB_BASH_IS_UP_TO_DATE="true" &>/dev/null
-    (
     # shellcheck disable=SC2034
     LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
     # shellcheck disable=SC2034
@@ -1047,10 +1046,10 @@ if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
     lib_bash_set_askpass
     set_default_settings
     lib_bash_self_update "$@"
-    )
-else
-    echo "before lib_bash_main" "${0}" "${@}"
-    LIB_BASH_MAIN "$@"
 fi
+
+echo "before LIB_BASH_MAIN" "${0}" "${@}"
+LIB_BASH_MAIN "$@"
+
 
 
