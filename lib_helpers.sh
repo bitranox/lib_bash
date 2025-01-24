@@ -20,6 +20,6 @@ else
     # --- Falls ausgeführt wird ---
     # Führe lib_bash mit allen Parametern in sauberem Kontext aus
     exec "${BASH}" --noprofile --norc -c \
-        "source '${LIB_BASH_MAIN}' && lib_bash_main \"\$@\"" \
+        "source '${LIB_BASH_MAIN}' && LIB_BASH_MAIN \"\$@\"" \
         _ "$@"
 fi
