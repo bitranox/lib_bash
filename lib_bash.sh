@@ -192,6 +192,7 @@ function is_root {
     fi
 }
 
+
 function exit_if_not_is_root {
 if ! is_root; then
     echo "lib_bash: You need to run this script or function as root."
@@ -1050,7 +1051,8 @@ function _lib_bash_self_update {
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         log "New version available, updating..."
         git -C "$script_dir" fetch --all
-        git -C "$script_dir" reset --hard origin/main
+        git -C "$script_dir" reset --hard origin/main &> /dev/null
+        git -C "$script_dir" reset --hard origin/master &> /dev/null
         git -C "$script_dir" clean -fd
         return 0
     fi
