@@ -89,7 +89,7 @@ function lib_bash_update_myself {
 #######################################
 function check_self_update_ownership {
     local file="$1"
-    local current_uid file_uid file_owner stat_exit_code
+    local current_uid file_uid file_owner
 
     # Verify file existence
     if [[ ! -e "$file" ]]; then
