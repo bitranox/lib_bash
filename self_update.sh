@@ -116,18 +116,20 @@ function lib_bash_self_update {
             fi
         fi
 
-        if ! is_lib_bash_up_to_date && check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
-            LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
-            if lib_bash_update_myself; then
-                log "Successfully updated! Restarting..."
-                # Restart Bash without config files, load the script's library, and run its main function.
-                exec "${BASH}" --noprofile --norc -c \
-                    "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
-                    _ "$@"
-            else
-                local ret=$?
-                log_err "Update failed with error code $ret"
-                return $ret
+        if ! is_lib_bash_up_to_date; then
+            if check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
+                LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
+                if lib_bash_update_myself; then
+                    log "Successfully updated! Restarting..."
+                    # Restart Bash without config files, load the script's library, and run its main function.
+                    exec "${BASH}" --noprofile --norc -c \
+                        "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
+                        _ "$@"
+                else
+                    local ret=$?
+                    log_err "Update failed with error code $ret"
+                    return $ret
+                fi
             fi
         fi
 }
