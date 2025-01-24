@@ -58,22 +58,33 @@ function clr_layer {
         fi
     done
 
-    clr_escape "$CLR_STACK" "$CLR_SWITCHES"
+    # Split CLR_STACK into codes and text
+    local CODES=()
+    local TEXT_PARTS=()
+    for part in $CLR_STACK; do
+        if [[ $part =~ ^[0-9]+$ ]]; then
+            CODES+=("$part")
+        else
+            TEXT_PARTS+=("$part")
+        fi
+    done
+    local TEXT="${TEXT_PARTS[*]}"
+
+    clr_escape "$TEXT" "${CODES[@]}"
 }
 
 # Escape sequence generator
 function clr_escape {
     local text="$1"
     shift
-    local codes=()
+    local codes=("$@")
 
     # Validate and collect codes
-    for code in "$@"; do
+    for code in "${codes[@]}"; do
         if [[ ! "$code" =~ ^[0-9]+$ || "$code" -lt 0 || "$code" -gt 49 ]]; then
             echo "Invalid escape code: $code" >&2
             return 1
         fi
-        codes+=("$code")
     done
 
     # Build escape sequence
@@ -153,7 +164,6 @@ function clr_dump {
         done
     done
 }
-
 
 # Utility functions
 function fail {
