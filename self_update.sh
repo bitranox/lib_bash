@@ -25,13 +25,6 @@
 # UPDATE MYSELF
 ##############################################################################
 
-# Dependency check (ensure these are defined in the main script)
-# if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
-if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]]; then
-  echo "ERROR: LIB_BASH_SELF and LIB_BASH_DIR and function MAIN must be defined in the main script" >&2
-  exit 1
-fi
-
 ########################################################################################################################################################
 # UPDATE MYSELF
 ########################################################################################################################################################
@@ -95,7 +88,13 @@ function lib_bash_update_myself {
 }
 
 function lib_bash_self_update {
-    if ! is_lib_bash_up_to_date; then
+        if ! is_lib_bash_up_to_date; then
+            # Dependency check (ensure these are defined in the main script)
+            if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
+              log_err "LIB_BASH_SELF , LIB_BASH_DIR and function MAIN must be defined in the main script" >&2
+              exit 1
+        fi
+
         log "Update available! Performing self-update..."
         if lib_bash_update_myself; then
             log "Successfully updated! Restarting..."
