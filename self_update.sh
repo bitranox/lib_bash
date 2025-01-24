@@ -114,9 +114,7 @@ function lib_bash_self_update {
               log_err "the main function ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION} must be defined in the calling script"
               exit 1
             fi
-        fi
 
-        if ! is_lib_bash_up_to_date; then
             if check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
                 LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
                 if lib_bash_update_myself; then
