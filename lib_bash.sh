@@ -1036,7 +1036,7 @@ function LIB_BASH_MAIN {
 
 # update myself in a subshell - only once per session
 if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
-    LIB_BASH_IS_UP_TO_DATE="true" &>/dev/null
+    declare -r LIB_BASH_IS_UP_TO_DATE="true" &>/dev/null
     (
     # shellcheck disable=SC2034
     LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
