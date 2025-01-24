@@ -79,12 +79,11 @@ function lib_bash_self_update {
             if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" || -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]]; then
               log_err "LIB_BASH_SELF_UPDATE_SELF and function LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION must be defined in the calling script"
               exit 1
+            fi
             if ! declare -F "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" >/dev/null 2>&1 ; then
               log_err "the main function ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION} must be defined in the calling script"
               exit 1
-
-
-        fi
+            fi
 
         log "Update available! Performing self-update..."
         LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
@@ -104,5 +103,5 @@ function lib_bash_self_update {
 
 if ! declare -F "source_lib_bash_dependencies" >/dev/null 2>&1
 then
-    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib_helpers.sh"
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib_bash.sh"
 fi
