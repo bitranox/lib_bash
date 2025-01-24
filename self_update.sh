@@ -44,8 +44,8 @@ function is_lib_bash_up_to_date {
 
     # Get local hash
     git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD) || {
-        log_err "Failed to get local hash"
-        return 4
+        log_warn "Failed to get local hash - can not check platform self update"
+        return 0
     }
 
     [[ "${git_remote_hash}" == "${git_local_hash}" ]] && return 0
