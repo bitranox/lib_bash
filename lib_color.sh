@@ -175,6 +175,7 @@ function warn {
     clr_yellow "$(clr_bold "[WARNING] ${1}")" >&2
 }
 
+
 # Only execute if run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     case "$1" in
