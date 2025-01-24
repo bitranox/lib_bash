@@ -116,7 +116,7 @@ function lib_bash_self_update {
             fi
         fi
 
-        if ! is_lib_bash_up_to_date || check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
+        if ! is_lib_bash_up_to_date && check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
             LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
             if lib_bash_update_myself; then
                 log "Successfully updated! Restarting..."
