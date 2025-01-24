@@ -73,8 +73,38 @@ function lib_bash_update_myself {
     return $?
 }
 
+function check_self_update_ownership {
+    # Validate that the specified file is owned by the current user
+    # Usage: check_self_update_ownership "/path/to/file"
+    # Returns: 0 if ownership matches, 1 if not
+
+    local file="$1"
+    local current_uid
+    local file_uid
+    local file_owner
+
+    # Get current user's UID
+    current_uid=$(id -u)
+
+    # Get file's UID (cross-platform)
+    file_uid=$(stat -c '%u' "$file" 2>/dev/null || stat -f '%u' "$file" 2>/dev/null)
+
+    # Get file owner's username (cross-platform)
+    file_owner=$(stat -c '%U' "$file" 2>/dev/null || stat -f '%Su' "$file" 2>/dev/null)
+
+    # Compare UIDs for ownership check
+    if [ "$file_uid" -ne "$current_uid" ]; then
+        log_warn "Cannot self_update: The file '${file}' is owned by '${file_owner}' (UID: ${file_uid}), not your account (UID: ${current_uid})"
+        return 1
+    fi
+
+    return 0
+}
+
+
 function lib_bash_self_update {
         if ! is_lib_bash_up_to_date; then
+            log "Update available! Performing self-update..."
             # Dependency check (ensure these are defined in the main script)
             if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" || -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]]; then
               log_err "LIB_BASH_SELF_UPDATE_SELF and function LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION must be defined in the calling script"
@@ -84,21 +114,22 @@ function lib_bash_self_update {
               log_err "the main function ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION} must be defined in the calling script"
               exit 1
             fi
-
-        log "Update available! Performing self-update..."
-        LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
-        if lib_bash_update_myself; then
-            log "Successfully updated! Restarting..."
-            # Restart Bash without config files, load the script's library, and run its main function.
-            exec "${BASH}" --noprofile --norc -c \
-                "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
-                _ "$@"
-        else
-            local ret=$?
-            log_err "Update failed with error code $ret"
-            return $ret
         fi
-    fi
+
+        if ! is_lib_bash_up_to_date || check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
+            LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
+            if lib_bash_update_myself; then
+                log "Successfully updated! Restarting..."
+                # Restart Bash without config files, load the script's library, and run its main function.
+                exec "${BASH}" --noprofile --norc -c \
+                    "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
+                    _ "$@"
+            else
+                local ret=$?
+                log_err "Update failed with error code $ret"
+                return $ret
+            fi
+        fi
 }
 
 if ! declare -F "source_lib_bash_dependencies" >/dev/null 2>&1
