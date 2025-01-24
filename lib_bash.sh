@@ -1048,7 +1048,7 @@ if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]] && [[ ! -v LIB_BASH_DO_NOT_UPDATE ]]; then
     lib_bash_self_update "$@"
 fi
 
-echo "before LIB_BASH_MAIN" "${0}" "${@}"
+echo "CALLING LIB_BASH_MAIN" "${0}" "${@}"
 LIB_BASH_MAIN "$@"
 
 
