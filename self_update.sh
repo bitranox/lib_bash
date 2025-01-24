@@ -73,64 +73,129 @@ function lib_bash_update_myself {
     return $?
 }
 
-function check_self_update_ownership {
-    # Validate that the specified file is owned by the current user
-    # Usage: check_self_update_ownership "/path/to/file"
-    # Returns: 0 if ownership matches, 1 if not
+#!/bin/bash
 
+#######################################
+# Validate file ownership for self-update
+# Globals:
+#   None
+# Arguments:
+#   $1: file path to check
+# Returns:
+#   0 - ownership matches
+#   1 - ownership mismatch
+#   2 - file not found
+#   3 - stat command failed
+# Outputs:
+#   Warning messages on ownership mismatch
+#######################################
+function check_self_update_ownership {
     local file="$1"
-    local current_uid
-    local file_uid
-    local file_owner
+    local current_uid file_uid file_owner stat_exit_code
+
+    # Verify file existence
+    if [[ ! -e "$file" ]]; then
+        log_warn "File not found: '${file}'"
+        return 2
+    fi
 
     # Get current user's UID
-    current_uid=$(id -u)
+    current_uid=$(id -u) || return 3
 
-    # Get file's UID (cross-platform)
-    file_uid=$(stat -c '%u' "$file" 2>/dev/null || stat -f '%u' "$file" 2>/dev/null)
+    # Cross-platform UID/username retrieval
+    if ! file_uid=$(stat -c '%u' "$file" 2>/dev/null) && \
+       ! file_uid=$(stat -f '%u' "$file" 2>/dev/null); then
+        log_warn "Failed to get UID for: '${file}'"
+        return 3
+    fi
 
-    # Get file owner's username (cross-platform)
-    file_owner=$(stat -c '%U' "$file" 2>/dev/null || stat -f '%Su' "$file" 2>/dev/null)
+    if ! file_owner=$(stat -c '%U' "$file" 2>/dev/null) && \
+       ! file_owner=$(stat -f '%Su' "$file" 2>/dev/null); then
+        log_warn "Failed to get owner for: '${file}'"
+        return 3
+    fi
 
-    # Compare UIDs for ownership check
-    if [ "$file_uid" -ne "$current_uid" ]; then
-        log_warn "Cannot self_update: The file '${file}' is owned by '${file_owner}' (UID: ${file_uid}), not your account (UID: ${current_uid})"
+    # Ownership validation
+    if (( file_uid != current_uid )); then
+        log_warn "Cannot self-update: File '${file}' owned by '${file_owner}' (UID:${file_uid}), current UID:${current_uid}"
         return 1
     fi
 
     return 0
 }
 
+#######################################
+# Validate required dependencies for self-update
+# Globals:
+#   LIB_BASH_SELF_UPDATE_SELF
+#   LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION
+# Arguments:
+#   None
+# Returns:
+#   0 - all dependencies met
+#   1 - missing dependencies
+#######################################
+function _validate_self_update_dependencies {
+    # Check required variables
+    local missing_vars=()
+    [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" ]] && missing_vars+=("LIB_BASH_SELF_UPDATE_SELF")
+    [[ -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]] && missing_vars+=("LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION")
 
-function lib_bash_self_update {
-        if ! is_lib_bash_up_to_date; then
-            log "Update available! Performing self-update..."
-            # Dependency check (ensure these are defined in the main script)
-            if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" || -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]]; then
-              log_err "LIB_BASH_SELF_UPDATE_SELF and function LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION must be defined in the calling script"
-              exit 1
-            fi
-            if ! declare -F "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" >/dev/null 2>&1 ; then
-              log_err "the main function ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION} must be defined in the calling script"
-              exit 1
-            fi
+    if (( ${#missing_vars[@]} > 0 )); then
+        log_err "Missing required variables: ${missing_vars[*]}"
+        return 1
+    fi
 
-            if check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}"; then
-                LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
-                if lib_bash_update_myself; then
-                    log "Successfully updated! Restarting..."
-                    # Restart Bash without config files, load the script's library, and run its main function.
-                    exec "${BASH}" --noprofile --norc -c \
-                        "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
-                        _ "$@"
-                else
-                    local ret=$?
-                    log_err "Update failed with error code $ret"
-                    return $ret
-                fi
-            fi
-        fi
+    # Check main function existence
+    if ! declare -F "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" >/dev/null; then
+        log_err "Main function not found: ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}"
+        return 1
+    fi
+
+    return 0
 }
+
+#######################################
+# Perform self-update if needed
+# Globals:
+#   LIB_BASH_SELF_UPDATE_SELF
+#   BASH
+# Arguments:
+#   All arguments passed to the script
+# Returns:
+#   Exits script on successful update
+#   Returns error code on failure
+#######################################
+function lib_bash_self_update {
+    if ! is_lib_bash_up_to_date; then
+        log "Update available! Performing self-update..."
+
+        # Validate dependencies
+        _validate_self_update_dependencies || return $?
+
+        # Verify file ownership
+        check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}" || return $?
+
+        # Perform update
+        local update_dir update_result
+        update_dir=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
+
+        if lib_bash_update_myself; then
+            log "Successfully updated! Restarting..."
+
+            # Clean restart with updated script
+            exec "${BASH}" --noprofile --norc -c \
+                "source '${LIB_BASH_SELF_UPDATE_SELF}' && \
+                '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
+                _ "$@"
+        else
+            local update_status=$?
+            log_err "Update failed with error code: ${update_status}"
+            return ${update_status}
+        fi
+    fi
+}
+
 
 if ! declare -F "source_lib_bash_dependencies" >/dev/null 2>&1
 then
