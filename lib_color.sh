@@ -90,4 +90,4 @@ function clr_escape {
     # Build escape sequence
     if [ ${#codes[@]} -gt 0 ]; then
         local IFS=';'
-        text="${CLR_ESC}${codes[*]}m${text}${}
+        text="${CLR_ESC}${codes[*]}m${text}${}"
