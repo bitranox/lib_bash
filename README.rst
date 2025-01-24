@@ -8,7 +8,7 @@ Some Bash Script Helpers and useful functions
 .. code-block:: bash
 
     # Install :
-    sudo git clone https://github.com/bitranox/lib_bash.git /usr/local
+    sudo git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
 
     # Sample Usage
     /usr/local/lib_bash/sample_self_updating_main_script.sh
