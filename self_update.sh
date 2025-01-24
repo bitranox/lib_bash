@@ -175,8 +175,6 @@ function lib_bash_self_update {
         check_self_update_ownership "${LIB_BASH_SELF_UPDATE_SELF}" || return $?
 
         # Perform update
-        local update_dir update_result
-        update_dir=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
 
         if lib_bash_update_myself; then
             log "Successfully updated! Restarting..."
