@@ -4,7 +4,7 @@
 # Holen des absoluten Pfads des Skripts selbst (funktioniert bei Sourcing und Execution)
 declare -r LIB_BASH_SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 declare -r LIB_BASH_DIR="$(dirname "${LIB_BASH_SELF}")"
-declare -r LIB_BASH_MAIN="${LIB_BASH_DIR}/lib_bash"
+declare -r LIB_BASH_MAIN="${LIB_BASH_DIR}/lib_bash.sh"
 
 # Unterschiedliches Verhalten je nach Kontext
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
