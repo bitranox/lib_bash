@@ -1047,10 +1047,8 @@ function LIB_BASH_MAIN {
 # update myself in a subshell - only once per session
 if [[ ! -v LIB_BASH_DO_NOT_UPDATE ]]; then
     declare -r LIB_BASH_DO_NOT_UPDATE="true" &>/dev/null
-    # shellcheck disable=SC2034
-    LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
-    # shellcheck disable=SC2034
-    LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="LIB_BASH_MAIN"
+    : "${LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")}"
+    : "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="LIB_BASH_MAIN"}"
     source_lib_bash_dependencies
     lib_bash_set_askpass
     set_default_settings
