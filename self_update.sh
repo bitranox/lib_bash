@@ -73,8 +73,6 @@ function lib_bash_update_myself {
     return $?
 }
 
-#!/bin/bash
-
 #######################################
 # Validate file ownership for self-update
 # Globals:
