@@ -1065,6 +1065,7 @@ function _lib_bash_self_update {
 
 function LIB_BASH_MAIN {
     if ! is_sourced; then
+        log "New Version"
         call_function_from_commandline "${0}" "${@}"
     fi
 }
