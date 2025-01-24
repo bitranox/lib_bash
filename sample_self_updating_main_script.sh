@@ -19,6 +19,8 @@ if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
     source /usr/local/lib_bash/self_update.sh
     lib_bash_self_update "$@"
     )
+else
+    MAIN "$@"
 fi
 
-MAIN "$@"
+

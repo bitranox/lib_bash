@@ -1046,6 +1046,8 @@ if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
     set_default_settings
     lib_bash_self_update "$@"
     )
+else
+    LIB_BASH_MAIN "$@"
 fi
 
-LIB_BASH_MAIN "$@"
+
