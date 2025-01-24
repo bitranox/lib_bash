@@ -1063,6 +1063,7 @@ function  lib_bash_path_exist {
 }
 
 
+
 function MAIN {
   source_lib_bash_dependencies
   lib_bash_set_askpass
