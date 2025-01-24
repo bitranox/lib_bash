@@ -1049,6 +1049,7 @@ if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
     lib_bash_self_update "$@"
     )
 else
+    echo "before lib_bash_main" "${0}" "${@}"
     LIB_BASH_MAIN "$@"
 fi
 
