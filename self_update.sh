@@ -76,9 +76,14 @@ function lib_bash_update_myself {
 function lib_bash_self_update {
         if ! is_lib_bash_up_to_date; then
             # Dependency check (ensure these are defined in the main script)
-            if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
-              log_err "LIB_BASH_SELF_UPDATE_SELF and function MAIN must be defined in the main script" >&2
+            if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" || -z "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" ]]; then
+              log_err "LIB_BASH_SELF_UPDATE_SELF and function LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION must be defined in the calling script"
               exit 1
+            if ! declare -F "${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}" >/dev/null 2>&1 ; then
+              log_err "the main function ${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION} must be defined in the calling script"
+              exit 1
+
+
         fi
 
         log "Update available! Performing self-update..."
@@ -87,7 +92,7 @@ function lib_bash_self_update {
             log "Successfully updated! Restarting..."
             # Restart Bash without config files, load the script's library, and run its main function.
             exec "${BASH}" --noprofile --norc -c \
-                "source '${LIB_BASH_SELF_UPDATE_SELF}' && main \"\$@\"" \
+                "source '${LIB_BASH_SELF_UPDATE_SELF}' && '${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}' \"\$@\"" \
                 _ "$@"
         else
             local ret=$?

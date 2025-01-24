@@ -11,6 +11,7 @@ function MAIN {
 # update myself in a subshell
 (
 LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="MAIN"
 source /usr/local/lib_bash/self_update.sh
 lib_bash_self_update "$@"
 )
