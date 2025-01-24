@@ -1064,14 +1064,14 @@ function _lib_bash_self_update {
 ########################################################################################################################################################
 
 function LIB_BASH_MAIN {
-    source_lib_bash_dependencies
-    lib_bash_set_askpass
-    set_default_settings
-
     if ! is_sourced; then
         call_function_from_commandline "${0}" "${@}"
     fi
 }
+
+source_lib_bash_dependencies
+lib_bash_set_askpass
+set_default_settings
 
 # Self-update and restart logic
 if [[ -z "$LIB_BASH_RESTARTED" ]]; then
