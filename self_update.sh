@@ -31,19 +31,19 @@ function is_lib_bash_up_to_date {
     local git_remote_hash git_local_hash default_branch
 
     # Safely get default branch
-    default_branch=$(git -C "${LIB_BASH_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
+    default_branch=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
         log_err "Failed to determine default branch"
         return 2
     }
 
     # Get remote hash
-    git_remote_hash=$(git -C "${LIB_BASH_DIR}" ls-remote origin --heads "${default_branch}" | awk '{print $1}') || {
+    git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" | awk '{print $1}') || {
         log_err "Failed to get remote hash"
         return 3
     }
 
     # Get local hash
-    git_local_hash=$(git -C "${LIB_BASH_DIR}" rev-parse HEAD) || {
+    git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD) || {
         log_err "Failed to get local hash"
         return 4
     }
@@ -56,7 +56,7 @@ function lib_bash_update_myself {
     local default_branch
     (
         set -eo pipefail
-        cd "${LIB_BASH_DIR}" || exit 99
+        cd "${LIB_BASH_SELF_UPDATE_SELF_DIR}" || exit 99
 
         # Get default branch
         default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') || exit 100
@@ -76,17 +76,18 @@ function lib_bash_update_myself {
 function lib_bash_self_update {
         if ! is_lib_bash_up_to_date; then
             # Dependency check (ensure these are defined in the main script)
-            if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
-              log_err "LIB_BASH_SELF , LIB_BASH_DIR and function MAIN must be defined in the main script" >&2
+            if [[ -z "${LIB_BASH_SELF_UPDATE_SELF}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
+              log_err "LIB_BASH_SELF_UPDATE_SELF and function MAIN must be defined in the main script" >&2
               exit 1
         fi
 
         log "Update available! Performing self-update..."
+        LIB_BASH_SELF_UPDATE_SELF_DIR=$(dirname "${LIB_BASH_SELF_UPDATE_SELF}")
         if lib_bash_update_myself; then
             log "Successfully updated! Restarting..."
             # Restart Bash without config files, load the script's library, and run its main function.
             exec "${BASH}" --noprofile --norc -c \
-                "source '${LIB_BASH_SELF}' && main \"\$@\"" \
+                "source '${LIB_BASH_SELF_UPDATE_SELF}' && main \"\$@\"" \
                 _ "$@"
         else
             local ret=$?
