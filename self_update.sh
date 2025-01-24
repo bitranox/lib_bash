@@ -30,20 +30,20 @@ function verify_commit {
 function is_lib_bash_up_to_date {
     local git_remote_hash git_local_hash default_branch
 
-    # Safely get default branch
+    # Safely get default branch (suppress stderr)
     default_branch=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
         log_err "Failed to determine default branch - can not check platform self update"
         return 0
     }
 
-    # Get remote hash
-    git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" | awk '{print $1}') || {
+    # Get remote hash (suppress stderr)
+    git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" 2>/dev/null | awk '{print $1}') || {
         log_err "Failed to get remote hash - can not check platform self update"
         return 0
     }
 
-    # Get local hash
-    git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD) || {
+    # Get local hash (suppress stderr)
+    git_local_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" rev-parse HEAD 2>/dev/null) || {
         log_warn "Failed to get local hash - can not check platform self update"
         return 0
     }
