@@ -26,7 +26,8 @@
 ##############################################################################
 
 # Dependency check (ensure these are defined in the main script)
-if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
+# if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]] || ! declare -F "MAIN" >/dev/null 2>&1 ; then
+if [[ -z "${LIB_BASH_SELF}" || -z "${LIB_BASH_DIR}" ]]; then
   echo "ERROR: LIB_BASH_SELF and LIB_BASH_DIR and function MAIN must be defined in the main script" >&2
   exit 1
 fi
