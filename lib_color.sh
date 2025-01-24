@@ -154,6 +154,7 @@ function clr_dump {
     done
 }
 
+
 # Utility functions
 function fail {
     clr_red "$(clr_bold "[ERROR] ${1}")" >&2
