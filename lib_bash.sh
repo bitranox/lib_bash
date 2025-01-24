@@ -1021,7 +1021,7 @@ function  lib_bash_path_exist {
     fi
 }
 
-function is_sourced{
+function is_sourced {
     if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         return 1
     else
