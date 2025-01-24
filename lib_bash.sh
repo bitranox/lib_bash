@@ -13,16 +13,16 @@ function set_default_settings {
     # Uses POSIX options expansion for safe default assignment
     # -----------------------------------------------------------
     # Main application log file (persistent)
-    : "${LIB_BASH_LOGFILE:=/var/log/lib_bash.log}"
+    : "${LIB_BASH_LOGFILE:=/var/log/lib_bash_$(whoami).log}"
 
     # Temporary log storage (e.g., for session-specific logs)
-    : "${LIB_BASH_LOGFILE_TMP:=/var/log/lib_bash_tmp.log}"
+    : "${LIB_BASH_LOGFILE_TMP:=/var/log/lib_bash_$(whoami)_tmp.log}"
 
     # Error-specific log file (persistent errors)
-    : "${LIB_BASH_LOGFILE_ERR:=/var/log/lib_bash_err.log}"
+    : "${LIB_BASH_LOGFILE_ERR:=/var/log/lib_bash_$(whoami)_err.log}"
 
     # Temporary error log storage (ephemeral error tracking)
-    : "${LIB_BASH_LOGFILE_ERR_TMP:=/var/log/lib_bash_err_tmp.log}"
+    : "${LIB_BASH_LOGFILE_ERR_TMP:=/var/log/lib_bash_$(whoami)_err_tmp.log}"
 
     # -----------------------------------------------------------
     # Technical notes:

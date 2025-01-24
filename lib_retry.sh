@@ -15,9 +15,6 @@ function include_dependencies {
     source "${my_dir}/lib_color.sh"
 }
 
-include_dependencies
-
-
 # This directive only applies to this function
 # shellcheck disable=SC2015
 function retry {
@@ -65,4 +62,5 @@ function retry_nofail {
 }
 
 ## make it possible to call functions without source include
+include_dependencies
 call_function_from_commandline "${0}" "${@}"
