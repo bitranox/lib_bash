@@ -194,7 +194,7 @@ function lib_bash_self_update {
     fi
 }
 
-function is_sourced{
+function is_sourced {
     if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
         return 1
     else
