@@ -111,6 +111,49 @@ function clr_magentab        { clr_layer $CLR_MAGENTAB "$@";        }
 function clr_cyanb           { clr_layer $CLR_CYANB "$@";           }
 function clr_whiteb          { clr_layer $CLR_WHITEB "$@";          }
 
+function clr_dump {
+    # Define foreground and background color codes and names
+    local fg_colors=(
+        "30:BLACK"
+        "31:RED"
+        "32:GREEN"
+        "33:YELLOW"
+        "34:BLUE"
+        "35:MAGENTA"
+        "36:CYAN"
+        "37:WHITE"
+    )
+    local bg_colors=(
+        "40:BLACKB"
+        "41:REDB"
+        "42:GREENB"
+        "43:YELLOWB"
+        "44:BLUEB"
+        "45:MAGENTAB"
+        "46:CYANB"
+        "47:WHITEB"
+    )
+
+    # Iterate over each foreground and background combination
+    for fg_entry in "${fg_colors[@]}"; do
+        local fg_code="${fg_entry%%:*}"
+        local fg_name="${fg_entry##*:}"
+        for bg_entry in "${bg_colors[@]}"; do
+            local bg_code="${bg_entry%%:*}"
+            local bg_name="${bg_entry##*:}"
+            # Skip combinations where background is the same as foreground
+            if (( bg_code - fg_code == 10 )); then
+                continue
+            fi
+            # Construct the escape sequences
+            local start="${CLR_ESC}${fg_code};${bg_code}m"
+            local reset="${CLR_ESC}${CLR_RESET}m"
+            # Print the formatted text and description
+            printf "%b%s%b - %s on %s\n" "$start" "Text" "$reset" "$fg_name" "$bg_name"
+        done
+    done
+}
+
 # Utility functions
 function fail {
     clr_red "$(clr_bold "[ERROR] ${1}")" >&2
