@@ -1030,6 +1030,8 @@ function LIB_BASH_MAIN {
   lib_bash_set_askpass
   set_default_settings
   ## make it possible to call functions without source include
+  #
+  echo "CALLING" "$0" "$@"
   call_function_from_commandline "${0}" "${@}"
 }
 
