@@ -1,6 +1,3 @@
-Here's the revised README tailored for lib_color.sh as part of the lib_bash collection:
-
-```markdown
 # lib_color.sh - Bash Terminal Color Library
 
 ![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)  
@@ -28,13 +25,13 @@ echo "$(clr_bold "$(clr_green "SUCCESS")") $(clr_blue "Color output made easy")"
 
 ### As part of lib_bash
 ```bash
-git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
-source /usr/local/lib_bash/lib_color.sh
+git clone https://github.com/bitranox/lib_bash.git
+source lib_bash/lib_color.sh
 ```
 
 ### Standalone usage
 ```bash
-curl -O https://raw.githubusercontent.com/bitranox/lib_bash/main/lib_color.sh
+curl -O https://raw.githubusercontent.com/bitranox/lib_bash/master/lib_color.sh
 source lib_color.sh
 ```
 
@@ -59,8 +56,8 @@ lib_color.sh --dump
 ## API Reference
 
 ### Text Formatting
-| Function           | Description                     |
-|--------------------|---------------------------------|
+| Function           | Description                    |
+|--------------------|--------------------------------|
 | `clr_bold`         | Bold text style                |
 | `clr_underscore`   | Underlined text                |
 | `clr_reverse`      | Reverse video effect           |
@@ -112,7 +109,7 @@ Display all 896 possible color/style combinations:
 lib_color.sh --dump
 ```
 
-![Color Combination Demo](https://raw.githubusercontent.com/bitranox/lib_bash/main/docs/color_demo_screenshot.png)
+![Color Combination Demo](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/color_demo_screenshot.png)
 
 ## Requirements
 
@@ -121,11 +118,15 @@ lib_color.sh --dump
 
 ## License
 
-GNU General Public License v3.0 - See [LICENSE](https://github.com/bitranox/lib_bash/blob/main/LICENSE) file.
+GNU General Public License v3.0 - See [LICENSE](https://github.com/bitranox/lib_bash/blob/master/docs/LICENSE) file.
 
 ## lib_bash Ecosystem
 
-Part of a comprehensive Bash utilities collection
+Part of a comprehensive Bash utilities collection:
+- **lib_color.sh** - Terminal color formatting
+- **lib_bash.sh** - a bunch of small helpers and source the whole collection at once
+- **lib_retry.sh** - the name is obviouse
+- **self_update.sh** - make Your script self updating
 - [View all modules...](https://github.com/bitranox/lib_bash)
 
 ## Contributing
@@ -136,10 +137,9 @@ Contributions welcome! Please follow lib_bash contribution guidelines:
 3. Commit changes
 4. Submit Pull Request
 
-See [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/main/CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/master/CONTRIBUTING.md) for details.
 
 ---
 
-*Tested on: Linux, macOS, Windows (WSL2)*  
+*Tested on: Linux  
 *Part of the [lib_bash](https://github.com/bitranox/lib_bash) professional scripting toolkit*
-```
