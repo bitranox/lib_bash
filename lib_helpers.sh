@@ -33,8 +33,6 @@ function set_default_settings {
     # 3. All paths use /var/log/ as default base directory
     # 4. Handles empty string values (e.g., explicitly set to "")
     # 5. No-op if variables already contain non-empty values
-    lib_bash_github_repo="https://github.com/bitranox/lib_bash.git"
-    lib_bash_target_dir="/usr/local/lib_bash"
 }
 
 ########################################################################################################################################################
@@ -59,6 +57,7 @@ function source_lib_bash_dependencies {
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
+    source "${my_dir}/self_update.sh"
 }
 
 ########################################################################################################################################################
@@ -133,7 +132,7 @@ function lib_bash_update_myself_if_needed {
         log "Update available! Performing self-update..."
         if lib_bash_update_myself; then
             log "Successfully updated! Restarting..."
-            # Proper argument handling with quoting
+            # Restart Bash without config files, load the script's library, and run its main function.
             exec "${BASH}" --noprofile --norc -c \
                 "source '${LIB_BASH_SELF}' && lib_bash_main \"\$@\"" \
                 _ "$@"
@@ -1069,14 +1068,20 @@ function  lib_bash_path_exist {
 }
 
 
-function lib_bash_main {
-  lib_bash_set_askpass
-  set_default_settings
+function MAIN {
   ## make it possible to call functions without source include
   call_function_from_commandline "${0}" "${@}"
 }
 
 # Initial execution flow
 source_lib_bash_dependencies
-lib_bash_update_myself_if_needed "$@"
-lib_bash_main "$@"
+# set askpass
+lib_bash_set_askpass
+# set defaults for logfiles if not set already
+set_default_settings
+# shellcheck disable=SC2155
+declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+# shellcheck disable=SC2155
+declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
+lib_bash_self_update "$@"
+MAIN "$@"
