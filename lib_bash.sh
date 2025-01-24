@@ -1021,6 +1021,14 @@ function  lib_bash_path_exist {
     fi
 }
 
+function is_sourced{
+    if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
 ########################################################################################################################################################
 # INIT
 #######################################################################################################################################################
@@ -1032,7 +1040,10 @@ function LIB_BASH_MAIN {
   ## make it possible to call functions without source include
   #
   echo "CALLED LIB_BASH_MAIN"
-  call_function_from_commandline "${0}" "${@}"
+  if ! is_sourced; then
+    echo "is not sourced, calling function"
+    call_function_from_commandline "${0}" "${@}"
+  fi
 }
 
 # update myself in a subshell - only once per session
