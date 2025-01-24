@@ -1031,7 +1031,7 @@ function LIB_BASH_MAIN {
   set_default_settings
   ## make it possible to call functions without source include
   #
-  echo "CALLING" "$0" "$@"
+  echo "CALLED LIB_BASH_MAIN"
   call_function_from_commandline "${0}" "${@}"
 }
 
