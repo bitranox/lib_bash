@@ -75,7 +75,7 @@ function lib_bash_update_myself {
 
 #######################################
 # Validate file ownership for self-update
-# Globals:
+# Globals: #
 #   None
 # Arguments:
 #   $1: file path to check
