@@ -1074,14 +1074,14 @@ function MAIN {
 }
 
 # Initial execution flow
+# shellcheck disable=SC2155
+declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+# shellcheck disable=SC2155
+declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
 source_lib_bash_dependencies
 # set askpass
 lib_bash_set_askpass
 # set defaults for logfiles if not set already
 set_default_settings
-# shellcheck disable=SC2155
-declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
-# shellcheck disable=SC2155
-declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
 lib_bash_self_update "$@"
 MAIN "$@"
