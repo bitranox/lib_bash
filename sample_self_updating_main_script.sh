@@ -8,14 +8,17 @@ function MAIN {
   echo "Hello World"
 }
 
-# update myself in a subshell
-(
-# shellcheck disable=SC2034
-LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
-# shellcheck disable=SC2034
-LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="MAIN"
-source /usr/local/lib_bash/self_update.sh
-lib_bash_self_update "$@"
-)
+# update myself in a subshell - only once per session
+if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
+    declare -r LIB_BASH_IS_UP_TO_DATE="true" &>/dev/null
+    (
+    # shellcheck disable=SC2034
+    LIB_BASH_SELF_UPDATE_SELF=$(readlink -f "${BASH_SOURCE[0]}")
+    # shellcheck disable=SC2034
+    LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION="MAIN"
+    source /usr/local/lib_bash/self_update.sh
+    lib_bash_self_update "$@"
+    )
+fi
 
 MAIN "$@"
