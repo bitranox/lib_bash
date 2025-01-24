@@ -179,7 +179,7 @@ function lib_bash_self_update {
         # Perform update
 
         if lib_bash_update_myself; then
-            log "Successfully updated! Restarting..."
+            log "Successfully updated! Restarting...${LIB_BASH_SELF_UPDATE_SELF_MAIN_FUNCTION}@${LIB_BASH_SELF_UPDATE_SELF}"
 
             # Clean restart with updated script
             exec "${BASH}" --noprofile --norc -c \
