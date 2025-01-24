@@ -23,19 +23,19 @@ function set_default_settings {
     # Uses POSIX options expansion for safe default assignment
     # -----------------------------------------------------------
     # Main application log file (persistent)
-    : "${LIB_BASH_LOGFILE:=~/log/lib_bash/lib_bash.log}"
+    : "${LIB_BASH_LOGFILE:=$HOME/log/lib_bash/lib_bash.log}"
     create_log_dir "${LIB_BASH_LOGFILE}"
 
     # Temporary log storage (e.g., for session-specific logs)
-    : "${LIB_BASH_LOGFILE_TMP:=~/log/lib_bash/lib_bash_tmp.log}"
+    : "${LIB_BASH_LOGFILE_TMP:=$HOME/log/lib_bash/lib_bash_tmp.log}"
     create_log_dir "${LIB_BASH_LOGFILE_TMP}"
 
     # Error-specific log file (persistent errors)
-    : "${LIB_BASH_LOGFILE_ERR:=~/log/lib_bash/lib_bash_err.log}"
+    : "${LIB_BASH_LOGFILE_ERR:=$HOME/log/lib_bash/lib_bash_err.log}"
     create_log_dir "${LIB_BASH_LOGFILE_ERR}"
 
     # Temporary error log storage (ephemeral error tracking)
-    : "${LIB_BASH_LOGFILE_ERR_TMP:=~/log/lib_bash/lib_bash_err_tmp.log}"
+    : "${LIB_BASH_LOGFILE_ERR_TMP:=$HOME/log/lib_bash/lib_bash_err_tmp.log}"
     create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
 
     # -----------------------------------------------------------
