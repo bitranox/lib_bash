@@ -65,11 +65,6 @@ function source_lib_bash_dependencies {
 ########################################################################################################################################################
 # 2025-01-23
 
-# shellcheck disable=SC2155
-declare -r LIB_BASH_SELF=$(readlink -f "${BASH_SOURCE[0]}")
-# shellcheck disable=SC2155
-declare -r LIB_BASH_DIR=$(dirname "${LIB_BASH_SELF}")
-
 # Add commit verification (placeholder - implement proper verification)
 function verify_commit {
     local commit_hash=$1
