@@ -2,6 +2,7 @@
 ## shellcheck disable=SC2164
 ## shellcheck disable=SC2155
 ## shellcheck disable=SC2034
+source /usr/local/lib_bash/lib_bash.sh
 
 function MAIN {
   echo "Hello World"
