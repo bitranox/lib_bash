@@ -1037,9 +1037,7 @@ function LIB_BASH_MAIN {
   source_lib_bash_dependencies
   lib_bash_set_askpass
   set_default_settings
-  ## make it possible to call functions without source include
-  #
-  echo "CALLED LIB_BASH_MAIN"
+
   if ! is_sourced; then
     echo "is not sourced, calling function"
     call_function_from_commandline "${0}" "${@}"
@@ -1059,7 +1057,7 @@ if [[ ! -v LIB_BASH_DO_NOT_UPDATE ]]; then
     lib_bash_self_update "$@"
 fi
 
-echo "CALLING LIB_BASH_MAIN" "${0}" "${@}"
+echo "INIT LIB_BASH_MAIN" "${0}" "${@}"
 LIB_BASH_MAIN "$@"
 
 
