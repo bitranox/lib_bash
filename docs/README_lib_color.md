@@ -31,8 +31,8 @@ clr_bold clr_green "SUCCESS" clr_blue "Color output made easy"
 
 ### As part of lib_bash
 ```bash
-git clone https://github.com/bitranox/lib_bash.git
-source lib_bash/lib_color.sh
+git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
+source /usr/local/lib_bash/lib_color.sh
 ```
 
 ### Standalone usage
@@ -44,7 +44,7 @@ source lib_color.sh
 ## Quick Start
 
 ```bash
-source /usr/local/lib_color.sh
+source /usr/local/lib_bash/lib_color.sh
 
 # Basic formatted output
 clr_red "Error message"
@@ -114,7 +114,7 @@ clr_bold "$(clr_underscore "$(clr_cyan "Styled text")")"
 Display all 896 possible color/style combinations:
 
 ```bash
-lib_color.sh --dump
+/usr/local/lib_bash/lib_color.sh --dump
 ```
 
 ![Color Combination Demo](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/color_demo_screenshot.png)
