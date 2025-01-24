@@ -5,10 +5,16 @@
 
 Part of the [lib_bash](https://github.com/bitranox/lib_bash) collection - A powerful Bash scripting utilities library.
 
+### sourced : 
 ```bash
 #!/bin/bash
-source "lib_color.sh"
-echo "$(clr_bold "$(clr_green "SUCCESS")") $(clr_blue "Color output made easy")"
+source /usr/local/lib_color.sh
+clr_bold clr_green "SUCCESS" clr_blue "Color output made easy"
+```
+
+### directly from the commandline :
+```bash
+/usr/local/lib_color.sh clr_green "SUCCESS" clr_blue "Color output made easy" 
 ```
 
 ## Features
@@ -38,12 +44,14 @@ source lib_color.sh
 ## Quick Start
 
 ```bash
+source /usr/local/lib_color.sh
+
 # Basic formatted output
 clr_red "Error message"
-clr_greenb "$(clr_white "Status update")"
+clr_greenb clr_white "Status update"
 
 # Combined styles
-clr_bold "$(clr_underscore "$(clr_cyan "Important notice")")"
+clr_bold clr_underscore clr_cyan "Important notice"
 
 # Utility functions
 fail "Critical error - aborting"  # Exits with status 1
