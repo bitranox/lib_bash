@@ -152,24 +152,15 @@ function clr_dump {
         for bg_entry in "${bg_colors[@]}"; do
             local bg_code="${bg_entry%%:*}"
             local bg_name="${bg_entry##*:}"
-
-            # Skip combinations where background is same as foreground
-            (( bg_code - fg_code == 10 )) && continue
-
-            # Create escape sequences for different styles
+            # Skip combinations where background is the same as foreground
+            if (( bg_code - fg_code == 10 )); then
+                continue
+            fi
+            # Construct the escape sequences
+            local start="${CLR_ESC}${fg_code};${bg_code}m"
             local reset="${CLR_ESC}${CLR_RESET}m"
-            local base="${CLR_ESC}${fg_code};${bg_code}m"
-            local bold="${CLR_ESC}1;${fg_code};${bg_code}m"
-            local under="${CLR_ESC}4;${fg_code};${bg_code}m"
-            local reverse="${CLR_ESC}7;${fg_code};${bg_code}m"
-
-            # Build the formatted line
-            printf "%b%-25s %b%-25s %b%-25s %b%-25s %b- %s on %s\n" \
-                "$base" "Text (Normal)" \
-                "$bold" "Text (Bold)" \
-                "$under" "Text (Underscore)" \
-                "$reverse" "Text (Reverse)" \
-                "$reset" "$fg_name" "$bg_name"
+            # Print the formatted text and description
+            printf "%b%s%b - %s on %s\n" "$start" "Text" "$reset" "$fg_name" "$bg_name"
         done
     done
 }
@@ -183,6 +174,7 @@ function fail {
 function warn {
     clr_yellow "$(clr_bold "[WARNING] ${1}")" >&2
 }
+
 
 # Only execute if run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
