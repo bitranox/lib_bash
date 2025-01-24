@@ -11,7 +11,7 @@ Some Bash Script Helpers and useful functions
     sudo git clone https://github.com/bitranox/lib_bash.git /usr/local
 
     # Sample Usage
-    /usr/local/lib_bash/sample_self_update_main_script.sh
+    /usr/local/lib_bash/sample_self_updating_main_script.sh
 
 
 -------
