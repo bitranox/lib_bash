@@ -217,10 +217,9 @@ function log {
   local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
   local logline
 
-  LIB_BASH_HOSTNAME="$(hostname -s)"
   # Process each line in the message
   while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ${line}"
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ${line}"
     if [[ "${options}" != *NO_TTY* ]]; then
         if [[ "${options}" == *bold* ]]; then
           clr_bold clr_green "${logline}"
@@ -241,7 +240,7 @@ function log_err {
 
   # Process each line in the message
   while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: ERROR [EE]: ${line}"
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ERROR [EE]: ${line}"
     if [[ "${options}" != *NO_TTY* ]]; then
       clr_bold clr_cyan "${logline}"
     fi
@@ -260,7 +259,7 @@ function log_warn {
 
   # Process each line in the message
   while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - ${LIB_BASH_HOSTNAME}: WARNING [WW]: ${line}"
+    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): WARNING [WW]: ${line}"
     if [[ "${options}" != *NO_TTY* ]]; then
       clr_bold clr_yellow "${logline}"
     fi
