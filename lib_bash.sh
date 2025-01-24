@@ -270,11 +270,11 @@ function logc {
 ########################################################################################################################################################
 # 2025-01-21
 
-function lib_bash_send_email {
+function send_email {
     # Description:
     # This function sends an email to a specified recipient with a subject, content (from a file), and optional attachments.
     # Example :
-    # lib_bash_send_email "recipient@example.com" "Subject of the Email" "/path/to/body_file.txt" "/path/to/attachment1" "/path/to/attachment2"
+    # send_email "recipient@example.com" "Subject of the Email" "/path/to/body_file.txt" "/path/to/attachment1" "/path/to/attachment2"
 
     local recipient="$1"  # The destination email address
     local subject="$2"    # The subject of the email
@@ -283,18 +283,18 @@ function lib_bash_send_email {
 
     # Validate the recipient email address
     if [[ -z "$recipient" ]]; then
-        log_err "lib_bash_send_email: Recipient email address is missing."
+        log_err "send_email: Recipient email address is missing."
         return 1
     fi
 
     # Validate the subject
     if [[ -z "$subject" ]]; then
-        log_err "lib_bash_send_email: Subject is missing."
+        log_err "send_email: Subject is missing."
         return 1
     fi
 
     if [[ $# -lt 3 ]]; then
-        log_err "lib_bash_send_email: Insufficient arguments provided. A recipient, subject, and body_file are required."
+        log_err "send_email: Insufficient arguments provided. A recipient, subject, and body_file are required."
         return 1
     fi
 
@@ -305,12 +305,12 @@ function lib_bash_send_email {
 
     # Validate the body file
     if [[ -z "${body_file}" ]]; then
-        log_err "lib_bash_send_email: body_file is missing."
+        log_err "send_email: body_file is missing."
         return 1
     fi
 
     if [[ ! -f "${body_file}" || ! -r "${body_file}" ]]; then
-        log_err "lib_bash_send_email: body_file ${body_file} does not exist or is not readable."
+        log_err "send_email: body_file ${body_file} does not exist or is not readable."
         return 1
     fi
 
@@ -318,14 +318,14 @@ function lib_bash_send_email {
     for attachment in "${attachments[@]}"; do
         # Handle filenames with spaces or special characters
         if [[ ! -f "${attachment}" || ! -r "${attachment}" ]]; then
-            log_err "lib_bash_send_email: Attachment ${attachment} does not exist or is not readable."
+            log_err "send_email: Attachment ${attachment} does not exist or is not readable."
             return 1
         fi
     done
 
     if ! command -v mutt &> /dev/null; then
         # Provide alternative instructions if 'mutt' is not available
-        log_err "lib_bash_send_email: 'mutt' command not found. Please install it before proceeding."
+        log_err "send_email: 'mutt' command not found. Please install it before proceeding."
         return 1
     fi
 
@@ -339,13 +339,13 @@ function lib_bash_send_email {
             mutt -s "${subject}" -a "${attachments[@]}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
-            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
+            } || log_err "send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
         else
             # Sending without attachments
             mutt -s "${subject}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
-            } || log_err "lib_bash_send_email: Error sending email (attempt $attempt): ${subject}."
+            } || log_err "send_email: Error sending email (attempt $attempt): ${subject}."
         fi
 
         local backoff=$((2 ** attempt))
@@ -353,12 +353,12 @@ function lib_bash_send_email {
         ((attempt++))
     done
 
-    log_err "lib_bash_send_email: Failed to send email after $max_retries attempts: ${subject}."
+    log_err "send_email: Failed to send email after $max_retries attempts: ${subject}."
     return 1
 }
 
 ########################################################################################################################################################
-# (OLD) HELPERS
+# OLD HELPERS
 ########################################################################################################################################################
 
 function is_ok() {
@@ -984,6 +984,9 @@ function  lib_bash_path_exist {
     fi
 }
 
+########################################################################################################################################################
+# INIT
+########################################################################################################################################################
 
 function LIB_BASH_MAIN {
   source_lib_bash_dependencies
@@ -992,7 +995,6 @@ function LIB_BASH_MAIN {
   ## make it possible to call functions without source include
   call_function_from_commandline "${0}" "${@}"
 }
-
 
 # update myself in a subshell - only once per session
 if [[ ! -v LIB_BASH_IS_UP_TO_DATE ]]; then
