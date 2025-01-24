@@ -32,14 +32,14 @@ function is_lib_bash_up_to_date {
 
     # Safely get default branch
     default_branch=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || {
-        log_err "Failed to determine default branch"
-        return 2
+        log_err "Failed to determine default branch - can not check platform self update"
+        return 0
     }
 
     # Get remote hash
     git_remote_hash=$(git -C "${LIB_BASH_SELF_UPDATE_SELF_DIR}" ls-remote origin --heads "${default_branch}" | awk '{print $1}') || {
-        log_err "Failed to get remote hash"
-        return 3
+        log_err "Failed to get remote hash - can not check platform self update"
+        return 0
     }
 
     # Get local hash
