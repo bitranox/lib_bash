@@ -156,20 +156,19 @@ function clr_dump {
             # Skip combinations where background is same as foreground
             (( bg_code - fg_code == 10 )) && continue
 
-            # Create escape sequences for different styles
+            # Create escape sequences
             local reset="${CLR_ESC}${CLR_RESET}m"
             local base="${CLR_ESC}${fg_code};${bg_code}m"
-            local bold="${CLR_ESC}1;${fg_code};${bg_code}m"
-            local under="${CLR_ESC}4;${fg_code};${bg_code}m"
-            local reverse="${CLR_ESC}7;${fg_code};${bg_code}m"
+            local bold="${CLR_ESC}${CLR_BOLD};${fg_code};${bg_code}m"
+            local under="${CLR_ESC}${CLR_UNDERSCORE};${fg_code};${bg_code}m"
+            local reverse="${CLR_ESC}${CLR_REVERSE};${fg_code};${bg_code}m"
 
-            # Build the formatted line
-            printf "%b%-25s %b%-25s %b%-25s %b%-25s %b- %s on %s\n" \
-                "$base" "Text (Normal)" \
-                "$bold" "Text (Bold)" \
-                "$under" "Text (Underscore)" \
-                "$reverse" "Text (Reverse)" \
-                "$reset" "$fg_name" "$bg_name"
+            # Print with isolated resets
+            printf "%bText (Normal)%b  " "$base" "$reset"
+            printf "%bText (Bold)%b  " "$bold" "$reset"
+            printf "%bText (Underscore)%b  " "$under" "$reset"
+            printf "%bText (Reverse)%b  " "$reverse" "$reset"
+            printf "- %s on %s\n" "$fg_name" "$bg_name"
         done
     done
 }
