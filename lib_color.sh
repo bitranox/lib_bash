@@ -168,7 +168,7 @@ function clr_dump {
             printf "%bText (Bold)%b  " "$bold" "$reset"
             printf "%bText (Underscore)%b  " "$under" "$reset"
             printf "%bText (Reverse)%b  " "$reverse" "$reset"
-            printf "- %s on %s\n" "$fg_name" "$bg_name"
+            printf -- " - %s on %s\n" "$fg_name" "$bg_name"
         done
     done
 }
