@@ -8,12 +8,10 @@ Some Bash Script Helpers and useful functions
 .. code-block:: bash
 
     # Install :
-    cd /usr/local
-    sudo git clone https://github.com/bitranox/lib_bash.git
-    # Update
-    sudo /usr/local/lib_bash/install_or_update.sh
+    sudo git clone https://github.com/bitranox/lib_bash.git /usr/local
+
     # Sample Usage
-    /usr/local/lib_bash/sample_shellscript.sh
+    /usr/local/lib_bash/sample_self_update_main_script.sh
 
 
 -------
