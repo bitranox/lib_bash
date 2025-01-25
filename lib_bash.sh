@@ -1044,12 +1044,27 @@ function _lib_bash_restart_parent {
     exit 0
 }
 
+function  _user_is_allowed_to_update {
+    # Check if the user's UID matches the script's UID
+    local script_uid=$(stat -c %u "$0")
+    local current_uid=$(id -u)
+    local script_user=$(getent passwd "$script_uid" | cut -d: -f1 || echo "Unknown user")
+    local current_user=$(id -un)
+
+    if [ "$script_uid" -ne "$current_uid" ]; then
+        log_warn "can not update lib_bash, the current user '$current_user' (UID: $current_uid) is not the owner of the script (Owner: '$script_user', UID: $script_uid)"
+        return 1
+    else
+        return 0
+    fi
+}
+
 function _lib_bash_self_update {
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-     # local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
-    # local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
-    local current_hash=$(git -C "$script_dir" rev-parse HEAD)
-    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
+     if _user_is_allowed_to_update; then return 0; fi
+
+    local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
+    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
 
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         log "New version available, updating..."
