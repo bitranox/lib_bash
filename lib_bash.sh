@@ -1039,7 +1039,7 @@ function _lib_bash_restart_parent {
     local parent_script=$(readlink -f "${BASH_SOURCE[-1]}")
     local script_args=("${@}")
 
-    log "lib_bash: Restarting parent script to apply updates"
+    log "lib_bash: restarting parent script to apply updates"
     exec "$BASH" --noprofile --norc "$parent_script" "${script_args[@]}"
     exit 0
 }
@@ -1069,7 +1069,7 @@ function _lib_bash_self_update {
     # local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         if ! _user_is_allowed_to_update; then return 0; fi
-        log "lib_bash: New version available, updating..."
+        log "lib_bash: new version available, updating..."
         git -C "$script_dir" fetch --all                &> /dev/null
         git -C "$script_dir" reset --hard origin/main   &> /dev/null
         git -C "$script_dir" reset --hard origin/master &> /dev/null
