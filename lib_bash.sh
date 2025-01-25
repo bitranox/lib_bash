@@ -1070,7 +1070,7 @@ function _lib_bash_self_update {
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         if ! _user_is_allowed_to_update; then return 0; fi
         log "lib_bash: New version available, updating..."
-        git -C "$script_dir" fetch --all  origin
+        git -C "$script_dir" fetch --all
         git -C "$script_dir" reset --hard origin/main
         git -C "$script_dir" reset --hard origin/master
         git -C "$script_dir" clean -fd
