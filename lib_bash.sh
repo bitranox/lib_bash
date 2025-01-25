@@ -1032,14 +1032,14 @@ function is_sourced {
 
 ########################################################################################################################################################
 # SELF-UPDATE CORE LOGIC
-#######################################################################################################################################################
+########################################################################################################################################################
 
 function _lib_bash_restart_parent {
     # Get parent script path (the script that sourced lib_bash.sh)
     local parent_script=$(readlink -f "${BASH_SOURCE[-1]}")
     local script_args=("${@}")
 
-    log "Restarting parent script to apply updates"
+    log "lib_bash: Restarting parent script to apply updates"
     exec "$BASH" --noprofile --norc "$parent_script" "${script_args[@]}"
     exit 0
 }
