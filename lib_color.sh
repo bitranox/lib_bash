@@ -93,7 +93,7 @@ function clr_escape {
         text="${CLR_ESC}${codes[*]}m${text}${CLR_ESC}${CLR_RESET}m"
     fi
 
-    echo $CLR_ECHOSWITCHES "$text"
+    echo "${CLR_ECHOSWITCHES}" "$text"
 }
 
 # Color functions

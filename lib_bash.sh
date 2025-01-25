@@ -374,12 +374,14 @@ function send_email {
     while [[ $attempt -le $max_retries ]]; do
         if [[ ${#attachments[@]} -gt 0 ]]; then
             # Sending with attachments
+            # shellcheck disable=SC2015
             mutt -s "${subject}" -a "${attachments[@]}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
             } || log_err "send_email: Error sending email (attempt $attempt): ${subject}. Attachments: ${attachments[*]}."
         else
             # Sending without attachments
+            # shellcheck disable=SC2015
             mutt -s "${subject}" -- "${recipient}" < "${body_file}" && \
             {
                 return 0
@@ -985,7 +987,7 @@ function  lib_bash_split {
         local num_index="${3}"
         echo "${str_input}" | python3 -c"import sys; sys.stdout.write(sys.stdin.read().split(\"${str_separator}\")[${num_index}])"
     else
-        fail "python3 needs to be installed in order to use the function lib_bash_split"
+        log_err "python3 needs to be installed in order to use the function lib_bash_split"
         exit 1
     fi
 }

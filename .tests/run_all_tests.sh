@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../lib_helpers.sh
+source ../lib_bash.sh
 
 sudo_askpass="$(command -v ssh-askpass)"
 export SUDO_ASKPASS="${sudo_askpass}"
@@ -16,8 +16,8 @@ function run_all_tests {
     do
         "${actual_file_to_test}"
     done
-    shellcheck.sh
-    clr_green "test ok in $(get_own_script_name "${BASH_SOURCE[0]}")"
+    ./shellcheck.sh
+    clr_green "test ok in ${BASH_SOURCE[0]}"
     sleep 1
 }
 
