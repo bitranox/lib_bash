@@ -1062,14 +1062,15 @@ function  _user_is_allowed_to_update {
 function _lib_bash_self_update {
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     # if ! _user_is_allowed_to_update; then return 0; fi
+    git config --global --add safe.directory /usr/local/lib_bash
     local current_hash=$(git -C "$script_dir" rev-parse HEAD )
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         log "New version available, updating..."
         git -C "$script_dir" fetch --all
-        git -C "$script_dir" reset --hard origin/main   &> /dev/null
-        git -C "$script_dir" reset --hard origin/master &> /dev/null
+        git -C "$script_dir" reset --hard origin/main   # &> /dev/null
+        git -C "$script_dir" reset --hard origin/master # &> /dev/null
         git -C "$script_dir" clean -fd
         return 0
     fi
