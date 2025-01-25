@@ -24,5 +24,3 @@ function update_caller {
         exec "$(readlink -f "${BASH_SOURCE[1]}")" "${original_args[@]}"
     fi
 }
-
-update_caller "$@"
