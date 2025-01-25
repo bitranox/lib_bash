@@ -3,7 +3,7 @@
 # Get the directory of the script that sourced this file
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[1]}")")"
 
-function update_myself() {
+function update_caller {
     # Store original arguments
     local original_args=("$@")
 
@@ -24,3 +24,5 @@ function update_myself() {
         exec "$(readlink -f "${BASH_SOURCE[1]}")" "${original_args[@]}"
     fi
 }
+
+update_caller "$@"
