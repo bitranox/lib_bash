@@ -397,89 +397,10 @@ function send_email {
     return 1
 }
 
+
 ########################################################################################################################################################
-# OLD HELPERS
+# ASSERT FUNCTIONS FOR TESTING
 ########################################################################################################################################################
-
-function is_ok() {
-    # for easy use : if is_ok; then ...
-    # also preserves the returncode
-    return $?
-}
-
-
-function get_own_script_name {
-    # $1: bash_source, usually "${BASH_SOURCE}"
-    local bash_source="${1}"
-    readlink -f "${bash_source}"
-}
-
-
-function is_script_sourced {
-    # $1: script_name "${0}"
-    # $2: bash_source "${BASH_SOURCE}"
-    local script_name="${1}"
-    local bash_source="${2}"
-    if [[ "${script_name}" != "${bash_source}" ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-
-function debug {
-    # $1: should_debug: True/False
-    # $2: debug_message
-    local should_debug debug_message script_name
-    should_debug="${1}"
-    debug_message="${2}"
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
-
-    if [[ "${should_debug}" == "True" ]]; then
-        clr_blue "\
-        ** DEBUG *****************************************************************************************************${IFS}\
-        File          : ${script_name}${IFS}\
-        Function      : ${FUNCNAME[ 1 ]}${IFS}\
-        Caller        : ${FUNCNAME[ 2 ]}${IFS}\
-        Debug Message : ${debug_message}${IFS}\
-        **************************************************************************************************************"
-    fi
-}
-
-
-function wait_for_file_to_be_created {
-    # $1: file_name
-    local file_name
-    file_name="${1}"
-    while [[ ! -f "${file_name}" ]]; do
-        clr_blue "wait for ${file_name} to be created"
-        sleep 1
-    done
-    sleep 1
-}
-
-
-
-function is_bash_function_declared {
-    # checks if the function is declared
-    # $1 : function name
-    local function_name="${1}"
-    declare -F "${function_name}" &>/dev/null && return 0 || return 1
-}
-
-function is_valid_command {
-    #
-    # $1 : any bash internal command, external command or function name
-    local command
-    command="${1}"
-
-    if [[ "$(type -t "${command}")" == "builtin" ]]; then return 0; fi  # builtin command
-    if is_bash_function_declared "${command}"; then return 0; fi        # declared function
-    if [[ -n "$(type -p "${command}")" ]]; then return 0; fi            # external command
-    return 1
-}
-
 
 function create_assert_failed_message {
 
@@ -596,6 +517,93 @@ function assert_fail {
 	    create_assert_failed_message "${test_command}" "return code > 0" "return code = ${result}"
     fi
 }
+
+
+
+
+########################################################################################################################################################
+# OLD HELPERS
+########################################################################################################################################################
+
+function is_ok() {
+    # for easy use : if is_ok; then ...
+    # also preserves the returncode
+    return $?
+}
+
+
+function get_own_script_name {
+    # $1: bash_source, usually "${BASH_SOURCE}"
+    local bash_source="${1}"
+    readlink -f "${bash_source}"
+}
+
+
+function is_script_sourced {
+    # $1: script_name "${0}"
+    # $2: bash_source "${BASH_SOURCE}"
+    local script_name="${1}"
+    local bash_source="${2}"
+    if [[ "${script_name}" != "${bash_source}" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+function debug {
+    # $1: should_debug: True/False
+    # $2: debug_message
+    local should_debug debug_message script_name
+    should_debug="${1}"
+    debug_message="${2}"
+    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
+
+    if [[ "${should_debug}" == "True" ]]; then
+        clr_blue "\
+        ** DEBUG *****************************************************************************************************${IFS}\
+        File          : ${script_name}${IFS}\
+        Function      : ${FUNCNAME[ 1 ]}${IFS}\
+        Caller        : ${FUNCNAME[ 2 ]}${IFS}\
+        Debug Message : ${debug_message}${IFS}\
+        **************************************************************************************************************"
+    fi
+}
+
+
+function wait_for_file_to_be_created {
+    # $1: file_name
+    local file_name
+    file_name="${1}"
+    while [[ ! -f "${file_name}" ]]; do
+        clr_blue "wait for ${file_name} to be created"
+        sleep 1
+    done
+    sleep 1
+}
+
+
+
+function is_bash_function_declared {
+    # checks if the function is declared
+    # $1 : function name
+    local function_name="${1}"
+    declare -F "${function_name}" &>/dev/null && return 0 || return 1
+}
+
+function is_valid_command {
+    #
+    # $1 : any bash internal command, external command or function name
+    local command
+    command="${1}"
+
+    if [[ "$(type -t "${command}")" == "builtin" ]]; then return 0; fi  # builtin command
+    if is_bash_function_declared "${command}"; then return 0; fi        # declared function
+    if [[ -n "$(type -p "${command}")" ]]; then return 0; fi            # external command
+    return 1
+}
+
 
 
 function cmd {

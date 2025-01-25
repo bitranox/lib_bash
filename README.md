@@ -3,8 +3,8 @@
 [![License: GPL3](https://img.shields.io/badge/License-GPL3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Bash Version](https://img.shields.io/badge/Bash-4.4%2B-lightgrey)
 
-A smal Bash scripting library with system administration utilities, logging mechanisms, and self-updating capabilities.
-some of the "OLD" marked functions are rediculouse, but the new functions are useful.
+a small Bash scripting library with system administration utilities, logging mechanisms, and self-updating capabilities.  
+the functions marked as "OLD" are ridiculouse, don't use them, they will be replaced or deleted, but the new functions are useful.
 
 ## Features
 
@@ -103,7 +103,7 @@ _lib_bash_self_update  # Manual update check
 
 ## License
 
-GNU General Public License v3.0 - See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.en.html)
+GNU General Public License v3.0 - See [LICENSE](https://github.com/bitranox/lib_bash/blob/master/docs/LICENSE)
 
 ## Contributing
 
