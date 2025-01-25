@@ -1052,7 +1052,8 @@ function  _user_is_allowed_to_update {
     local current_user=$(id -un)
 
     if [ "$script_uid" -ne "$current_uid" ]; then
-        log_warn "lib_bash : can not check git updates, the current user '$current_user' (UID: $current_uid) is not the owner of the script (Owner: '$script_user', UID: $script_uid)"
+        log_warn "lib_bash : can not apply updates, the current user '$current_user' (UID: $current_uid) is not the owner of the script (Owner:
+        '$script_user', UID: $script_uid)"
         return 1
     else
         return 0
@@ -1061,17 +1062,15 @@ function  _user_is_allowed_to_update {
 
 function _lib_bash_self_update {
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-    # if ! _user_is_allowed_to_update; then return 0; fi
     git config --global --add safe.directory /usr/local/lib_bash
-    local current_hash=$(git -C "$script_dir" rev-parse HEAD )
-    # local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
-    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
-    # local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
+    local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
+    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
+        if ! _user_is_allowed_to_update; then return 0; fi
         log "lib_bash: New version available, updating..."
         git -C "$script_dir" fetch --all
-        git -C "$script_dir" reset --hard origin/main   # &> /dev/null
-        git -C "$script_dir" reset --hard origin/master # &> /dev/null
+        git -C "$script_dir" reset --hard origin/main   &> /dev/null
+        git -C "$script_dir" reset --hard origin/master &> /dev/null
         git -C "$script_dir" clean -fd
         return 0
     fi
