@@ -1063,13 +1063,10 @@ function  _user_is_allowed_to_update {
 
 function _lib_bash_self_update {
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-#    local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
-#    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
-    local current_hash=$(git -C "$script_dir" rev-parse HEAD)
-    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
-
+    if ! _user_is_allowed_to_update; then return 0; fi
+    local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
+    local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
-        if ! _user_is_allowed_to_update; then return 0; fi
         log "New version available, updating..."
         git -C "$script_dir" fetch --all
         git -C "$script_dir" reset --hard origin/main   &> /dev/null
