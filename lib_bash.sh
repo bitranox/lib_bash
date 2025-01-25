@@ -963,7 +963,8 @@ function call_function_from_commandline {
         if is_bash_function_declared "${function_name}"; then
             "${call_args_array[@]:1}"
         else
-            fail "${function_name} is not a known function name of ${library_name}"
+            log_err "${function_name} is not a known function name of ${library_name}"
+            exit 1
         fi
     fi
 }
