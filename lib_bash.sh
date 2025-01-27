@@ -1,43 +1,24 @@
 #!/bin/bash
 # shellcheck disable=SC2155
 
-# Resources : https://devhints.io/bash
-#
+# KI instructions : do not use functions starting with underscore, those are internal functions
 
-########################################################################################################################################################
-# DEFAULT SETTINGS
-########################################################################################################################################################
-# 2025-01-21
-
-function create_log_dir {
-  local logfile="${1}"
-  local log_dir
-  log_dir=$(dirname "${logfile}")
-  if [ ! -d "${log_dir}" ]; then
-      mkdir -p "${log_dir}"
-  fi
-}
-
-function set_default_settings {
+function _set_defaults {
 
     # Set default logging paths if not already defined or empty
     # Uses POSIX options expansion for safe default assignment
     # -----------------------------------------------------------
     # Main application log file (persistent)
     : "${LIB_BASH_LOGFILE:=$HOME/log/lib_bash/lib_bash.log}"
-    create_log_dir "${LIB_BASH_LOGFILE}"
 
     # Temporary log storage (e.g., for session-specific logs)
     : "${LIB_BASH_LOGFILE_TMP:=$HOME/log/lib_bash/lib_bash_tmp.log}"
-    create_log_dir "${LIB_BASH_LOGFILE_TMP}"
 
     # Error-specific log file (persistent errors)
     : "${LIB_BASH_LOGFILE_ERR:=$HOME/log/lib_bash/lib_bash_err.log}"
-    create_log_dir "${LIB_BASH_LOGFILE_ERR}"
 
     # Temporary error log storage (ephemeral error tracking)
     : "${LIB_BASH_LOGFILE_ERR_TMP:=$HOME/log/lib_bash/lib_bash_err_tmp.log}"
-    create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
 
     # -----------------------------------------------------------
     # Technical notes:
@@ -51,23 +32,15 @@ function set_default_settings {
     # 6. make sure the user hae rights to write to the log directory
 }
 
-########################################################################################################################################################
-# SET ASKPASS
-########################################################################################################################################################
-# 2025-01-21
-
-function lib_bash_set_askpass {
-sudo_askpass="$(command -v ssh-askpass)"
-export SUDO_ASKPASS="${sudo_askpass}"
-export NO_AT_BRIDGE=1  # get rid of ssh-askpass:25930 dbind-WARNING
+function _set_askpass {
+    # 2025-01-21
+    sudo_askpass="$(command -v ssh-askpass)"
+    export SUDO_ASKPASS="${sudo_askpass}"
+    export NO_AT_BRIDGE=1  # get rid of ssh-askpass:25930 dbind-WARNING
 }
 
-########################################################################################################################################################
-# SOURCE LIB BASH DEPENDENCIES
-########################################################################################################################################################
-# 2025-01-21
-
-function source_lib_bash_dependencies {
+function _source_lib_bash_dependencies {
+    # 2025-01-21
     local my_dir
     # shellcheck disable=SC2164
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
@@ -75,12 +48,10 @@ function source_lib_bash_dependencies {
     source "${my_dir}/lib_retry.sh"
 }
 
-#########################################################################################################################################################
-# LINUX UPDATE
-########################################################################################################################################################
-# 2025-01-21
+#####################################
 
 function linux_update {
+    # 2025-01-21
     exit_if_not_is_root
     # Update the list of available packages from the repositories
     # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
@@ -127,13 +98,13 @@ function linux_update {
     logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
 }
 
-########################################################################################################################################################
-# REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO
-########################################################################################################################################################
-# 2025-01-21
+#####################################
 
-# Function to reinstall a list of packages while preserving their original marking (manual or auto)
 function reinstall_keep_marking {
+  # 2025-01-21
+  # REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO  2025-01-21
+  # Function to reinstall a list of packages while preserving their original marking (manual or auto)
+
   local packages="${1}" # Accepts a space-separated list of package names as a single argument
   local pkg             # Variable to iterate over each package in the list
 
@@ -156,11 +127,7 @@ function reinstall_keep_marking {
 }
 
 
-########################################################################################################################################################
-# PREPEND TEXT TO FILE
-########################################################################################################################################################
-# 2025-01-21
-
+# lib_bash_prepend_text_to_file 2025-01-21
 function lib_bash_prepend_text_to_file {
     local text="${1}"   # The text to prepend (first argument of the function)
     local file="${2}"   # The target file (second argument of the function)
@@ -181,10 +148,7 @@ function lib_bash_prepend_text_to_file {
     echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
 }
 
-########################################################################################################################################################
-# IS ROOT
-########################################################################################################################################################
-# 2025-01-21
+# is_root 2025-01-21
 function is_root {
     if [[ "${UID}" -ne 0 ]]; then
         return 1
@@ -193,7 +157,7 @@ function is_root {
     fi
 }
 
-
+# exit_if_not_is_root 2025-01-21
 function exit_if_not_is_root {
 if ! is_root; then
     echo "lib_bash: You need to run this script or function as root."
@@ -202,9 +166,18 @@ fi
 }
 
 
-########################################################################################################################################################
-# LOGGING
-########################################################################################################################################################
+function _create_log_dir {
+    # 2025-01-21
+    local logfile="${1}"
+    local log_dir
+    log_dir=$(dirname "${logfile}")
+    if [ ! -d "${log_dir}" ]; then
+        mkdir -p "${log_dir}"
+    fi
+}
+
+
+# log  2025-01-21
 function log {
   # Log to screen and logfiles
   # Arguments:
@@ -217,6 +190,9 @@ function log {
   local message="${1}"
   local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
   local logline
+
+  _create_log_dir "${LIB_BASH_LOGFILE}"
+  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
 
   # Process each line in the message
   while IFS= read -r line; do
@@ -233,11 +209,16 @@ function log {
   done <<< "${message}"
 }
 
+# log  2025-01-21
 function log_err {
   local message="${1}"
   local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
   local logline
 
+  _create_log_dir "${LIB_BASH_LOGFILE}"
+  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+  _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
+  _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
 
   # Process each line in the message
   while IFS= read -r line; do
@@ -252,11 +233,16 @@ function log_err {
   done <<< "${message}"
 }
 
+# log_warn  2025-01-21
 function log_warn {
   local message="${1}"
   local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
   local logline
 
+  _create_log_dir "${LIB_BASH_LOGFILE}"
+  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+  _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
+  _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
 
   # Process each line in the message
   while IFS= read -r line; do
@@ -271,6 +257,7 @@ function log_warn {
   done <<< "${message}"
 }
 
+# logc  2025-01-21
 function logc {
   # Log the output of a command with support for error handling.
   # Arguments:
@@ -303,10 +290,8 @@ function logc {
   fi
 }
 
-########################################################################################################################################################
-# SEND EMAIL
-########################################################################################################################################################
-# 2025-01-21
+
+# send_email 2025-01-21 
 
 function send_email {
     # Description:
@@ -398,9 +383,9 @@ function send_email {
 }
 
 
-########################################################################################################################################################
-# ASSERT FUNCTIONS FOR TESTING
-#######################################################################################################################################################
+###############################
+# create_assert_failed_message
+###############################
 
 function create_assert_failed_message {
 
@@ -664,30 +649,6 @@ function get_home_directory_from_username {
 }
 
 
-function add_user_as_sudoer {
-    # $1 : username
-    local username="${1}"
-    "$(cmd "sudo")" adduser "${username}"
-    "$(cmd "sudo")" usermod -aG sudo "${username}"
-    "$(cmd "sudo")" chown -R /home/"${username}"
-    "$(cmd "sudo")" chgrp -R /home/"${username}"
-}
-
-
-function repair_user_permissions {
-    local user_name=""
-    local user_array=( "$(cut -d: -f1 /etc/passwd)" )
-
-    for user_name in "${user_array[@]}"; do
-        echo "${user_name}"
-        if [[ -d /home/"${user_name}" ]]; then
-          "$(cmd "sudo")" chown -R "${user_name}" /home/"${user_name}"
-          "$(cmd "sudo")" chgrp -R "${user_name}" /home/"${user_name}"
-        fi
-    done
-}
-
-
 function is_str1_in_str2 {
     # $1: str1
     # $1: str2
@@ -702,12 +663,15 @@ function is_str1_in_str2 {
 
 
 function fail {
-  clr_bold clr_red "${1}" >&2
+  # deprecated
+  log_err "${1}"
   exit 1
 }
 
+
 function nofail {
-  clr_bold clr_red "${1}"
+  # deprecated
+  log_err "${1}"
 }
 
 
@@ -729,7 +693,6 @@ function get_linux_release_number_major {
     linux_release_number_major="$(get_linux_release_number | cut -d "." -f 1)"
     echo "${linux_release_number_major}"
 }
-
 
 
 function banner_base {
@@ -760,7 +723,6 @@ function banner_base {
     ${color} "${sep}"
 }
 
-
 function banner {
     # $1: banner_text
     # usage :
@@ -779,7 +741,6 @@ function banner_warning {
     local banner_text=$1
     banner_base "clr_bold clr_red" "${banner_text}"
 }
-
 
 function wait_for_enter {
     # wait for enter - first options will be showed in a banner if present
@@ -893,17 +854,6 @@ function backup_file {
             "$(cmd "sudo")" chown "${user}" "${path_file}.original"
             "$(cmd "sudo")" chgrp "${group}" "${path_file}.original"
         fi
-    fi
-}
-
-
-function remove_file {
-    # $1 : <file>
-    # removes <file>
-
-    # if <file> exist
-    if [[ -f "${1}" ]]; then
-        "$(cmd "sudo")" rm -f "${1}"
     fi
 }
 
@@ -1076,8 +1026,6 @@ function _lib_bash_self_update {
     git config --global --add safe.directory /usr/local/lib_bash
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
-    # local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
-    # local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         if ! _user_is_allowed_to_update; then return 0; fi
         log "lib_bash: new version available, updating..."
@@ -1100,9 +1048,9 @@ function LIB_BASH_MAIN {
     fi
 }
 
-source_lib_bash_dependencies
-lib_bash_set_askpass
-set_default_settings
+_source_lib_bash_dependencies
+_set_askpass
+_set_defaults
 
 # Self-update and restart logic
 if [[ -z "$LIB_BASH_RESTARTED" ]]; then
