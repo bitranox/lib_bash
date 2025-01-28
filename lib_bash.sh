@@ -25,6 +25,10 @@ fi
 }
 
 
+function _own_fullpath {
+  "$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")"
+}
+
 function _set_defaults {
     _set_askpass
     _source_submodules
@@ -131,7 +135,7 @@ function _set_tempfile_managment {
 function _source_submodules {
     # 2025-01-21
     local my_dir
-    my_dir=$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")  # this gives the full path, even for sourced scripts
+    my_dir=$(_own_fullpath)
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
     source "${my_dir}/lib_update_caller.sh"
@@ -167,7 +171,7 @@ function elevate {
         # Re-execute the main script with sudo, passing arguments
         log "Elevating permissions and reset logfile locations..."
         _set_default_logfiles "RESET"
-        echo $(get_script_fullpath)
+        "$(get_script_fullpath)" # debug
         exec sudo "$(get_script_fullpath)" "$@"
     fi
 }
@@ -1089,7 +1093,7 @@ function _lib_bash_restart_parent {
 
 function  _user_is_allowed_to_update {
     # Check if the user's UID matches the script's UID
-    local script_uid=$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")
+    local script_uid=$(stat -c %u "$(_own_fullpath)")
     local current_uid=$(id -u)
     local script_user=$(getent passwd "$script_uid" | cut -d: -f1 || echo "Unknown user")
     local current_user=$(id -un)
@@ -1104,7 +1108,7 @@ function  _user_is_allowed_to_update {
 }
 
 function _lib_bash_self_update {
-    local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    local script_dir=$(_own_fullpath)
     git config --global --add safe.directory /usr/local/lib_bash
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
