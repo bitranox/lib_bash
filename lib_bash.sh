@@ -25,13 +25,18 @@ fi
 }
 
 
-function _own_fullpath {
+function _get_own_fullpath {
     local script
     # If sourced, use $BASH_SOURCE; if executed, use $0
     script="${BASH_SOURCE[0]:-$0}"
     # Resolve the full path
     realpath "$script"
 }
+
+function _get_own_dirname {
+  "$(dirname "$(_get_own_fullpath)")"
+}
+
 
 function _set_defaults {
     _set_askpass
@@ -138,10 +143,10 @@ function _set_tempfile_managment {
 
 function _source_submodules {
     # 2025-01-21
-    source "$(_own_fullpath)/lib_color.sh"
-    source "$(_own_fullpath)/lib_retry.sh"
-    source "$(_own_fullpath)/lib_update_caller.sh"
-    source "$(_own_fullpath)/lib_assert.sh"
+    source "$(_get_own_dirname)/lib_color.sh"
+    source "$(_get_own_dirname)/lib_retry.sh"
+    source "$(_get_own_dirname)/lib_update_caller.sh"
+    source "$(_get_own_dirname)/lib_assert.sh"
 }
 
 function create_temp_file {
@@ -1095,7 +1100,7 @@ function _lib_bash_restart_parent {
 
 function  _user_is_allowed_to_update {
     # Check if the user's UID matches the script's UID
-    local script_uid=$(stat -c %u "$(_own_fullpath)")
+    local script_uid=$(stat -c %u "$(_get_own_fullpath)")
     local current_uid=$(id -u)
     local script_user=$(getent passwd "$script_uid" | cut -d: -f1 || echo "Unknown user")
     local current_user=$(id -un)
@@ -1110,7 +1115,7 @@ function  _user_is_allowed_to_update {
 }
 
 function _lib_bash_self_update {
-    local script_dir=$(_own_fullpath)
+    local script_dir="$(_get_own_dirname)"
     git config --global --add safe.directory /usr/local/lib_bash
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
