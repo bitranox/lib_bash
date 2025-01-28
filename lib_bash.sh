@@ -564,7 +564,7 @@ function logc {
 
     # Log only if there was output
     if $has_output; then
-        if (( ${exit_code:-0} = 0 )); then
+        if (( ${exit_code:-0} == 0 )); then
             log "${output}" "NO_TTY"
         else
             log_err "${output}" "NO_TTY"
