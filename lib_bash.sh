@@ -363,11 +363,7 @@ function is_ok {
 }
 
 function is_root {
-    if [[ "${UID}" -ne 0 ]]; then
-        return 1
-    else
-        return 0
-    fi
+    (( EUID == 0 ))  # True if effective user is root
 }
 
 function is_script_sourced {
@@ -576,7 +572,7 @@ function logc {
         fi
     else
         # if there is no ouput but exit code, log that as error
-        if [ "${exit_code}" -eq 0 ]; then
+        if [ "${exit_code}" -ne 0 ]; then
             log_err "exitcode: ${exit_code}"
         fi
     fi
