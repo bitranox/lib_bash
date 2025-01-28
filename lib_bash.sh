@@ -203,7 +203,7 @@ function get_file_groupname {
 
 # Function to get the full path of the main script
 function get_script_fullpath  {
-    realpath "${BASH_SOURCE[1]}"
+    realpath "$0"
 }
 
 # Function to get the directory of the main script
