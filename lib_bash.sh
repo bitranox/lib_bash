@@ -26,7 +26,7 @@ fi
 
 
 function _own_fullpath {
-  "$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")"
+  "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 }
 
 function _set_defaults {
