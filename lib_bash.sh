@@ -26,7 +26,11 @@ fi
 
 
 function _own_fullpath {
-  "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script
+    # If sourced, use $BASH_SOURCE; if executed, use $0
+    script="${BASH_SOURCE[0]:-$0}"
+    # Resolve the full path
+    realpath "$script"
 }
 
 function _set_defaults {
@@ -134,12 +138,10 @@ function _set_tempfile_managment {
 
 function _source_submodules {
     # 2025-01-21
-    local my_dir
-    my_dir=$(_own_fullpath)
-    source "${my_dir}/lib_color.sh"
-    source "${my_dir}/lib_retry.sh"
-    source "${my_dir}/lib_update_caller.sh"
-    source "${my_dir}/lib_assert.sh"
+    source "$(_own_fullpath)/lib_color.sh"
+    source "$(_own_fullpath)/lib_retry.sh"
+    source "$(_own_fullpath)/lib_update_caller.sh"
+    source "$(_own_fullpath)/lib_assert.sh"
 }
 
 function create_temp_file {
