@@ -131,8 +131,7 @@ function _set_tempfile_managment {
 function _source_submodules {
     # 2025-01-21
     local my_dir
-    # shellcheck disable=SC2164
-    my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+    my_dir="$("$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
     source "${my_dir}/lib_update_caller.sh"
@@ -1089,7 +1088,7 @@ function _lib_bash_restart_parent {
 
 function  _user_is_allowed_to_update {
     # Check if the user's UID matches the script's UID
-    local script_uid=$(stat -c %u "$0")
+    local script_uid=$("$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
     local current_uid=$(id -u)
     local script_user=$(getent passwd "$script_uid" | cut -d: -f1 || echo "Unknown user")
     local current_user=$(id -un)
@@ -1111,10 +1110,10 @@ function _lib_bash_self_update {
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         if ! _user_is_allowed_to_update; then return 0; fi
         log "lib_bash: new version available, updating..."
-        git -C "$script_dir" fetch --all                &> /dev/null
-        git -C "$script_dir" reset --hard origin/main   &> /dev/null
-        git -C "$script_dir" reset --hard origin/master &> /dev/null
-        git -C "$script_dir" clean -fd
+        logc git -C "$script_dir" fetch --all
+        logc git -C "$script_dir" reset --hard origin/main
+        logc git -C "$script_dir" reset --hard origin/master
+        logc git -C "$script_dir" clean -fd
         return 0
     fi
     return 1
