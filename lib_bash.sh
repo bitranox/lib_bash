@@ -131,7 +131,7 @@ function _set_tempfile_managment {
 function _source_submodules {
     # 2025-01-21
     local my_dir
-    my_dir="$("$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
+    my_dir=$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
     source "${my_dir}/lib_update_caller.sh"
@@ -1088,7 +1088,7 @@ function _lib_bash_restart_parent {
 
 function  _user_is_allowed_to_update {
     # Check if the user's UID matches the script's UID
-    local script_uid=$("$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+    local script_uid=$(dirname "$(realpath -s "${BASH_SOURCE[0]}")")
     local current_uid=$(id -u)
     local script_user=$(getent passwd "$script_uid" | cut -d: -f1 || echo "Unknown user")
     local current_user=$(id -un)
