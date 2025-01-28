@@ -34,7 +34,7 @@ function _get_own_fullpath {
 }
 
 function _get_own_dirname {
-  "$(dirname "$(_get_own_fullpath)")"
+  dirname "$(_get_own_fullpath)"
 }
 
 
