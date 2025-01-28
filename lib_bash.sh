@@ -3,124 +3,333 @@
 
 # KI instructions : do not use functions starting with underscore, those are internal functions
 
+function _create_log_dir {
+    # create the directory for the given logfile
+    # we neeed this, because the user just want to set another logfile location
+    # which is set by default. That might fail if the user does not have the permissions to create that directory
+    local logfile="${1}"
+    local log_dir
+    log_dir=$(dirname "${logfile}")
+    if [ ! -d "${log_dir}" ]; then
+        mkdir -p "${log_dir}"
+    fi
+}
+
+
+function _exit_if_not_is_root {
+# exits if not elevated
+if ! is_root; then
+    log_err "lib_bash: You need to run this script or function as root (elevated)."
+    exit 1
+fi
+}
+
+
 function _set_defaults {
+    _set_askpass
+    _source_submodules
+    _set_default_logfiles
+    _set_default_logfile_colors
+    _set_default_debugmode
+    _set_tempfile_managment
+}
 
-    # Set default logging paths if not already defined or empty
-    # Uses POSIX options expansion for safe default assignment
-    # -----------------------------------------------------------
-    # Main application log file (persistent)
-    : "${LIB_BASH_LOGFILE:=$HOME/log/lib_bash/lib_bash.log}"
+function _set_default_logfiles {
+    # sets the logfiles to $HOME/log/lib_bash/<mainscript>.log ... if the user does not have root rights,
+    # or /var/log/lib_bash/<mainscript>.log ... if the user has root rights
+    local reset="${1:-}"          # logfile paths will be reset if You pass "RESET" here
+    local script_stem
+    local log_prefix
 
-    # Temporary log storage (e.g., for session-specific logs)
-    : "${LIB_BASH_LOGFILE_TMP:=$HOME/log/lib_bash/lib_bash_tmp.log}"
+    script_stem=$(get_script_stem)
+    if is_root; then
+        log_prefix="/var/log/lib_bash"
+    else
+        log_prefix="${HOME}/log/lib_bash"
+    fi
 
-    # Error-specific log file (persistent errors)
-    : "${LIB_BASH_LOGFILE_ERR:=$HOME/log/lib_bash/lib_bash_err.log}"
+    local main_log="${log_prefix}/${script_stem}.log"
+    local tmp_log="${log_prefix}/${script_stem}_tmp.log"
+    local err_log="${log_prefix}/${script_stem}_err.log"
+    local err_tmp_log="${log_prefix}/${script_stem}_err_tmp.log"
 
-    # Temporary error log storage (ephemeral error tracking)
-    : "${LIB_BASH_LOGFILE_ERR_TMP:=$HOME/log/lib_bash/lib_bash_err_tmp.log}"
+    if [[ "${reset}" == "RESET" ]]; then
+        # Assign default values regardless of current settings
+        LIB_BASH_LOGFILE="${main_log}"
+        LIB_BASH_LOGFILE_TMP="${tmp_log}"
+        LIB_BASH_LOGFILE_ERR="${err_log}"
+        LIB_BASH_LOGFILE_ERR_TMP="${err_tmp_log}"
+    else
+        # Set each variable only if not already set
+        : "${LIB_BASH_LOGFILE:="${main_log}"}"
+        : "${LIB_BASH_LOGFILE_TMP:="${tmp_log}"}"
+        : "${LIB_BASH_LOGFILE_ERR:="${err_log}"}"
+        : "${LIB_BASH_LOGFILE_ERR_TMP:="${err_tmp_log}"}"
+    fi
+    register_temppath "${LIB_BASH_LOGFILE}"
+    register_temppath "${LIB_BASH_LOGFILE_TMP}"
+    register_temppath "${LIB_BASH_LOGFILE_ERR}"
+    register_temppath "${LIB_BASH_LOGFILE_ERR_TMP}"
+}
 
-    # -----------------------------------------------------------
-    # Technical notes:
-    # 1. The colon (:) is a null command that expands arguments
-    # 2. ${VAR:=DEFAULT} syntax:
-    #    - Sets VAR to DEFAULT if VAR is unset or empty
-    #    - Preserves existing non-empty values
-    # 3. All paths use /var/log/lib_bash/$(whoami)/ as default base directory
-    # 4. Handles empty string values (e.g., explicitly set to "")
-    # 5. No-op if variables already contain non-empty values
-    # 6. make sure the user hae rights to write to the log directory
+# shellcheck disable=SC2120
+function _set_default_debugmode {
+    local reset="${1:-}"          # logging mode will be reset if You pass "RESET" here
+    local debug_mode
+    debug_mode="OFF"
+
+    if [[ "${reset}" == "RESET" ]]; then
+        # Assign default values regardless of current settings
+        LIB_BASH_DEBUG_MODE="${debug_mode}"
+    else
+        # Set each variable only if not already set
+        : "${LIB_BASH_DEBUG_MODE:="${debug_mode}"}"
+    fi
+}
+
+# shellcheck disable=SC2120
+function _set_default_logfile_colors {
+    local reset="${1:-}"  # reset the colors if You pass "RESET" here
+    # Local variables holding default values
+    local default_clr="clr_green"
+    local default_bold="clr_bold clr_green"
+    local default_err="clr_bold clr_cyan"
+    local default_warn="clr_bold clr_yellow"
+    local default_debug="clr_bold clr_magentab clr_yellow"
+
+    if [[ "${reset}" == "RESET" ]]; then
+        # Force reset all values from defaults
+        _LOG_COLOR="$default_clr"
+        _LOG_COLOR_BOLD="$default_bold"
+        _LOG_COLOR_ERR="$default_err"
+        _LOG_COLOR_WARN="$default_warn"
+        _LOG_COLOR_DEBUG="$default_debug"
+    else
+        # Set only undefined variables using defaults
+        : "${_LOG_COLOR=$default_clr}"
+        : "${_LOG_COLOR_BOLD=$default_bold}"
+        : "${_LOG_COLOR_ERR=$default_err}"
+        : "${_LOG_COLOR_WARN=$default_warn}"
+        : "${_LOG_COLOR_DEBUG=$default_debug}"
+    fi
 }
 
 function _set_askpass {
     # 2025-01-21
-    sudo_askpass="$(command -v ssh-askpass)"
-    export SUDO_ASKPASS="${sudo_askpass}"
-    export NO_AT_BRIDGE=1  # get rid of ssh-askpass:25930 dbind-WARNING
+    export SUDO_ASKPASS="$(command -v ssh-askpass)"
+    export NO_AT_BRIDGE=1  # suppress accessibility-related D-Bus warnings (like dbind-WARNING) in GUI applications on Linux
 }
 
-function _source_lib_bash_dependencies {
+function _set_tempfile_managment {
+    # Temporary Path Management Library
+    # Check and initialize arrays only if they don't exist
+    [[ -z "${_TMP_PATHS+isset}" ]] && declare -g -a _TMP_PATHS=()
+    [[ -z "${_TMP_CLEANUP_FAILED_FILES+isset}" ]] && declare -g -a _TMP_CLEANUP_FAILED_FILES=()
+    [[ -z "${_TMP_CLEANUP_FAILED_DIRS+isset}" ]] && declare -g -a _TMP_CLEANUP_FAILED_DIRS=()
+}
+
+function _source_submodules {
     # 2025-01-21
     local my_dir
     # shellcheck disable=SC2164
     my_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"  # this gives the full path, even for sourced scripts
     source "${my_dir}/lib_color.sh"
     source "${my_dir}/lib_retry.sh"
+    source "${my_dir}/lib_update_caller.sh"
+    source "${my_dir}/lib_assert.sh"
 }
 
-#####################################
+function create_temp_file {
+    # Create a temporary file and get its path. it will be registered for later cleanup
+    local temp_file
+    if ! temp_file=$(mktemp 2>/dev/null); then
+        log_err "Failed to create temporary file"
+        return 1
+    fi
+
+    # Verify the file is writable
+    if [[ ! -w "$temp_file" ]]; then
+        log_err "Error: Temporary file is not writable"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    # register for later cleanup
+    register_temppath "$temp_file"
+    echo "$temp_file"
+    return 0
+}
+
+function elevate {
+    # Function to elevate the main script with sudo if not running as root
+    # call with 'elevate "$@"'
+    # Check if not running as root
+    if [[ $EUID -ne 0 ]]; then
+        # Re-execute the main script with sudo, passing arguments
+        log "Elevating permissions and reset logfile locations..."
+        _set_default_logfiles "RESET"
+        exec sudo "$(get_script_fullpath)" "$@"
+    fi
+}
+
+function get_file_username {
+    # $1: File or Directory
+    # returns user name as string
+    local path_file="${1}"
+    local user=""
+    user=$(stat -c "%U$" "${path_file}")
+    echo "${user}"
+}
+
+function get_file_groupname {
+    # $1: File or Directory
+    # returns group name as string
+    local path_file="${1}"
+    local group=""
+    group=$(stat -c "%G" "${path_file}")
+    echo "${group}"
+}
+
+# Function to get the full path of the main script
+function get_script_fullpath  {
+    realpath "${BASH_SOURCE[1]}"
+}
+
+# Function to get the directory of the main script
+function get_script_dirname {
+    dirname "$(get_script_fullpath)"
+}
+
+# Function to get the basename of the main script
+function get_script_basename {
+    basename "$(get_script_fullpath)"
+}
+
+# Function to get the stem of the main script (the basename without extension)
+function get_script_stem {
+    local basename
+    basename=$(get_script_basename)
+    echo "${basename%.*}"
+}
 
 function linux_update {
+    # pass "--force-phased-updates" as parameter if You want to do that
+    local force_phased_updates="${1:-}"
     # 2025-01-21
-    exit_if_not_is_root
+    _exit_if_not_is_root
     # Update the list of available packages from the repositories
-    # logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}"
     log "apt-get update"
-    logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get update
     # Configure any packages that were unpacked but not yet configured
     log "dpkg --configure -a"
-    logc "$(dpkg --configure -a | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc dpkg --configure -a
     # Attempt to fix broken dependencies and install missing packages
     log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold"
     # Upgrade all installed packages while keeping existing configuration files
     log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get upgrade -y -o Dpkg::Options::="--force-confold"
     # Perform a distribution upgrade, which can include installing or removing packages
     # This also keeps existing configuration files
     log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc "$(apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
     # Clean up the local repository of retrieved package files to free up space
     log "apt-get autoclean -y"
-    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get autoclean -y
     # Remove unnecessary packages and purge their configuration files
     log "apt-get autoremove --purge -y"
-    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-    # Forcing Phased Updates : If the package is held back due to a phased update,
-    # this command will still upgrade the package immediately, bypassing the phased rollout restrictions.
-    # it will not mark it as manually installed
-    # retry apt-get -s upgrade | grep "^Inst" | awk '{print $2}' | xargs -n 1 apt-get install --only-upgrade -y -o Dpkg::Options::="--force-confold"
-    log "Installing phased updates"
-
-    while true; do
-      first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:|have been kept back:/ {while(1){getline; if(/^[0-9]/) break; for(i=1;i<=NF;i++) print $i}}' | sort -u | head -n1)
-      if [ -z "$first_package_to_update" ]; then
-        break
-      fi
-      reinstall_keep_marking "${first_package_to_update}"
-    done
+    logc apt-get autoremove --purge -y
+    # Forcing Phased Updates
+    log "Force update of phased (kept back) updates"
+    if [[ "${force_phased_updates}" == "--force-phased-updates" ]]; then
+        while true; do
+          first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:|have been kept back:/ {while(1){getline; if(/^[0-9]/) break; for(i=1;i<=NF;i++) print $i}}' | sort -u | head -n1)
+          if [ -z "$first_package_to_update" ]; then
+            break
+          fi
+          reinstall_packages "${first_package_to_update}"
+        done
+    fi
 
     # Repeat cleaning up of the package files after additional installations
     log "apt-get autoclean -y"
-    logc "$(apt-get autoclean -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get autoclean -y
     # Repeat removal of unnecessary packages after additional installations
     log "apt-get autoremove --purge -y"
-    logc "$(apt-get autoremove --purge -y | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
+    logc apt-get autoremove --purge -y
 }
 
-#####################################
+function register_temppath {
+    local path="$1"
 
-function reinstall_keep_marking {
-  # 2025-01-21
-  # REINSTALL PACKAGES AND KEEP MARKING MANUAL/AUTO  2025-01-21
+    [[ -z "$path" ]] && { log_err "register_temppath: Path required" ; return 1; }
+
+    # Resolve to canonical path
+    local canon_path
+    canon_path=$(realpath -m -- "$path" 2>/dev/null || echo "$path")
+
+    # Check for existing entry
+    for existing in "${_TMP_PATHS[@]}"; do
+        [[ "$existing" == "$canon_path" ]] && return 0
+    done
+
+    _TMP_PATHS+=("$canon_path")
+}
+
+cleanup_temppaths() {
+    _TMP_CLEANUP_FAILED_FILES=()
+    _TMP_CLEANUP_FAILED_DIRS=()
+    local path
+
+    # Phase 1: Delete files
+    for path in "${_TMP_PATHS[@]}"; do
+        if [[ -f "$path" ]]; then
+            rm -f -- "$path"
+            if [[ -e "$path" ]]; then
+                _TMP_CLEANUP_FAILED_FILES+=("$path")
+                log_warn "cleanup_temppaths: Could not delete file: ${path}"
+            fi
+        fi
+    done
+
+    # Phase 2: Delete directories
+    for path in "${_TMP_PATHS[@]}"; do
+        if [[ -d "$path" ]]; then
+            # Try to remove directory (will only succeed if empty)
+            rmdir --ignore-fail-on-non-empty -- "$path" 2>/dev/null
+
+            # Check if directory still exists
+            if [[ -d "$path" ]]; then
+                # Check if directory is non-empty
+                if [[ -n "$(find "$path" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
+                    log_warn "cleanup_temppaths: Could not delete non-empty directory: $path"
+                fi
+                _TMP_CLEANUP_FAILED_DIRS+=("$path")
+            fi
+        fi
+    done
+    # Clear registered paths regardless of success
+    _TMP_PATHS=()
+}
+
+function reinstall_packages {
   # Function to reinstall a list of packages while preserving their original marking (manual or auto)
-
   local packages="${1}" # Accepts a space-separated list of package names as a single argument
-  local pkg             # Variable to iterate over each package in the list
+  local pkg
 
-  exit_if_not_is_root
+  _exit_if_not_is_root
   # Loop through each package in the provided list
   for pkg in ${packages}; do
     # Check if the package is marked as manually installed
     if apt-mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
+      logc apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
       apt-mark manual "${pkg}"
     else
       # Reinstall the package and re-mark it as automatically installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc "$(apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}" | tee /dev/tty)" "${PIPESTATUS[0]}"  "NO_TTY"
+      logc apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
       apt-mark auto "${pkg}"
     fi
   done
@@ -148,7 +357,11 @@ function lib_bash_prepend_text_to_file {
     echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
 }
 
-# is_root 2025-01-21
+function is_ok {
+    # instead of `if $?; then ...` you can use `if is_ok; then ...` for better readability
+    return $?
+}
+
 function is_root {
     if [[ "${UID}" -ne 0 ]]; then
         return 1
@@ -157,62 +370,109 @@ function is_root {
     fi
 }
 
-# exit_if_not_is_root 2025-01-21
-function exit_if_not_is_root {
-if ! is_root; then
-    echo "lib_bash: You need to run this script or function as root."
-    exit 1
-fi
-}
-
-
-function _create_log_dir {
-    # 2025-01-21
-    local logfile="${1}"
-    local log_dir
-    log_dir=$(dirname "${logfile}")
-    if [ ! -d "${log_dir}" ]; then
-        mkdir -p "${log_dir}"
+function is_script_sourced {
+    local script_name="${1}"  # pass "${0}" from the calling script
+    local bash_source="${2}"  # pass "${BASH_SOURCE[0]}" from the calling script
+    if [[ "${script_name}" != "${bash_source}" ]]; then
+        return 0
+    else
+        return 1
     fi
 }
 
-
-# log  2025-01-21
 function log {
-  # Log to screen and logfiles
-  # Arguments:
-  #   1: message (required) - Text to log.
-  #   2: options (optional) - "bold" force to log the command output as bold
-  #                           "NO_TTY" to skip output to screen (but still to logfiles)
-  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-  # with single commands : logc "$(echo "test")" $?
+    local message="${1}"          # Message (required) - Text to log
+    local options="${2:-}"        # Options (default: "") - "bold" for bold output, "NO_TTY" to skip screen output
+    local logline
 
-  local message="${1}"
-  local options="${2}:-}"       # options, default to "" if not provided.: "bold", "NO_TTY"
-  local logline
+    _create_log_dir "${LIB_BASH_LOGFILE}"
+    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
 
-  _create_log_dir "${LIB_BASH_LOGFILE}"
-  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+    # Process each line in the message
+    while IFS= read -r line; do
+      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ${line}"
 
-  # Process each line in the message
-  while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ${line}"
-    if [[ "${options}" != *NO_TTY* ]]; then
-        if [[ "${options}" == *bold* ]]; then
-          clr_bold clr_green "${logline}"
-        else
-          clr_green "${logline}"
-        fi
-    fi
-    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-  done <<< "${message}"
+      if [[ "${options}" != *NO_TTY* ]]; then
+          # Determine color functions based on options and defaults
+          local color_funcs_str
+          if [[ "${options}" == *bold* ]]; then
+              color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"  # Default bold if not set
+          else
+              color_funcs_str="${_LOG_COLOR:-clr_green}"               # Default color if not set
+          fi
+
+          # Split into array of color functions
+          local -a color_funcs=()
+          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+          # Apply color functions sequentially
+          local formatted_line="${logline}"
+          for func in "${color_funcs[@]}"; do
+              if declare -f "${func}" >/dev/null 2>&1; then
+                  formatted_line="$("${func}" "${formatted_line}")"
+              else
+                  echo "Warning: function '${func}' not found, skipping." >&2
+              fi
+          done
+
+          # Output to terminal
+          echo -e "${formatted_line}"
+      fi
+
+      # Write to log files (unformatted)
+      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+    done <<< "${message}"
 }
 
-# log  2025-01-21
+function log_debug {
+    # logs to the default logfile if LIB_BASH_DEBUG_MODE != "OFF"
+    if [[ "${LIB_BASH_DEBUG_MODE}" == "OFF" ]]; then
+        return 0
+    fi
+
+    local message="${1}"          # Message (required) - Text to log
+    local logline
+
+    _create_log_dir "${LIB_BASH_LOGFILE}"
+    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+
+    # Process each line in the message
+    while IFS= read -r line; do
+      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): DEBUG [DBG]: ${line}"
+
+      if [[ "${options}" != *NO_TTY* ]]; then
+          # Determine color functions based on options and defaults
+          local color_funcs_str
+          color_funcs_str="${_LOG_COLOR_DEBUG:-clr_bold clr_magentab clr_yellow}"  # Default if not set
+
+          # Split into array of color functions
+          local -a color_funcs=()
+          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+          # Apply color functions sequentially
+          local formatted_line="${logline}"
+          for func in "${color_funcs[@]}"; do
+              if declare -f "${func}" >/dev/null 2>&1; then
+                  formatted_line="$("${func}" "${formatted_line}")"
+              else
+                  echo "Warning: function '${func}' not found, skipping." >&2
+              fi
+          done
+
+          # Output to terminal
+          echo -e "${formatted_line}"
+      fi
+
+      # Write to log files (unformatted)
+      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+    done <<< "${message}"
+}
+
 function log_err {
-  local message="${1}"
-  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
+  local message="${1}"          # Message (required) - Text to log
+  local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
   local logline
 
   _create_log_dir "${LIB_BASH_LOGFILE}"
@@ -223,9 +483,28 @@ function log_err {
   # Process each line in the message
   while IFS= read -r line; do
     logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ERROR [EE]: ${line}"
+
     if [[ "${options}" != *NO_TTY* ]]; then
-      clr_bold clr_cyan "${logline}"
+        # Use _LOG_COLOR_ERR configuration
+        local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"  # Default error color
+        local -a color_funcs=()
+        IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+        # Apply color functions sequentially
+        local formatted_line="${logline}"
+        for func in "${color_funcs[@]}"; do
+            if declare -f "${func}" >/dev/null 2>&1; then
+                formatted_line="$("${func}" "${formatted_line}")"
+            else
+                echo "Warning: function '${func}' not found, skipping." >&2
+            fi
+        done
+
+        # Output to terminal
+        echo -e "${formatted_line}"
     fi
+
+    # Write to log files (unformatted)
     [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
     [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
     [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
@@ -233,10 +512,9 @@ function log_err {
   done <<< "${message}"
 }
 
-# log_warn  2025-01-21
 function log_warn {
-  local message="${1}"
-  local options="${2}:-}"       # options, default to "" if not provided.: "NO_TTY"
+  local message="${1}"          # Message (required) - Text to log
+  local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
   local logline
 
   _create_log_dir "${LIB_BASH_LOGFILE}"
@@ -247,9 +525,28 @@ function log_warn {
   # Process each line in the message
   while IFS= read -r line; do
     logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): WARNING [WW]: ${line}"
+
     if [[ "${options}" != *NO_TTY* ]]; then
-      clr_bold clr_yellow "${logline}"
+        # Use _LOG_COLOR_WARN configuration
+        local color_funcs_str="${_LOG_COLOR_WARN:-clr_bold clr_yellow}"  # Default warning color
+        local -a color_funcs=()
+        IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+        # Apply color functions sequentially
+        local formatted_line="${logline}"
+        for func in "${color_funcs[@]}"; do
+            if declare -f "${func}" >/dev/null 2>&1; then
+                formatted_line="$("${func}" "${formatted_line}")"
+            else
+                echo "Warning: function '${func}' not found, skipping." >&2
+            fi
+        done
+
+        # Output to terminal
+        echo -e "${formatted_line}"
     fi
+
+    # Write to log files (unformatted)
     [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
     [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
     [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
@@ -257,37 +554,49 @@ function log_warn {
   done <<< "${message}"
 }
 
-# logc  2025-01-21
 function logc {
-  # Log the output of a command with support for error handling.
-  # Arguments:
-  #   1: output (required) - Text to log.
-  #   2: exit_code (required) - Exit code of the last command. If 0, we log normally; otherwise, as an error.
-  #   3: options (optional) - "ERR" force to log the command output as error, even if exit_code is 0.
-  #                           "NO_TTY" to skip output to screen (but still to logfiles)
-  # Usage : with piped commands : logc "$(apt-get update | tee /dev/tty)" "${PIPESTATUS[0]}" "NO_TTY"
-  # with single commands : logc "$(echo "test")" $?
+    # Run command, capture output, and display in real-time
+    local exit_code output has_output
+    exec 3>&1  # Save original stdout
 
-  local output="${1}"          # Output to be logged.
-  local exit_code="${2:-0}"    # Exit code, default to 0 if not provided.
-  local options="${3:-}"       # options, default to "" if not provided.: "ERR","NO_TTY","bold"
+    # Use 'tee' to both capture and display output
+    output=$("$@" 2>&1 | tee >(cat >&3))
+    exit_code=${PIPESTATUS[0]}
+    exec 3>&-  # Close duplicated descriptor
 
-  # Return if output is empty.
-  if [[ -z "${output}" ]]; then
-    return 0
-  fi
+    # Check if output is non-empty (including whitespace-only but not empty string)
+    [[ -n "$output" ]] && has_output=true || has_output=false
 
-  # Log the exit code if it indicates an error.
-  if [[ ${exit_code} -ne 0 ]]; then
-    log_err "Exit code: ${exit_code}"
-  fi
+    # Log only if there was output
+    if $has_output; then
+        if [ "${exit_code}" -eq 0 ]; then
+            log "${output}" "NO_TTY"
+        else
+            log_err "${output}" "NO_TTY"
+        fi
+    else
+        # if there is no ouput but exit code, log that as error
+        if [ "${exit_code}" -eq 0 ]; then
+            log_err "exitcode: ${exit_code}"
+        fi
+    fi
+    return "${exit_code}"
+}
 
-  # Log the output based on the log type or exit code.
-  if [[ "${options}" == *ERR* ]] || [[ ${exit_code} -ne 0 ]]; then
-    log_err "${output}" "${options}"
-  else
-    log "${output}" "${options}"
-  fi
+
+# Function to log command output - but always log it as an error
+# this is needed for instance to show failed services, etc.
+function logc_err {
+    local exit_code output
+    exec 3>&1  # Duplicate stdout to file descriptor 3
+    # Run the command, capture output, and display in real-time
+    output=$("$@" 2>&1 | tee >(cat >&3))
+    exit_code=${PIPESTATUS[0]}
+    exec 3>&-  # Close file descriptor 3
+    log_err "$output" "NO_TTY"
+    if [ "${exit_code}" -eq 0 ]; then
+        log_err "exitcode: ${exit_code}"
+    fi
 }
 
 
@@ -323,8 +632,6 @@ function send_email {
 
     shift 3  # Ensure that all subsequent parameters are attachments, safe even if no extra arguments are provided
     local attachments=("$@")
-
-    # Validate the number and size of attachments to avoid performance issues
 
     # Validate the body file
     if [[ -z "${body_file}" ]]; then
@@ -383,195 +690,10 @@ function send_email {
 }
 
 
-###############################
-# create_assert_failed_message
-###############################
-
-function create_assert_failed_message {
-
-	# $1 : test_command
-	# $2 : expected
-	# $3 : expected
-    local script_name result test_command expected result
-
-	test_command="${1}"
-	expected="${2}"
-	result="${3}"
-
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
-
-	clr_red "\
-    ** ASSERT ****************************************************************************************************"
-	clr_reverse clr_cyan "\
-	File     : ${script_name}"
-	clr_cyan "\
-	Test     : ${test_command}${IFS}\
-	Result   : ${result}${IFS}\
-	Expected : ${expected}"
-	clr_red "\
-	**************************************************************************************************************"
-}
-
-
-
-function check_assert_command_defined {
-    local test_command expected result function_name
-  	# $1 : test_command
-	# $2 : expected
-	test_command="${1}"
-	expected="${2}"
-    function_name="$(echo "${test_command}" | cut -d " " -f 1)"
-
-    if ! is_valid_command "${function_name}"; then
-        result="command \"${function_name}\" is not a declared function or a valid internal or external command "
-        create_assert_failed_message "${test_command}" "${expected}" "${result}"
-        return 1
-    fi
-}
-
-
-function assert_equal {
-	# $1 : test_command
-	# $2 : expected
-	local test_command expected result
-
-	test_command="${1}"
-	expected="${2}"
-    check_assert_command_defined "${test_command}" "${expected}" || return 0
-    result=$(eval "${1}")
-
-	if [[ "${result}" != "${expected}" ]]; then
-	    create_assert_failed_message "${test_command}" "\"${expected}\"" "\"${result}\""
-    fi
-}
-
-
-
-function assert_contains {
-	# $1 : test_command
-	# $2 : expected
-	local test_command expected result
-	test_command="${1}"
-	expected="${2}"
-    check_assert_command_defined "${test_command}" "*${expected}*" || return 0
-    result=$(eval "${1}")
-
-	if [[ "${result}" != *"${expected}"* ]]; then
-	    create_assert_failed_message "${test_command}" "\"*${expected}*\"" "\"${result}\""
-	    fi
-}
-
-
-
-function assert_return_code {
-	# $1 : test_command
-	# $2 : expected
-	local test_command expected result
-	test_command="${1}"
-	expected="${2}"
-    check_assert_command_defined "${test_command}" "return code = ${expected}" || return 0
-    eval "${1}"
-    result="${?}"
-	if [[ "${result}" -ne "${expected}" ]]; then
-	    create_assert_failed_message "${test_command}" "return code = ${expected}" "return code = ${result}"
-    fi
-}
-
-
-function assert_pass {
-	# $1 : test_command
-	local test_command result
-	test_command="${1}"
-    check_assert_command_defined "${test_command}" "return code = 0" || return 0
-    eval "${1}"
-    result="${?}"
-	if [[ "${result}" -ne 0 ]]; then
-	    create_assert_failed_message "${test_command}" "return code = 0" "return code = ${result}"
-    fi
-}
-
-
-function assert_fail {
-	# $1 : test_command
-	local test_command result
-	test_command="${1}"
-    check_assert_command_defined "${test_command}" "return code > 0" || return 0
-    eval "${1}"
-    result="${?}"
-	if [[ "${result}" -eq 0 ]]; then
-	    create_assert_failed_message "${test_command}" "return code > 0" "return code = ${result}"
-    fi
-}
-
-
-
 
 ########################################################################################################################################################
 # OLD HELPERS
 ########################################################################################################################################################
-
-function is_ok() {
-    # for easy use : if is_ok; then ...
-    # also preserves the returncode
-    return $?
-}
-
-
-function get_own_script_name {
-    # $1: bash_source, usually "${BASH_SOURCE}"
-    local bash_source="${1}"
-    readlink -f "${bash_source}"
-}
-
-# Function to retrieve the name of the main script
-get_main_script_name() {
-    echo "$0"
-}
-
-function is_script_sourced {
-    # $1: script_name "${0}"
-    # $2: bash_source "${BASH_SOURCE}"
-    local script_name="${1}"
-    local bash_source="${2}"
-    if [[ "${script_name}" != "${bash_source}" ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
-
-function debug {
-    # $1: should_debug: True/False
-    # $2: debug_message
-    local should_debug debug_message script_name
-    should_debug="${1}"
-    debug_message="${2}"
-    script_name="$(get_own_script_name "${BASH_SOURCE[0]}")"
-
-    if [[ "${should_debug}" == "True" ]]; then
-        clr_blue "\
-        ** DEBUG *****************************************************************************************************${IFS}\
-        File          : ${script_name}${IFS}\
-        Function      : ${FUNCNAME[ 1 ]}${IFS}\
-        Caller        : ${FUNCNAME[ 2 ]}${IFS}\
-        Debug Message : ${debug_message}${IFS}\
-        **************************************************************************************************************"
-    fi
-}
-
-
-function wait_for_file_to_be_created {
-    # $1: file_name
-    local file_name
-    file_name="${1}"
-    while [[ ! -f "${file_name}" ]]; do
-        clr_blue "wait for ${file_name} to be created"
-        sleep 1
-    done
-    sleep 1
-}
-
 
 
 function is_bash_function_declared {
@@ -599,46 +721,6 @@ function cmd {
     # returns the command if present
     # $1 : the command
     command -v "${1}" 2>/dev/null
-}
-
-
-function get_log_file_name {
-    # $1: script_name "${0}"
-    # $2: bash_source "${BASH_SOURCE}"
-    # usage : test_logfile=$(get_log_file_name "${0}" "${BASH_SOURCE}")
-    # returns the name of the logfile : ${HOME}/log_usr_local_lib_<...>_001_000_<...>.log
-    local script_name="${1}"
-    local bash_source="${2}"
-    local own_script_name_full=""
-    local own_script_name_wo_extension=""
-    local own_script_name_wo_extension_dashed=""
-    local log_file_name=""
-
-    own_script_name_full="$(get_own_script_name "${BASH_SOURCE[0]}")"
-    own_script_name_wo_extension=${own_script_name_full%.*}
-    own_script_name_wo_extension_dashed=$(echo "${own_script_name_wo_extension}" | tr '/' '_' )
-    log_file_name="${HOME}"/log"${own_script_name_wo_extension_dashed}".log
-
-    echo "${log_file_name}"
-}
-
-
-function get_user_from_fileobject {
-    # $1: File or Directory
-    # returns user
-    local path_file="${1}"
-    local user=""
-    user=$(stat -c "%U$" "${path_file}")
-    echo "${user}"
-}
-
-function get_group_from_fileobject {
-    # $1: File or Directory
-    # returns group
-    local path_file="${1}"
-    local group=""
-    group=$(stat -c "%G" "${path_file}")
-    echo "${group}"
 }
 
 
@@ -846,8 +928,8 @@ function backup_file {
 
     if [[ -f ${path_file} ]]; then
         local user group
-        user=$(get_user_from_fileobject "${path_file}")
-        group=$(get_group_from_fileobject "${path_file}")
+        user=$(get_file_username "${path_file}")
+        group=$(get_file_groupname "${path_file}")
 
         "$(cmd "sudo")" cp -f "${path_file}" "${path_file}.backup"
         "$(cmd "sudo")" chown "${user}" "${path_file}.backup"
@@ -888,8 +970,8 @@ function replace_or_add_lines_containing_string_in_file {
     search_string="${2}"
     new_line="${3}"
     comment_char="${4}"
-    user=$(get_user_from_fileobject "${path_file}")
-    group=$(get_group_from_fileobject "${path_file}")
+    user=$(get_file_username "${path_file}")
+    group=$(get_file_groupname "${path_file}")
     number_of_lines_found="$(grep -c "${search_string}" "${path_file}")"
 
     new_line=$(get_prepend_auto_configuration_message_to_line "${new_line}" "${comment_char}")
@@ -1052,8 +1134,6 @@ function LIB_BASH_MAIN {
     fi
 }
 
-_source_lib_bash_dependencies
-_set_askpass
 _set_defaults
 
 # Self-update and restart logic

@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# will update the main script, if it is in a github cloned directory
+# call from the main script with :
+# source /usr/local/lib_bash/lib_update_caller.sh && update_caller "$@"
+
+
 # Get the directory of the script that sourced this file
 SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[1]}")")"
 
