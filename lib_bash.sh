@@ -523,6 +523,10 @@ function get_own_script_name {
     readlink -f "${bash_source}"
 }
 
+# Function to retrieve the name of the main script
+get_main_script_name() {
+    echo "$0"
+}
 
 function is_script_sourced {
     # $1: script_name "${0}"
