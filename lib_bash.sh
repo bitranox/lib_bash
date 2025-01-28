@@ -564,7 +564,7 @@ function logc {
 
     # Log only if there was output
     if $has_output; then
-        if [ "${exit_code}" -eq 0 ]; then
+        if (( ${exit_code:-0} = 0 )); then
             log "${output}" "NO_TTY"
         else
             log_err "${output}" "NO_TTY"
@@ -589,7 +589,7 @@ function logc_err {
     exit_code=${PIPESTATUS[0]}
     exec 3>&-  # Close file descriptor 3
     log_err "$output" "NO_TTY"
-    if [ "${exit_code}" -eq 0 ]; then
+    if (( ${exit_code:-0} != 0 )); then
         log_err "exitcode: ${exit_code}"
     fi
 }
