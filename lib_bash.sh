@@ -1074,7 +1074,7 @@ function is_sourced {
 
 ########################################################################################################################################################
 # SELF-UPDATE CORE LOGIC
-#######################################################################################################################################################
+########################################################################################################################################################
 
 function _lib_bash_restart_parent {
     # Get parent script path (the script that sourced lib_bash.sh)
@@ -1110,10 +1110,10 @@ function _lib_bash_self_update {
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
         if ! _user_is_allowed_to_update; then return 0; fi
         log "lib_bash: new version available, updating..."
-        logc git -C "$script_dir" fetch --all
-        logc git -C "$script_dir" reset --hard origin/main
-        logc git -C "$script_dir" reset --hard origin/master
-        logc git -C "$script_dir" clean -fd
+        git -C "$script_dir" fetch --all
+        git -C "$script_dir" reset --hard origin/main &> /dev/null
+        git -C "$script_dir" reset --hard origin/master &> /dev/null
+        git -C "$script_dir" clean -fd
         return 0
     fi
     return 1
