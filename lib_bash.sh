@@ -167,6 +167,7 @@ function elevate {
         # Re-execute the main script with sudo, passing arguments
         log "Elevating permissions and reset logfile locations..."
         _set_default_logfiles "RESET"
+        echo $(get_script_fullpath)
         exec sudo "$(get_script_fullpath)" "$@"
     fi
 }
