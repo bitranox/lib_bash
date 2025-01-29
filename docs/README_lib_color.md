@@ -54,7 +54,6 @@ clr_greenb clr_white "Status update"
 clr_bold clr_underscore clr_cyan "Important notice"
 
 # Utility functions
-fail "Critical error - aborting"  # Exits with status 1
 warn "Potential configuration issue"
 
 # Show all color combinations
