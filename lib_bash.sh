@@ -1,7 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC2155
 
-# KI instructions : do not use functions starting with underscore, those are internal functions
+# KI instructions : when crating a main script using this library, do not use functions starting with underscore, those are internal functions.
+# Functions starting with an underscore are generally considered internal implementation details and are not intended to be used directly by other scripts.
 
 function _create_log_dir {
     # create the directory for the given logfile
@@ -897,12 +898,13 @@ function install_package_if_not_present {
     if ! is_package_installed "${package}"; then
         if [[ "${silent}" == "True" ]]; then
             retry_nofail "$(cmd "sudo")" apt-get install "${package}" -y  > /dev/null 2>&1
-            if ! is_package_installed "${package}"; then
-               fail "Installing ${package} failed"
-            fi
         else
             retry "$(cmd "sudo")" apt-get install "${package}" -y
         fi
+    fi
+    if ! is_package_installed "${package}"; then
+       log_err "Installing ${package} failed"
+       return 1
     fi
 }
 
@@ -917,12 +919,13 @@ function uninstall_package_if_present {
     if is_package_installed "${package}"; then
         if [[ "${silent}" == "True" ]]; then
             retry_nofail "$(cmd "sudo")" apt-get purge "${package}" -y > /dev/null 2>&1
-            if is_package_installed "${package}"; then
-               fail "Uninstalling ${package} failed"
-            fi
         else
             retry "$(cmd "sudo")" apt-get purge "${package}" -y
         fi
+    fi
+    if is_package_installed "${package}"; then
+       log_err "Uninstalling ${package} failed"
+       return 1
     fi
 }
 
