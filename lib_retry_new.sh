@@ -36,6 +36,12 @@ retry() {
   done
   shift $((OPTIND - 1))
 
+  # Validate log function exists
+  if ! declare -F "$log_func" >/dev/null; then
+    echo "lib_retry: Invalid log function: $log_func" >&2
+    return 1
+  fi
+
   # Input Validation
   if ! [[ "$max" =~ ^[0-9]+$ ]] || [[ "$max" -le 0 ]]; then
     ${log_func} "lib_retry: Invalid max attempts: $max"
@@ -68,7 +74,8 @@ retry() {
             ${log_func} "lib_retry: Command ${cmd_str%% } failed with exit code $cmd_status. Attempt ${n}/${max}:"
           fi
         ((n++))
-        sleep "${delay}";
+        local backoff=$(( delay * (2 ** (n-1)) ))
+        sleep "$backoff"
       else
         if [[ -v error_messages[$cmd_status] ]] ; then
           printf -v cmd_str '%q ' "$@"
