@@ -5,13 +5,15 @@
 
 function _create_log_dir {
     # create the directory for the given logfile
-    # we neeed this, because the user just want to set another logfile location
+    # we need this, because the user just want to set another logfile location
     # which is set by default. That might fail if the user does not have the permissions to create that directory
     local logfile="${1}"
-    local log_dir
-    log_dir=$(dirname "${logfile}")
-    if [ ! -d "${log_dir}" ]; then
-        mkdir -p "${log_dir}"
+    local log_dir=$(dirname "${logfile}")
+    if [[ ! -d "${log_dir}" ]]; then
+        if ! mkdir -p "${log_dir}"; then
+            log_err "Failed to create log directory: ${log_dir}"
+            exit 1
+        fi
     fi
 }
 
@@ -183,12 +185,13 @@ function elevate {
 }
 
 function get_file_username {
-    # $1: File or Directory
     # returns user name as string
-    local path_file="${1}"
-    local user=""
-    user=$(stat -c "%U$" "${path_file}")
-    echo "${user}"
+    local path_file="${1}"    # $1: File or Directory
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        stat -f "%Su" "${path_file}"
+    else
+        stat -c "%U" "${path_file}"
+    fi
 }
 
 function get_file_groupname {
