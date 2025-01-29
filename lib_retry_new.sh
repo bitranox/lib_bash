@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Generic retry function
-retry() {
+function retry {
   local n max delay log_func cmd_status
   n=1
   max=5
