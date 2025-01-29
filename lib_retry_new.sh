@@ -58,16 +58,21 @@ function retry {
       if [[ ${n} -lt ${max} ]]; then
           # Check for specific error code
           if [[ -v error_messages[$cmd_status] ]] ; then
+            # shellcheck disable=SC2145
+            # "$@" provides better output for the use case of logging each argument separately and providing clearer information.
             ${log_func} "lib_retry: Command \"$@\" failed with exit code $cmd_status: ${error_messages[$cmd_status]}. Attempt ${n}/${max}:"
           else
+            # shellcheck disable=SC2145
             ${log_func} "lib_retry: Command \"$@\" failed with exit code $cmd_status. Attempt ${n}/${max}:"
           fi
         ((n++))
-        sleep ${delay};
+        sleep "${delay}";
       else
         if [[ -v error_messages[$cmd_status] ]] ; then
+          # shellcheck disable=SC2145
           ${log_func} "lib_retry: The command \"$@\" failed after ${n} attempts with exit code $cmd_status: ${error_messages[$cmd_status]}."
         else
+           # shellcheck disable=SC2145
            ${log_func} "lib_retry: The command \"$@\" failed after ${n} attempts with exit code $cmd_status."
         fi
          break # Exit retry loop after max attempts
