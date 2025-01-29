@@ -1,21 +1,22 @@
 #!/bin/bash
+set -o errexit -o nounset -o pipefail
 
 # Generic retry function
-function retry {
+retry() {
   local n max delay log_func cmd_status
+  local -Ar error_messages=(
+    [1]="General error"
+    [2]="Misuse of shell builtins"
+    [126]="Command invoked cannot execute"
+    [127]="Command not found"
+    [130]="Script terminated by Control-C"
+  )
+
   n=1
   max=5
   delay=5
   log_func="log_err"
-  cmd_status=0 # Initialize command status to success
-
-  # Error code mappings
-  declare -A error_messages
-  error_messages[1]="General error"
-  error_messages[2]="Misuse of shell builtins"
-  error_messages[126]="Command invoked cannot execute"
-  error_messages[127]="Command not found"
-  error_messages[130]="Script terminated by Control-C"
+  cmd_status=0
 
   # Parse Options
   while getopts "n:d:l:" opt; do
@@ -23,6 +24,10 @@ function retry {
         n) max="$OPTARG" ;;
         d) delay="$OPTARG" ;;
         l) log_func="$OPTARG" ;;
+        :)
+          echo "lib_retry: Option -$OPTARG requires an argument" >&2
+          return 1
+          ;;
         \?)
           echo "lib_retry: Usage: retry [-n <max_attempts>] [-d <delay>] [-l <log_function>] <command> [args ...]" >&2
           return 1
@@ -31,7 +36,7 @@ function retry {
   done
   shift $((OPTIND - 1))
 
-  # Input Validation (simplified)
+  # Input Validation
   if ! [[ "$max" =~ ^[0-9]+$ ]] || [[ "$max" -le 0 ]]; then
     ${log_func} "lib_retry: Invalid max attempts: $max"
     return 1
@@ -48,39 +53,36 @@ function retry {
   fi
 
   while true; do
-    # Execute the command, store exit code in cmd_status
     "${@}"
     cmd_status=$?
 
     if [[ $cmd_status -eq 0 ]]; then
-      break # Command success, exit retry loop
+      break
     else
       if [[ ${n} -lt ${max} ]]; then
-          # Check for specific error code
           if [[ -v error_messages[$cmd_status] ]] ; then
-            # shellcheck disable=SC2145
-            # "$@" provides better output for the use case of logging each argument separately and providing clearer information.
-            ${log_func} "lib_retry: Command \"$@\" failed with exit code $cmd_status: ${error_messages[$cmd_status]}. Attempt ${n}/${max}:"
+            printf -v cmd_str '%q ' "$@"
+            ${log_func} "lib_retry: Command ${cmd_str%% } failed with exit code $cmd_status: ${error_messages[$cmd_status]}. Attempt ${n}/${max}:"
           else
-            # shellcheck disable=SC2145
-            ${log_func} "lib_retry: Command \"$@\" failed with exit code $cmd_status. Attempt ${n}/${max}:"
+            printf -v cmd_str '%q ' "$@"
+            ${log_func} "lib_retry: Command ${cmd_str%% } failed with exit code $cmd_status. Attempt ${n}/${max}:"
           fi
         ((n++))
         sleep "${delay}";
       else
         if [[ -v error_messages[$cmd_status] ]] ; then
-          # shellcheck disable=SC2145
-          ${log_func} "lib_retry: The command \"$@\" failed after ${n} attempts with exit code $cmd_status: ${error_messages[$cmd_status]}."
+          printf -v cmd_str '%q ' "$@"
+          ${log_func} "lib_retry: The command ${cmd_str%% } failed after ${n} attempts with exit code $cmd_status: ${error_messages[$cmd_status]}."
         else
-           # shellcheck disable=SC2145
-           ${log_func} "lib_retry: The command \"$@\" failed after ${n} attempts with exit code $cmd_status."
+          printf -v cmd_str '%q ' "$@"
+          ${log_func} "lib_retry: The command ${cmd_str%% } failed after ${n} attempts with exit code $cmd_status."
         fi
-         break # Exit retry loop after max attempts
+         break
       fi
     fi
   done
 
-  return $cmd_status # Return the exit code of the last attempt
+  return $cmd_status
 }
 
 # Example usage:
