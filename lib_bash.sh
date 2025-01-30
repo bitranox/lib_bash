@@ -1141,9 +1141,9 @@ function _lib_bash_self_update {
 ########################################################################################################################################################
 
 function LIB_BASH_MAIN {
-    if ! is_sourced; then
-        call_function_from_commandline "${0}" "${@}"
-    fi
+    ! is_sourced || return 0  # Exit early if script is sourced
+    (( $# )) || exit 0        # Terminate if no arguments provided
+    call_function_from_commandline "${0}" "${@}"
 }
 
 _set_defaults
