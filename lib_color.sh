@@ -33,12 +33,12 @@ CLR_CYANB=46            # set cyan background
 CLR_WHITEB=47           # set white background
 
 # Check if string exists as function
-function fn_exists {
+fn_exists() {
     declare -F "$1" >/dev/null
 }
 
 # Process color layers
-function clr_layer {
+clr_layer() {
     local CLR_ECHOSWITCHES="-e"
     local CLR_STACK=""
     local CLR_SWITCHES=""
@@ -74,7 +74,7 @@ function clr_layer {
 }
 
 # Escape sequence generator
-function clr_escape {
+clr_escape() {
     local text="$1"
     shift
     local codes=("$@")
@@ -97,32 +97,32 @@ function clr_escape {
 }
 
 # Color functions
-function clr_reset           { clr_layer $CLR_RESET "$@";           }
-function clr_reset_underline { clr_layer $CLR_RESET_UNDERLINE "$@"; }
-function clr_reset_reverse   { clr_layer $CLR_RESET_REVERSE "$@";   }
-function clr_default         { clr_layer $CLR_DEFAULT "$@";         }
-function clr_defaultb        { clr_layer $CLR_DEFAULTB "$@";        }
-function clr_bold            { clr_layer $CLR_BOLD "$@";            }
-function clr_underscore      { clr_layer $CLR_UNDERSCORE "$@";      }
-function clr_reverse         { clr_layer $CLR_REVERSE "$@";         }
-function clr_black           { clr_layer $CLR_BLACK "$@";           }
-function clr_red             { clr_layer $CLR_RED "$@";             }
-function clr_green           { clr_layer $CLR_GREEN "$@";           }
-function clr_yellow          { clr_layer $CLR_YELLOW "$@";          }
-function clr_blue            { clr_layer $CLR_BLUE "$@";            }
-function clr_magenta         { clr_layer $CLR_MAGENTA "$@";         }
-function clr_cyan            { clr_layer $CLR_CYAN "$@";            }
-function clr_white           { clr_layer $CLR_WHITE "$@";           }
-function clr_blackb          { clr_layer $CLR_BLACKB "$@";          }
-function clr_redb            { clr_layer $CLR_REDB "$@";            }
-function clr_greenb          { clr_layer $CLR_GREENB "$@";          }
-function clr_yellowb         { clr_layer $CLR_YELLOWB "$@";         }
-function clr_blueb           { clr_layer $CLR_BLUEB "$@";           }
-function clr_magentab        { clr_layer $CLR_MAGENTAB "$@";        }
-function clr_cyanb           { clr_layer $CLR_CYANB "$@";           }
-function clr_whiteb          { clr_layer $CLR_WHITEB "$@";          }
+clr_reset()           { clr_layer $CLR_RESET "$@";           }
+clr_reset_underline() { clr_layer $CLR_RESET_UNDERLINE "$@"; }
+clr_reset_reverse()   { clr_layer $CLR_RESET_REVERSE "$@";   }
+clr_default()         { clr_layer $CLR_DEFAULT "$@";         }
+clr_defaultb()        { clr_layer $CLR_DEFAULTB "$@";        }
+clr_bold()            { clr_layer $CLR_BOLD "$@";            }
+clr_underscore()      { clr_layer $CLR_UNDERSCORE "$@";      }
+clr_reverse()         { clr_layer $CLR_REVERSE "$@";         }
+clr_black()           { clr_layer $CLR_BLACK "$@";           }
+clr_red()             { clr_layer $CLR_RED "$@";             }
+clr_green()           { clr_layer $CLR_GREEN "$@";           }
+clr_yellow()          { clr_layer $CLR_YELLOW "$@";          }
+clr_blue()            { clr_layer $CLR_BLUE "$@";            }
+clr_magenta()         { clr_layer $CLR_MAGENTA "$@";         }
+clr_cyan()            { clr_layer $CLR_CYAN "$@";            }
+clr_white()           { clr_layer $CLR_WHITE "$@";           }
+clr_blackb()          { clr_layer $CLR_BLACKB "$@";          }
+clr_redb()            { clr_layer $CLR_REDB "$@";            }
+clr_greenb()          { clr_layer $CLR_GREENB "$@";          }
+clr_yellowb()         { clr_layer $CLR_YELLOWB "$@";         }
+clr_blueb()           { clr_layer $CLR_BLUEB "$@";           }
+clr_magentab()        { clr_layer $CLR_MAGENTAB "$@";        }
+clr_cyanb()           { clr_layer $CLR_CYANB "$@";           }
+clr_whiteb()          { clr_layer $CLR_WHITEB "$@";          }
 
-function clr_dump {
+clr_dump() {
     # Define foreground and background color codes and names
     local fg_colors=(
         "30:BLACK"
@@ -171,16 +171,6 @@ function clr_dump {
             printf -- " - %s on %s\n" "$fg_name" "$bg_name"
         done
     done
-}
-
-# Utility functions
-function fail {
-    clr_red "$(clr_bold "[ERROR] ${1}")" >&2
-    exit 1
-}
-
-function warn {
-    clr_yellow "$(clr_bold "[WARNING] ${1}")" >&2
 }
 
 # Execution handler
