@@ -249,7 +249,7 @@ Contributions welcome! Please follow the standard procedure:
 3. Commit your changes  
 4. Submit a Pull Request  
 
-See [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/master/CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/master/docs/CONTRIBUTING.md) for more details.
 
 ---
 
