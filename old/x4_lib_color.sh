@@ -3,32 +3,27 @@
 set -o errexit -o nounset -o pipefail
 
 #####################################################################
-# 1) Basic SGR (Select Graphic Rendition) codes
+# 1) Standard 16-color constants & checks
 #####################################################################
+
 CLR_ESC='\033['
 
-# Ensure we're in Bash
 if [[ -z "${BASH_VERSION:-}" ]]; then
     echo "This script requires bash" >&2
     exit 1
 fi
 
-# Reset + attribute codes
-CLR_RESET=0
-CLR_RESET_UNDERLINE=24
-CLR_RESET_REVERSE=27
-CLR_DEFAULT=39
-CLR_DEFAULTB=49
-
+# Basic SGR reset and attribute codes
+CLR_RESET=0             # reset all attributes to default
+CLR_RESET_UNDERLINE=24  # underline off
+CLR_RESET_REVERSE=27    # reverse off
+CLR_DEFAULT=39          # default foreground
+CLR_DEFAULTB=49         # default background
 CLR_BOLD=1
 CLR_UNDERSCORE=4
 CLR_REVERSE=7
 
-# Newly added
-CLR_ITALIC=3
-CLR_BLINK=5
-
-# 8 standard FG (30..37)
+# 8 basic foreground colors (30..37)
 CLR_BLACK=30
 CLR_RED=31
 CLR_GREEN=32
@@ -38,7 +33,7 @@ CLR_MAGENTA=35
 CLR_CYAN=36
 CLR_WHITE=37
 
-# 8 standard BG (40..47)
+# 8 basic background colors (40..47)
 CLR_BLACKB=40
 CLR_REDB=41
 CLR_GREENB=42
@@ -48,36 +43,16 @@ CLR_MAGENTAB=45
 CLR_CYANB=46
 CLR_WHITEB=47
 
-# **Bright** FG (90..97)
-CLR_BRIGHT_BLACK=90
-CLR_BRIGHT_RED=91
-CLR_BRIGHT_GREEN=92
-CLR_BRIGHT_YELLOW=93
-CLR_BRIGHT_BLUE=94
-CLR_BRIGHT_MAGENTA=95
-CLR_BRIGHT_CYAN=96
-CLR_BRIGHT_WHITE=97
-
-# **Bright** BG (100..107)
-CLR_BRIGHT_BLACKB=100
-CLR_BRIGHT_REDB=101
-CLR_BRIGHT_GREENB=102
-CLR_BRIGHT_YELLOWB=103
-CLR_BRIGHT_BLUEB=104
-CLR_BRIGHT_MAGENTAB=105
-CLR_BRIGHT_CYANB=106
-CLR_BRIGHT_WHITEB=107
-
 #####################################################################
-# 2) fn_exists() - check if a function is defined
+# 2) Function check
 #####################################################################
 fn_exists() {
     declare -F "$1" &>/dev/null
 }
 
 #####################################################################
-# 3) clr_layer() - (Use your latest version that preserves multi-word text)
-#    Or keep your existing one if it works for you.
+# 3) clr_layer() - updated to avoid the direct reverse for-loop
+#    but preserve the same "last arg processed first" layering
 #####################################################################
 clr_layer() {
     local CLR_ECHOSWITCHES="-e"
@@ -89,15 +64,14 @@ clr_layer() {
         return 0
     fi
 
-    # Reverse the args array (so last typed is applied first)
+    # Reverse the args, same as before
     local REVERSED=()
     for (( i=${#ARGS[@]}-1; i>=0; i-- )); do
         REVERSED+=( "${ARGS[i]}" )
     done
 
-    # We'll store each token separated by a delimiter that doesn't appear in text
-    # ASCII 30 (Record Separator) is a decent choice. You can also use "||" or "<SEP>" if you prefer.
-    local DELIM=$'\x1E'
+    # Use a special delimiter (e.g. ASCII 30 or literal <SEP>) to store each token
+    local DELIM=$'\x1E'  # Record Separator, or just use "<SEP>"
 
     for ARG in "${REVERSED[@]}"; do
         if [[ "${ARG:0:1}" == "-" ]]; then
@@ -105,21 +79,20 @@ clr_layer() {
             CLR_SWITCHES+=" $ARG"
         else
             if fn_exists "$ARG"; then
-                # If it's a color/attribute function, we need to rejoin the current CLR_STACK
-                # into spaced text, call the function, then store the result as a single token.
-                if [[ -n "$CLR_STACK" ]]; then
-                    # Convert CLR_STACK from delimiter-based string to a normal spaced string
-                    IFS="$DELIM" read -r -a stack_parts <<< "$CLR_STACK"
-                    local current_text="${stack_parts[*]}"  # rejoin with space
-                    current_text="$($ARG "$current_text")"
-                    # Now store the entire colored text as a single token in CLR_STACK
-                    CLR_STACK="$current_text"
-                else
-                    # If CLR_STACK was empty, just call the function on "" (rare)
-                    CLR_STACK="$($ARG "")"
-                fi
+                # A known color/attribute function, call it with the current stack as a single string
+                # Rejoin CLR_STACK by the chosen delimiter so the function sees everything as one string
+                local CURRENT_TEXT
+                # Turn the delimiter-based string back into spaced text:
+                # (shellsafe but straightforward)
+                IFS="$DELIM" read -r -a parts <<< "$CLR_STACK"
+                CURRENT_TEXT="${parts[*]}" # join with space
+
+                CURRENT_TEXT="$($ARG "$CURRENT_TEXT")"
+
+                # Now store it back into CLR_STACK as a single token
+                CLR_STACK="$CURRENT_TEXT"
             else
-                # Otherwise, treat it as plain text or numeric code, but store as one token
+                # Prepend ARG to CLR_STACK, separated by DELIM, so we don't split on spaces
                 if [[ -z "$CLR_STACK" ]]; then
                     CLR_STACK="$ARG"
                 else
@@ -129,22 +102,26 @@ clr_layer() {
         fi
     done
 
-    # Now we parse CLR_STACK by $DELIM, not by spaces
+    # Now parse $CLR_STACK by $DELIM, *not* by spaces
     local items=()
-    IFS="$DELIM" read -r -a items <<< "$CLR_STACK"
+    local DELIM_FINAL=$'\x1E'
+    IFS="$DELIM_FINAL" read -r -a items <<< "$CLR_STACK"
 
-    # Separate numeric codes vs. text
+    # We'll put numeric/extended codes into CODES; everything else is text
     local CODES=()
     local TEXT_PARTS=()
 
     for part in "${items[@]}"; do
+        # If it has a semicolon, assume extended code like "38;5;196"
+        # If it is purely numeric, 0..107
+        # else treat as text
         if [[ "$part" == *";"* ]]; then
-            # extended code "38;5;196" or combined "1;38;5;82"
             CODES+=("$part")
         elif [[ "$part" =~ ^[0-9]+$ ]]; then
-            # plain numeric code 0..107
+            # plain numeric code
             CODES+=("$part")
         else
+            # text
             TEXT_PARTS+=("$part")
         fi
     done
@@ -154,7 +131,7 @@ clr_layer() {
 }
 
 #####################################################################
-# 4) clr_escape() - also supports extended codes
+# 4) clr_escape() - now allows extended codes like "38;5;NNN"
 #####################################################################
 clr_escape() {
     local echoswitches="$1"
@@ -163,12 +140,12 @@ clr_escape() {
     shift
     local codes=("$@")
 
-    # Minimal check: if code has semicolon, skip numeric check.
-    # Otherwise ensure 0..107 range. Adjust if you want to allow more.
     for code in "${codes[@]}"; do
+        # If code has a semicolon, skip numeric check
         if [[ "$code" == *";"* ]]; then
-            : # extended "38;5;..." or combined "1;38;5;196", skip
+            :
         else
+            # Must be a normal 0..107 code or we throw "Invalid escape code"
             if [[ ! "$code" =~ ^[0-9]+$ || "$code" -lt 0 || "$code" -gt 107 ]]; then
                 echo "Invalid escape code: $code" >&2
                 return 1
@@ -184,10 +161,10 @@ clr_escape() {
     echo $echoswitches "$text"
 }
 
+
 #####################################################################
-# 5) Color wrapper functions
+# 5) Basic color wrapper functions
 #####################################################################
-# Basic
 clr_reset()           { clr_layer $CLR_RESET "$@";           }
 clr_reset_underline() { clr_layer $CLR_RESET_UNDERLINE "$@"; }
 clr_reset_reverse()   { clr_layer $CLR_RESET_REVERSE "$@";   }
@@ -196,53 +173,29 @@ clr_defaultb()        { clr_layer $CLR_DEFAULTB "$@";        }
 clr_bold()            { clr_layer $CLR_BOLD "$@";            }
 clr_underscore()      { clr_layer $CLR_UNDERSCORE "$@";      }
 clr_reverse()         { clr_layer $CLR_REVERSE "$@";         }
-
-# Newly added attribute wrappers:
-clr_italic()          { clr_layer $CLR_ITALIC "$@";          }
-clr_blink()           { clr_layer $CLR_BLINK "$@";           }
-
-# 8 standard fg colors
-clr_black()   { clr_layer $CLR_BLACK "$@";   }
-clr_red()     { clr_layer $CLR_RED "$@";     }
-clr_green()   { clr_layer $CLR_GREEN "$@";   }
-clr_yellow()  { clr_layer $CLR_YELLOW "$@";  }
-clr_blue()    { clr_layer $CLR_BLUE "$@";    }
-clr_magenta() { clr_layer $CLR_MAGENTA "$@"; }
-clr_cyan()    { clr_layer $CLR_CYAN "$@";    }
-clr_white()   { clr_layer $CLR_WHITE "$@";   }
-
-# 8 standard bg colors
-clr_blackb()   { clr_layer $CLR_BLACKB "$@";   }
-clr_redb()     { clr_layer $CLR_REDB "$@";     }
-clr_greenb()   { clr_layer $CLR_GREENB "$@";   }
-clr_yellowb()  { clr_layer $CLR_YELLOWB "$@";  }
-clr_blueb()    { clr_layer $CLR_BLUEB "$@";    }
-clr_magentab() { clr_layer $CLR_MAGENTAB "$@"; }
-clr_cyanb()    { clr_layer $CLR_CYANB "$@";    }
-clr_whiteb()   { clr_layer $CLR_WHITEB "$@";   }
-
-# **Bright** fg
-clr_bright_black()   { clr_layer $CLR_BRIGHT_BLACK "$@";   }
-clr_bright_red()     { clr_layer $CLR_BRIGHT_RED "$@";     }
-clr_bright_green()   { clr_layer $CLR_BRIGHT_GREEN "$@";   }
-clr_bright_yellow()  { clr_layer $CLR_BRIGHT_YELLOW "$@";  }
-clr_bright_blue()    { clr_layer $CLR_BRIGHT_BLUE "$@";    }
-clr_bright_magenta() { clr_layer $CLR_BRIGHT_MAGENTA "$@"; }
-clr_bright_cyan()    { clr_layer $CLR_BRIGHT_CYAN "$@";    }
-clr_bright_white()   { clr_layer $CLR_BRIGHT_WHITE "$@";   }
-
-# **Bright** bg
-clr_bright_blackb()   { clr_layer $CLR_BRIGHT_BLACKB "$@";   }
-clr_bright_redb()     { clr_layer $CLR_BRIGHT_REDB "$@";     }
-clr_bright_greenb()   { clr_layer $CLR_BRIGHT_GREENB "$@";   }
-clr_bright_yellowb()  { clr_layer $CLR_BRIGHT_YELLOWB "$@";  }
-clr_bright_blueb()    { clr_layer $CLR_BRIGHT_BLUEB "$@";    }
-clr_bright_magentab() { clr_layer $CLR_BRIGHT_MAGENTAB "$@"; }
-clr_bright_cyanb()    { clr_layer $CLR_BRIGHT_CYANB "$@";    }
-clr_bright_whiteb()   { clr_layer $CLR_BRIGHT_WHITEB "$@";   }
+clr_black()           { clr_layer $CLR_BLACK "$@";           }
+clr_red()             { clr_layer $CLR_RED "$@";             }
+clr_green()           { clr_layer $CLR_GREEN "$@";           }
+clr_yellow()          { clr_layer $CLR_YELLOW "$@";          }
+clr_blue()            { clr_layer $CLR_BLUE "$@";            }
+clr_magenta()         { clr_layer $CLR_MAGENTA "$@";         }
+clr_cyan()            { clr_layer $CLR_CYAN "$@";            }
+clr_white()           { clr_layer $CLR_WHITE "$@";           }
+clr_blackb()          { clr_layer $CLR_BLACKB "$@";          }
+clr_redb()            { clr_layer $CLR_REDB "$@";            }
+clr_greenb()          { clr_layer $CLR_GREENB "$@";          }
+clr_yellowb()         { clr_layer $CLR_YELLOWB "$@";         }
+clr_blueb()           { clr_layer $CLR_BLUEB "$@";           }
+clr_magentab()        { clr_layer $CLR_MAGENTAB "$@";        }
+clr_cyanb()           { clr_layer $CLR_CYANB "$@";           }
+clr_whiteb()          { clr_layer $CLR_WHITEB "$@";          }
 
 #####################################################################
-# 6) 256-color functions
+# 6) 256-color support
+#####################################################################
+# Usage: clr_256fg [0..255] "text..."
+#        clr_256bg [0..255] "text..."
+# Will produce \033[38;5;NNNm or \033[48;5;NNNm
 #####################################################################
 clr_256fg() {
     local code="$1"
@@ -251,6 +204,7 @@ clr_256fg() {
         echo "Invalid 256 FG code: $code" >&2
         return 1
     fi
+    # This calls clr_layer with the extended code "38;5;${code}"
     clr_layer "38;5;${code}" "$@"
 }
 
@@ -265,10 +219,10 @@ clr_256bg() {
 }
 
 #####################################################################
-# 7) clr_dump() - show standard, bright, plus 256 color table
+# 7) clr_dump() - expanded to show both standard combos + 256 palette
 #####################################################################
 clr_dump() {
-    echo "==== 16-Color / 8-Color + Bright Combinations ===="
+    echo "==== 16-Color / 8-Color Combinations ===="
     local fg_colors=(
         "30:BLACK"
         "31:RED"
@@ -309,32 +263,29 @@ clr_dump() {
     for fg_entry in "${fg_colors[@]}"; do
         local fg_code="${fg_entry%%:*}"
         local fg_name="${fg_entry##*:}"
-
         for bg_entry in "${bg_colors[@]}"; do
             local bg_code="${bg_entry%%:*}"
             local bg_name="${bg_entry##*:}"
 
+            # skip identical combos if you want
             local reset="${CLR_ESC}${CLR_RESET}m"
             local base="${CLR_ESC}${fg_code};${bg_code}m"
             local bold="${CLR_ESC}${CLR_BOLD};${fg_code};${bg_code}m"
             local under="${CLR_ESC}${CLR_UNDERSCORE};${fg_code};${bg_code}m"
             local reverse="${CLR_ESC}${CLR_REVERSE};${fg_code};${bg_code}m"
-            local italic="${CLR_ESC}${CLR_ITALIC};${fg_code};${bg_code}m"
-            local blink="${CLR_ESC}${CLR_BLINK};${fg_code};${bg_code}m"
 
-            # We'll print everything on one line:
-            printf "%bText(Norm)%b "   "$base"    "$reset"
-            printf "%b(Bold)%b "       "$bold"    "$reset"
-            printf "%b(Undr)%b "       "$under"   "$reset"
-            printf "%b(Rev)%b "        "$reverse" "$reset"
-            printf "%b(Ital)%b "       "$italic"  "$reset"
-            printf "%b(Blink)%b "      "$blink"   "$reset"
+            printf "%bText (Normal)%b  "  "$base"    "$reset"
+            printf "%bText (Bold)%b  "    "$bold"    "$reset"
+            printf "%bText (Under)%b  "   "$under"   "$reset"
+            printf "%bText (Revs)%b  "    "$reverse" "$reset"
             printf " - %s on %s\n" "$fg_name" "$bg_name"
         done
     done
 
     echo
     echo "==== 256-Color Foreground Table ===="
+    # 6x6 color cube from 16..231, plus grayscale from 232..255
+    # We'll do a quick 16-wide output
     for c in {0..255}; do
         printf "\033[38;5;%sm%3d " "$c" "$c"
         if (( c % 16 == 15 )); then
@@ -357,7 +308,7 @@ clr_dump() {
 }
 
 #####################################################################
-# 8) Main entry point
+# 8) Main entry point (if called directly)
 #####################################################################
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     if [[ "$#" -eq 0 ]]; then
