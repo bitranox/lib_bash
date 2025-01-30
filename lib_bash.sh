@@ -1149,7 +1149,7 @@ function LIB_BASH_MAIN {
 _set_defaults
 
 # Self-update and restart logic
-if [[ -z "$LIB_BASH_RESTARTED" ]]; then
+if [[ -z "${LIB_BASH_RESTARTED-}" ]]; then  # Safe check for unset/nounset
     export LIB_BASH_RESTARTED=1
     if _lib_bash_self_update; then
         if is_sourced; then
