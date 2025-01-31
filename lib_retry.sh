@@ -1,5 +1,27 @@
 #!/bin/bash
 # lib_retry.sh
+
+set -o errexit -o nounset -o pipefail
+
+check_dependencies() {
+    # Pass one or more commands to check, e.g.: check_dependencies "getopt" "curl"
+    local -a missing_cmds=()
+
+    for cmd in "$@"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing_cmds+=("$cmd")
+        fi
+    done
+
+    if [ "${#missing_cmds[@]}" -ne 0 ]; then
+        echo "Error: The following required commands are not installed: ${missing_cmds[*]}" >&2
+        exit 127
+    fi
+}
+
+# Now call the check_dependencies function before doing anything else
+check_dependencies "getopt"
+
 :<<'DOC'
 Retry command with exponential backoff
 
@@ -15,7 +37,6 @@ Usage:
   retry [options] -- command [args...]
 DOC
 
-set -o errexit -o nounset -o pipefail
 
 retry() {
     local -i max_attempts=5 retry_delay=5 attempt=1
