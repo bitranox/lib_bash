@@ -1,6 +1,3 @@
-Below is the **updated** `README.md` that includes a **screenshot of the color dump**. The screenshot link is a placeholder—replace it with your actual image file/location as needed (for example, in your GitHub repo’s `docs/` folder).
-
-```markdown
 # lib_color.sh - Bash Terminal Color Library
 
 ![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)  
