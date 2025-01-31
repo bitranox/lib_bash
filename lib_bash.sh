@@ -391,6 +391,11 @@ is_script_sourced() {
 }
 
 log() {
+    # return if no argument is given
+    if [ -z "${1:-}" ]; then
+      log_warn "lib_bash: log: no message passed"
+      return 1
+    fi
     local message="${1:-"no message passed"}"          # Message (required) - Text to log
     local options="${2:-}"        # Options (default: "") - "bold" for bold output, "NO_TTY" to skip screen output
     local logline
