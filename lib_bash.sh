@@ -446,6 +446,12 @@ log_debug() {
         return 0
     fi
 
+    # return if no argument is given
+    if [ -z "${1:-}" ]; then
+      log_warn "lib_bash: log_debug: no message passed"
+      return 1
+    fi
+
     local message="${1}"          # Message (required) - Text to log
     local logline
 
@@ -486,87 +492,99 @@ log_debug() {
 }
 
 log_err() {
-  local message="${1}"          # Message (required) - Text to log
-  local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
-  local logline
-
-  _create_log_dir "${LIB_BASH_LOGFILE}"
-  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-  _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
-  _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
-
-  # Process each line in the message
-  while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ERROR [EE]: ${line}"
-
-    if [[ "${options}" != *NO_TTY* ]]; then
-        # Use _LOG_COLOR_ERR configuration
-        local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"  # Default error color
-        local -a color_funcs=()
-        IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-        # Apply color functions sequentially
-        local formatted_line="${logline}"
-        for func in "${color_funcs[@]}"; do
-            if declare -f "${func}" >/dev/null 2>&1; then
-                formatted_line="$("${func}" "${formatted_line}")"
-            else
-                echo "Warning: function '${func}' not found, skipping." >&2
-            fi
-        done
-
-        # Output to terminal
-        echo -e "${formatted_line}"
+    # return if no argument is given
+    if [ -z "${1:-}" ]; then
+      log_warn "lib_bash: log_err: no message passed"
+      return 1
     fi
 
-    # Write to log files (unformatted)
-    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
-  done <<< "${message}"
+    local message="${1}"          # Message (required) - Text to log
+    local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
+    local logline
+
+    _create_log_dir "${LIB_BASH_LOGFILE}"
+    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+    _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
+    _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
+
+    # Process each line in the message
+    while IFS= read -r line; do
+      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ERROR [EE]: ${line}"
+
+      if [[ "${options}" != *NO_TTY* ]]; then
+          # Use _LOG_COLOR_ERR configuration
+          local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"  # Default error color
+          local -a color_funcs=()
+          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+          # Apply color functions sequentially
+          local formatted_line="${logline}"
+          for func in "${color_funcs[@]}"; do
+              if declare -f "${func}" >/dev/null 2>&1; then
+                  formatted_line="$("${func}" "${formatted_line}")"
+              else
+                  echo "Warning: function '${func}' not found, skipping." >&2
+              fi
+          done
+
+          # Output to terminal
+          echo -e "${formatted_line}"
+      fi
+
+      # Write to log files (unformatted)
+      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+      [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
+      [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
+    done <<< "${message}"
 }
 
 log_warn() {
-  local message="${1}"          # Message (required) - Text to log
-  local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
-  local logline
-
-  _create_log_dir "${LIB_BASH_LOGFILE}"
-  _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-  _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
-  _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
-
-  # Process each line in the message
-  while IFS= read -r line; do
-    logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): WARNING [WW]: ${line}"
-
-    if [[ "${options}" != *NO_TTY* ]]; then
-        # Use _LOG_COLOR_WARN configuration
-        local color_funcs_str="${_LOG_COLOR_WARN:-clr_bold clr_yellow}"  # Default warning color
-        local -a color_funcs=()
-        IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-        # Apply color functions sequentially
-        local formatted_line="${logline}"
-        for func in "${color_funcs[@]}"; do
-            if declare -f "${func}" >/dev/null 2>&1; then
-                formatted_line="$("${func}" "${formatted_line}")"
-            else
-                echo "Warning: function '${func}' not found, skipping." >&2
-            fi
-        done
-
-        # Output to terminal
-        echo -e "${formatted_line}"
+    # return if no argument is given
+    if [ -z "${1:-}" ]; then
+      log_warn "lib_bash: log_warn: no message passed"
+      return 1
     fi
 
-    # Write to log files (unformatted)
-    [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-    [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
-    [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
-  done <<< "${message}"
+    local message="${1}"          # Message (required) - Text to log
+    local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
+    local logline
+
+    _create_log_dir "${LIB_BASH_LOGFILE}"
+    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
+    _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
+    _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
+
+    # Process each line in the message
+    while IFS= read -r line; do
+      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): WARNING [WW]: ${line}"
+
+      if [[ "${options}" != *NO_TTY* ]]; then
+          # Use _LOG_COLOR_WARN configuration
+          local color_funcs_str="${_LOG_COLOR_WARN:-clr_bold clr_yellow}"  # Default warning color
+          local -a color_funcs=()
+          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
+
+          # Apply color functions sequentially
+          local formatted_line="${logline}"
+          for func in "${color_funcs[@]}"; do
+              if declare -f "${func}" >/dev/null 2>&1; then
+                  formatted_line="$("${func}" "${formatted_line}")"
+              else
+                  echo "Warning: function '${func}' not found, skipping." >&2
+              fi
+          done
+
+          # Output to terminal
+          echo -e "${formatted_line}"
+      fi
+
+      # Write to log files (unformatted)
+      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
+      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
+      [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
+      [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
+    done <<< "${message}"
 }
 
 logc() {
