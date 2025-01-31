@@ -391,7 +391,7 @@ is_script_sourced() {
 }
 
 log() {
-    local message="${1}"          # Message (required) - Text to log
+    local message="${1:-"no message passed"}"          # Message (required) - Text to log
     local options="${2:-}"        # Options (default: "") - "bold" for bold output, "NO_TTY" to skip screen output
     local logline
 
