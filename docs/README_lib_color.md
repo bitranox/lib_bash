@@ -181,11 +181,8 @@ Use:
 to display **all** standard and bright combos, plus a **256-color** FG/BG matrix, including italic and blink columns.
 
 ![Color Dump Demo1](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/lib_color_Screenshot1.png "Sample color dump screenshot")
-
 ![Color Dump Demo2](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/lib_color_Screenshot2.png "Sample color dump screenshot")
-
 ![Color Dump Demo3](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/lib_color_Screenshot3.png "Sample color dump screenshot")
-
 ![Color Dump Demo4](https://raw.githubusercontent.com/bitranox/lib_bash/master/docs/lib_color_Screenshot4.png "Sample color dump screenshot")
 
 
