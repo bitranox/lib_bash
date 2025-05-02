@@ -82,7 +82,9 @@ _set_default_logfiles() {
         : "${LIB_BASH_LOGFILE_ERR:="${err_log}"}"
         : "${LIB_BASH_LOGFILE_ERR_TMP:="${err_tmp_log}"}"
     fi
+    register_temppath "${LIB_BASH_LOGFILE}"
     register_temppath "${LIB_BASH_LOGFILE_TMP}"
+    register_temppath "${LIB_BASH_LOGFILE_ERR}"
     register_temppath "${LIB_BASH_LOGFILE_ERR_TMP}"
 }
 
@@ -134,13 +136,41 @@ _set_askpass() {
     export NO_AT_BRIDGE=1  # suppress accessibility-related D-Bus warnings (like dbind-WARNING) in GUI applications on Linux
 }
 
+_set_tempfile_managment() {
+    # Temporary Path Management Library
+    # Check and initialize arrays only if they don't exist
+    [[ -z "${_TMP_PATHS+isset}" ]] && declare -g -a _TMP_PATHS=()
+    [[ -z "${_TMP_CLEANUP_FAILED_FILES+isset}" ]] && declare -g -a _TMP_CLEANUP_FAILED_FILES=()
+    [[ -z "${_TMP_CLEANUP_FAILED_DIRS+isset}" ]] && declare -g -a _TMP_CLEANUP_FAILED_DIRS=()
+}
+
 _source_submodules() {
     # 2025-01-21
     source "$(_get_own_dirname)/lib_color.sh"
-    source "$(_get_own_dirname)/lib_bash_tempfiles.sh"
     source "$(_get_own_dirname)/lib_retry.sh"
     source "$(_get_own_dirname)/lib_update_caller.sh"
     source "$(_get_own_dirname)/lib_assert.sh"
+}
+
+create_temp_file() {
+    # Create a temporary file and get its path. it will be registered for later cleanup
+    local temp_file
+    if ! temp_file=$(mktemp 2>/dev/null); then
+        log_err "Failed to create temporary file"
+        return 1
+    fi
+
+    # Verify the file is writable
+    if [[ ! -w "$temp_file" ]]; then
+        log_err "Error: Temporary file is not writable"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    # register for later cleanup
+    register_temppath "$temp_file"
+    echo "$temp_file"
+    return 0
 }
 
 elevate() {
@@ -241,8 +271,59 @@ linux_update() {
     # Repeat removal of unnecessary packages after additional installations
     log "apt-get autoremove --purge -y"
     logc apt-get autoremove --purge -y
-    # recreate temporary files which might get deleted after some update
-    systemd-tmpfiles --create
+}
+
+register_temppath() {
+    local path="$1"
+
+    [[ -z "$path" ]] && { log_err "register_temppath: Path required" ; return 1; }
+
+    # Resolve to canonical path
+    local canon_path
+    canon_path=$(realpath -m -- "$path" 2>/dev/null || echo "$path")
+
+    # Check for existing entry
+    for existing in "${_TMP_PATHS[@]}"; do
+        [[ "$existing" == "$canon_path" ]] && return 0
+    done
+
+    _TMP_PATHS+=("$canon_path")
+}
+
+cleanup_temppaths() {
+    _TMP_CLEANUP_FAILED_FILES=()
+    _TMP_CLEANUP_FAILED_DIRS=()
+    local path
+
+    # Phase 1: Delete files
+    for path in "${_TMP_PATHS[@]}"; do
+        if [[ -f "$path" ]]; then
+            rm -f -- "$path"
+            if [[ -e "$path" ]]; then
+                _TMP_CLEANUP_FAILED_FILES+=("$path")
+                log_warn "cleanup_temppaths: Could not delete file: ${path}"
+            fi
+        fi
+    done
+
+    # Phase 2: Delete directories
+    for path in "${_TMP_PATHS[@]}"; do
+        if [[ -d "$path" ]]; then
+            # Try to remove directory (will only succeed if empty)
+            rmdir --ignore-fail-on-non-empty -- "$path" 2>/dev/null
+
+            # Check if directory still exists
+            if [[ -d "$path" ]]; then
+                # Check if directory is non-empty
+                if [[ -n "$(find "$path" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
+                    log_warn "cleanup_temppaths: Could not delete non-empty directory: $path"
+                fi
+                _TMP_CLEANUP_FAILED_DIRS+=("$path")
+            fi
+        fi
+    done
+    # Clear registered paths regardless of success
+    _TMP_PATHS=()
 }
 
 reinstall_packages() {
