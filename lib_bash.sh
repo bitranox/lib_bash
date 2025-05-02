@@ -47,6 +47,7 @@ _set_defaults() {
     _set_default_logfiles
     _set_default_logfile_colors
     _set_default_debugmode
+    _set_tempfile_management
 }
 
 _set_default_logfiles() {
@@ -137,7 +138,6 @@ _source_submodules() {
     # 2025-01-21
     source "$(_get_own_dirname)/lib_color.sh"
     source "$(_get_own_dirname)/lib_bash_tempfiles.sh"
-    _set_tempfile_managment
     source "$(_get_own_dirname)/lib_retry.sh"
     source "$(_get_own_dirname)/lib_update_caller.sh"
     source "$(_get_own_dirname)/lib_assert.sh"
