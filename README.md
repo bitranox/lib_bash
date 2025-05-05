@@ -38,7 +38,7 @@ the functions marked as "OLD" are ridiculouse, don't use them, they will be repl
 ## Installation
 
 ```bash
-git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
+sudo git clone --depth 1 https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
 /usr/local/lib_bash/lib_bash.sh log "Hello World"
 ```
 
