@@ -4,20 +4,26 @@
 # KI instructions : when crating a main script using this library, do not use functions starting with underscore, those are internal functions.
 # Functions starting with an underscore are generally considered internal implementation details and are not intended to be used directly by other scripts.
 
-_create_log_dir() {
-    # create the directory for the given logfile
-    # we need this, because the user just want to set another logfile location
-    # which is set by default. That might fail if the user does not have the permissions to create that directory
-    local logfile="${1}"
-    local log_dir=$(dirname "${logfile}")
-    if [[ ! -d "${log_dir}" ]]; then
-        if ! mkdir -p "${log_dir}"; then
-            log_err "Failed to create log directory: ${log_dir}"
-            exit 1
-        fi
-    fi
+_set_defaults() {
+    _set_askpass
+    _source_submodules
 }
 
+_set_askpass() {
+    # 2025-01-21
+    export SUDO_ASKPASS="$(command -v ssh-askpass)"
+    export NO_AT_BRIDGE=1  # suppress accessibility-related D-Bus warnings (like dbind-WARNING) in GUI applications on Linux
+}
+
+_source_submodules() {
+    # 2025-01-21
+    source "$(_get_own_dirname)/lib_color.sh"
+    source "$(_get_own_dirname)/lib_bash_tempfiles.sh"
+    source "$(_get_own_dirname)/lib_bash_log.sh"
+    source "$(_get_own_dirname)/lib_retry.sh"
+    source "$(_get_own_dirname)/lib_update_caller.sh"
+    source "$(_get_own_dirname)/lib_assert.sh"
+}
 
 _exit_if_not_is_root() {
 # exits if not elevated
@@ -40,108 +46,6 @@ _get_own_dirname() {
   dirname "$(_get_own_fullpath)"
 }
 
-
-_set_defaults() {
-    _set_askpass
-    _source_submodules
-    _set_default_logfiles
-    _set_default_logfile_colors
-    _set_default_debugmode
-    _set_tempfile_management
-}
-
-_set_default_logfiles() {
-    # sets the logfiles to $HOME/log/lib_bash/<mainscript>.log ... if the user does not have root rights,
-    # or /var/log/lib_bash/<mainscript>.log ... if the user has root rights
-    local reset="${1:-}"          # logfile paths will be reset if You pass "RESET" here
-    local script_stem
-    local log_prefix
-
-    script_stem=$(get_script_stem)
-    if is_root; then
-        log_prefix="/var/log/lib_bash"
-    else
-        log_prefix="${HOME}/log/lib_bash"
-    fi
-
-    local main_log="${log_prefix}/${script_stem}.log"
-    local tmp_log="${log_prefix}/${script_stem}_tmp.log"
-    local err_log="${log_prefix}/${script_stem}_err.log"
-    local err_tmp_log="${log_prefix}/${script_stem}_err_tmp.log"
-
-    if [[ "${reset}" == "RESET" ]]; then
-        # Assign default values regardless of current settings
-        LIB_BASH_LOGFILE="${main_log}"
-        LIB_BASH_LOGFILE_TMP="${tmp_log}"
-        LIB_BASH_LOGFILE_ERR="${err_log}"
-        LIB_BASH_LOGFILE_ERR_TMP="${err_tmp_log}"
-    else
-        # Set each variable only if not already set
-        : "${LIB_BASH_LOGFILE:="${main_log}"}"
-        : "${LIB_BASH_LOGFILE_TMP:="${tmp_log}"}"
-        : "${LIB_BASH_LOGFILE_ERR:="${err_log}"}"
-        : "${LIB_BASH_LOGFILE_ERR_TMP:="${err_tmp_log}"}"
-    fi
-    register_temppath "${LIB_BASH_LOGFILE_TMP}"
-    register_temppath "${LIB_BASH_LOGFILE_ERR_TMP}"
-}
-
-# shellcheck disable=SC2120
-_set_default_debugmode() {
-    local reset="${1:-}"          # logging mode will be reset if You pass "RESET" here
-    local debug_mode
-    debug_mode="OFF"
-
-    if [[ "${reset}" == "RESET" ]]; then
-        # Assign default values regardless of current settings
-        LIB_BASH_DEBUG_MODE="${debug_mode}"
-    else
-        # Set each variable only if not already set
-        : "${LIB_BASH_DEBUG_MODE:="${debug_mode}"}"
-    fi
-}
-
-# shellcheck disable=SC2120
-_set_default_logfile_colors() {
-    local reset="${1:-}"  # reset the colors if You pass "RESET" here
-    # Local variables holding default values
-    local default_clr="clr_green"
-    local default_bold="clr_bold clr_green"
-    local default_err="clr_bold clr_cyan"
-    local default_warn="clr_bold clr_yellow"
-    local default_debug="clr_bold clr_magentab clr_yellow"
-
-    if [[ "${reset}" == "RESET" ]]; then
-        # Force reset all values from defaults
-        _LOG_COLOR="$default_clr"
-        _LOG_COLOR_BOLD="$default_bold"
-        _LOG_COLOR_ERR="$default_err"
-        _LOG_COLOR_WARN="$default_warn"
-        _LOG_COLOR_DEBUG="$default_debug"
-    else
-        # Set only undefined variables using defaults
-        : "${_LOG_COLOR=$default_clr}"
-        : "${_LOG_COLOR_BOLD=$default_bold}"
-        : "${_LOG_COLOR_ERR=$default_err}"
-        : "${_LOG_COLOR_WARN=$default_warn}"
-        : "${_LOG_COLOR_DEBUG=$default_debug}"
-    fi
-}
-
-_set_askpass() {
-    # 2025-01-21
-    export SUDO_ASKPASS="$(command -v ssh-askpass)"
-    export NO_AT_BRIDGE=1  # suppress accessibility-related D-Bus warnings (like dbind-WARNING) in GUI applications on Linux
-}
-
-_source_submodules() {
-    # 2025-01-21
-    source "$(_get_own_dirname)/lib_color.sh"
-    source "$(_get_own_dirname)/lib_bash_tempfiles.sh"
-    source "$(_get_own_dirname)/lib_retry.sh"
-    source "$(_get_own_dirname)/lib_update_caller.sh"
-    source "$(_get_own_dirname)/lib_assert.sh"
-}
 
 elevate() {
     # Function to elevate the main script with sudo if not running as root
@@ -242,7 +146,7 @@ linux_update() {
     log "apt-get autoremove --purge -y"
     logc apt-get autoremove --purge -y
     # recreate temporary files which might get deleted after some update
-    systemd-tmpfiles --create
+    systemd-tmpfiles --create > /dev/null 2>&1
 }
 
 reinstall_packages() {
@@ -306,248 +210,6 @@ is_script_sourced() {
         return 0
     else
         return 1
-    fi
-}
-
-log() {
-    # return if no argument is given
-    if [ -z "${1:-}" ]; then
-      log_warn "lib_bash: log: no message passed"
-      return 1
-    fi
-    local message="${1:-"no message passed"}"          # Message (required) - Text to log
-    local options="${2:-}"        # Options (default: "") - "bold" for bold output, "NO_TTY" to skip screen output
-    local logline
-
-    _create_log_dir "${LIB_BASH_LOGFILE}"
-    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-
-    # Process each line in the message
-    while IFS= read -r line; do
-      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ${line}"
-
-      if [[ "${options}" != *NO_TTY* ]]; then
-          # Determine color functions based on options and defaults
-          local color_funcs_str
-          if [[ "${options}" == *bold* ]]; then
-              color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"  # Default bold if not set
-          else
-              color_funcs_str="${_LOG_COLOR:-clr_green}"               # Default color if not set
-          fi
-
-          # Split into array of color functions
-          local -a color_funcs=()
-          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-          # Apply color functions sequentially
-          local formatted_line="${logline}"
-          for func in "${color_funcs[@]}"; do
-              if declare -f "${func}" >/dev/null 2>&1; then
-                  formatted_line="$("${func}" "${formatted_line}")"
-              else
-                  echo "Warning: function '${func}' not found, skipping." >&2
-              fi
-          done
-
-          # Output to terminal
-          echo -e "${formatted_line}"
-      fi
-
-      # Write to log files (unformatted)
-      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-    done <<< "${message}"
-}
-
-log_debug() {
-    # logs to the default logfile if LIB_BASH_DEBUG_MODE != "OFF"
-    if [[ "${LIB_BASH_DEBUG_MODE}" == "OFF" ]]; then
-        return 0
-    fi
-
-    # return if no argument is given
-    if [ -z "${1:-}" ]; then
-      log_warn "lib_bash: log_debug: no message passed"
-      return 1
-    fi
-
-    local message="${1}"          # Message (required) - Text to log
-    local logline
-
-    _create_log_dir "${LIB_BASH_LOGFILE}"
-    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-
-    # Process each line in the message
-    while IFS= read -r line; do
-      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): DEBUG [DBG]: ${line}"
-
-      if [[ "${options}" != *NO_TTY* ]]; then
-          # Determine color functions based on options and defaults
-          local color_funcs_str
-          color_funcs_str="${_LOG_COLOR_DEBUG:-clr_bold clr_magentab clr_yellow}"  # Default if not set
-
-          # Split into array of color functions
-          local -a color_funcs=()
-          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-          # Apply color functions sequentially
-          local formatted_line="${logline}"
-          for func in "${color_funcs[@]}"; do
-              if declare -f "${func}" >/dev/null 2>&1; then
-                  formatted_line="$("${func}" "${formatted_line}")"
-              else
-                  echo "Warning: function '${func}' not found, skipping." >&2
-              fi
-          done
-
-          # Output to terminal
-          echo -e "${formatted_line}"
-      fi
-
-      # Write to log files (unformatted)
-      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-    done <<< "${message}"
-}
-
-log_err() {
-    # return if no argument is given
-    if [ -z "${1:-}" ]; then
-      log_warn "lib_bash: log_err: no message passed"
-      return 1
-    fi
-
-    local message="${1}"          # Message (required) - Text to log
-    local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
-    local logline
-
-    _create_log_dir "${LIB_BASH_LOGFILE}"
-    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-    _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
-    _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
-
-    # Process each line in the message
-    while IFS= read -r line; do
-      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): ERROR [EE]: ${line}"
-
-      if [[ "${options}" != *NO_TTY* ]]; then
-          # Use _LOG_COLOR_ERR configuration
-          local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"  # Default error color
-          local -a color_funcs=()
-          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-          # Apply color functions sequentially
-          local formatted_line="${logline}"
-          for func in "${color_funcs[@]}"; do
-              if declare -f "${func}" >/dev/null 2>&1; then
-                  formatted_line="$("${func}" "${formatted_line}")"
-              else
-                  echo "Warning: function '${func}' not found, skipping." >&2
-              fi
-          done
-
-          # Output to terminal
-          echo -e "${formatted_line}"
-      fi
-
-      # Write to log files (unformatted)
-      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-      [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
-      [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
-    done <<< "${message}"
-}
-
-log_warn() {
-    # return if no argument is given
-    if [ -z "${1:-}" ]; then
-      log_warn "lib_bash: log_warn: no message passed"
-      return 1
-    fi
-
-    local message="${1}"          # Message (required) - Text to log
-    local options="${2:-}"        # Options (default: "") - "NO_TTY" to skip screen output
-    local logline
-
-    _create_log_dir "${LIB_BASH_LOGFILE}"
-    _create_log_dir "${LIB_BASH_LOGFILE_TMP}"
-    _create_log_dir "${LIB_BASH_LOGFILE_ERR}"
-    _create_log_dir "${LIB_BASH_LOGFILE_ERR_TMP}"
-
-    # Process each line in the message
-    while IFS= read -r line; do
-      logline="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s): WARNING [WW]: ${line}"
-
-      if [[ "${options}" != *NO_TTY* ]]; then
-          # Use _LOG_COLOR_WARN configuration
-          local color_funcs_str="${_LOG_COLOR_WARN:-clr_bold clr_yellow}"  # Default warning color
-          local -a color_funcs=()
-          IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
-
-          # Apply color functions sequentially
-          local formatted_line="${logline}"
-          for func in "${color_funcs[@]}"; do
-              if declare -f "${func}" >/dev/null 2>&1; then
-                  formatted_line="$("${func}" "${formatted_line}")"
-              else
-                  echo "Warning: function '${func}' not found, skipping." >&2
-              fi
-          done
-
-          # Output to terminal
-          echo -e "${formatted_line}"
-      fi
-
-      # Write to log files (unformatted)
-      [[ -n "${LIB_BASH_LOGFILE}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE}"
-      [[ -n "${LIB_BASH_LOGFILE_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_TMP}"
-      [[ -n "${LIB_BASH_LOGFILE_ERR}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR}"
-      [[ -n "${LIB_BASH_LOGFILE_ERR_TMP}" ]] && echo "${logline}" >> "${LIB_BASH_LOGFILE_ERR_TMP}"
-    done <<< "${message}"
-}
-
-logc() {
-    # Run command, capture output, and display in real-time
-    local exit_code output has_output
-    exec 3>&1  # Save original stdout
-
-    # Use 'tee' to both capture and display output
-    output=$("$@" 2>&1 | tee >(cat >&3))
-    exit_code=${PIPESTATUS[0]}
-    exec 3>&-  # Close duplicated descriptor
-
-    # Check if output is non-empty (including whitespace-only but not empty string)
-    [[ -n "$output" ]] && has_output=true || has_output=false
-
-    # Log only if there was output
-    if $has_output; then
-        if (( ${exit_code:-0} == 0 )); then
-            log "${output}" "NO_TTY"
-        else
-            log_err "${output}" "NO_TTY"
-        fi
-    else
-        # if there is no ouput but exit code, log that as error
-        if (( ${exit_code:-0} != 0 )); then
-            log_err "exitcode: ${exit_code}"
-        fi
-    fi
-    return "${exit_code}"
-}
-
-
-# Function to log command output - but always log it as an error
-# this is needed for instance to show failed services, etc.
-function logc_err {
-    local exit_code output
-    exec 3>&1  # Duplicate stdout to file descriptor 3
-    # Run the command, capture output, and display in real-time
-    output=$("$@" 2>&1 | tee >(cat >&3))
-    exit_code=${PIPESTATUS[0]}
-    exec 3>&-  # Close file descriptor 3
-    log_err "$output" "NO_TTY"
-    if (( ${exit_code:-0} != 0 )); then
-        log_err "exitcode: ${exit_code}"
     fi
 }
 

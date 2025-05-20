@@ -3,8 +3,9 @@
 
 set -o errexit -o nounset -o pipefail
 
+# Load your logging script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib_color.sh"
+source "${SCRIPT_DIR}/../lib_bash.sh"
 
 TESTS_RUN=0
 TESTS_FAILED=0

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source ../lib_bash.sh
+# Load your logging script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib_bash.sh"
 
 
 function run_tests {

@@ -7,8 +7,9 @@ log_err() {
     echo "[log_err] $*" >&2
 }
 
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-source "${SCRIPT_DIR}/../lib_retry.sh"
+# Load your logging script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib_bash.sh"
 
 TEST_COLOR_FAIL=$(tput setaf 1)
 TEST_COLOR_PASS=$(tput setaf 2)

@@ -44,7 +44,7 @@ retry -n 3 -d 2 -- ls /some/nonexistent/path
 ### As part of lib_bash
 
 ```bash
-git clone https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
+sudo git clone --depth 1 https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
 source /usr/local/lib_bash/lib_retry.sh
 ```
 
