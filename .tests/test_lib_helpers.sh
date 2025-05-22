@@ -23,7 +23,7 @@ function run_tests {
     assert_fail "is_script_sourced ${0} ${BASH_SOURCE[0]}"
     assert_fail "is_hetzner_virtual_server"
     assert_equal "echo \"printenv USER: $(printenv USER)\" : $USER" "printenv USER: $USER : $USER"  # check if env user is the same as the Variable $USER
-    log " Tests finished"
+    log_ok "Tests finished"
 }
 
 run_tests
