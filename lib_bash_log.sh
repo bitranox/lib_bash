@@ -217,7 +217,20 @@ log() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "ℹ️"
+    return 0
+}
+
+log_ok() {
+    if [ -z "${1:-}" ]; then
+        log_warn "lib_bash_log: log(): no message passed"
+        return 1
+    fi
+    local message="${1:-}"
+    local options="${2:-}"
+    local color_funcs_str="${_LOG_COLOR:-clr_green}"
+    [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✔️"
     return 0
 }
 

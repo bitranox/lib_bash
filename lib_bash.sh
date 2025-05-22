@@ -73,10 +73,13 @@ get_file_groupname() {
     # $1: File or Directory
     # returns group name as string
     local path_file="${1}"
-    local group=""
-    group=$(stat -c "%G" "${path_file}")
-    echo "${group}"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        stat -f "%Sg" "${path_file}"
+    else
+        stat -c "%G" "${path_file}"
+    fi
 }
+
 
 # Function to get the full path of the main script
 get_script_fullpath()  {
@@ -95,9 +98,15 @@ get_script_basename() {
 
 # Function to get the stem of the main script (the basename without extension)
 get_script_stem() {
-    local basename
-    basename=$(get_script_basename)
-    echo "${basename%.*}"
+    local script_basename
+    script_basename=$(get_script_basename)
+
+    # Remove extension only if there is one and it's not a hidden file like `.env`
+    if [[ "$script_basename" == *.* && "$script_basename" != .* ]]; then
+        echo "${script_basename%.*}"
+    else
+        echo "$script_basename"
+    fi
 }
 
 linux_update() {
@@ -105,6 +114,11 @@ linux_update() {
     local force_phased_updates="${1:-}"
     # 2025-01-21
     _exit_if_not_is_root
+    # Save shell state, trap state and disable strict mode
+    shell_state=$(set +o)
+    trap_state=$(trap -p ERR)
+    set +eEuo pipefail
+    trap - ERR
     # Update the list of available packages from the repositories
     log "apt-get update"
     logc apt-get update
@@ -147,6 +161,13 @@ linux_update() {
     logc apt-get autoremove --purge -y
     # recreate temporary files which might get deleted after some update
     systemd-tmpfiles --create > /dev/null 2>&1
+
+    # Restore shell and trap state
+    eval "$shell_state"
+    if [[ -n "$trap_state" ]]; then
+        eval "$trap_state"
+    fi
+    log_ok "Update Finished"
 }
 
 reinstall_packages() {
@@ -191,7 +212,39 @@ lib_bash_prepend_text_to_file() {
     fi
 
     # Prepend the text to the file
-    echo "${text}" | cat - "${file}" > "${file}.tmp" && mv "${file}.tmp" "${file}"
+    local temp_file
+    temp_file=$(create_temp_file)
+
+    if [[ -z "$temp_file" ]] || ! is_ok; then
+        log_err "lib_bash_prepend_text_to_file: Could not create temporary file."
+        return 1
+    fi
+
+    echo "${text}" > "${temp_file}"
+    if ! is_ok; then
+        log_err "lib_bash_prepend_text_to_file: Failed to write new text to temporary file '${temp_file}'."
+        rm -f "${temp_file}"
+        return 1
+    fi
+
+    cat "${file}" >> "${temp_file}"
+    if ! is_ok; then
+        log_err "lib_bash_prepend_text_to_file: Failed to append original content from '${file}' to temporary file '${temp_file}'."
+        rm -f "${temp_file}"
+        return 1
+    fi
+
+    mv "${temp_file}" "${file}"
+    if ! is_ok; then
+        log_err "lib_bash_prepend_text_to_file: Failed to move temporary file '${temp_file}' to '${file}'."
+        # Attempt to clean up temp_file if it still exists after a failed mv
+        if [[ -f "${temp_file}" ]]; then
+            rm -f "${temp_file}"
+        fi
+        return 1
+    fi
+
+    return 0
 }
 
 function is_ok {
@@ -204,8 +257,8 @@ function is_root {
 }
 
 is_script_sourced() {
-    local script_name="${1}"  # pass "${0}" from the calling script
-    local bash_source="${2}"  # pass "${BASH_SOURCE[0]}" from the calling script
+    local script_name="${1:-}"  # pass "${0}" from the calling script
+    local bash_source="${2:-}"  # pass "${BASH_SOURCE[0]}" from the calling script
     if [[ "${script_name}" != "${bash_source}" ]]; then
         return 0
     else
@@ -349,13 +402,13 @@ get_home_directory_from_username() {
 
 is_str1_in_str2() {
     # $1: str1
-    # $1: str2
+    # $2: str2
     local str1="${1}"
     local str2="${2}"
-    if [[ $(echo "$str2}" | grep -c "${str1}" ) == "0" ]]; then
-        return 1
-    else
+    if [[ "$str2" == *"$str1"* ]]; then
         return 0
+    else
+        return 1
     fi
 }
 
@@ -390,6 +443,7 @@ get_linux_release_number_major() {
     local linux_release_number_major=""
     linux_release_number_major="$(get_linux_release_number | cut -d "." -f 1)"
     echo "${linux_release_number_major}"
+    exit 0
 }
 
 
@@ -483,11 +537,7 @@ is_program_available() {
     # nicht für interne bash commands wie "ls"
     # $1: the program name to check
     local program_to_check="${1}"
-    if [[ $(which "${program_to_check}") == "" ]]; then
-      return 1
-    else
-      return 0
-    fi
+    command -v "$program_to_check" >/dev/null 2>&1
 }
 
 
@@ -612,23 +662,23 @@ is_hetzner_virtual_server() {
 
 
 call_function_from_commandline() {
-    # $1 : library_name ("${0}")
-    # $2 : function_name ("${1}")
-    # $3 : call_args ("${@}")
-    local library_name="${1}"
-    local function_name="${2}"
+    # $1+: arguments, where the first is the function name to call
     local call_args_array=("${@}")
+    local function_name="${call_args_array[0]}"
 
-    if [[ -n ${function_name} ]]; then
+    if [[ -n "${function_name}" ]]; then
         if is_bash_function_declared "${function_name}"; then
-            "${call_args_array[@]:1}"
+            # Call the function with the remaining arguments
+            "${function_name}" "${call_args_array[@]:1}"
         else
-            log_err "${function_name} is not a known function name of ${library_name}"
+            log_err "'${function_name}' is not a known function"
             exit 1
         fi
+    else
+        log_err "No function name provided"
+        exit 1
     fi
 }
-
 
 beep() {
     echo -ne '\007'
@@ -727,7 +777,7 @@ _lib_bash_self_update() {
     local current_hash=$(git -C "$script_dir" rev-parse HEAD 2>/dev/null)
     local remote_hash=$(git -C "$script_dir" ls-remote origin HEAD 2>/dev/null | awk '{print $1}')
     if [[ "$remote_hash" != "$current_hash" ]] && [[ -n "$remote_hash" ]]; then
-        if ! _user_is_allowed_to_update; then return 0; fi
+        if ! _user_is_allowed_to_update; then return 2; fi  # Return 2 if update available but user not allowed
         log "lib_bash: new version available, updating..."
         git -C "$script_dir" fetch --all &> /dev/null
         git -C "$script_dir" reset --hard origin/main &> /dev/null
@@ -745,7 +795,8 @@ _lib_bash_self_update() {
 LIB_BASH_MAIN() {
     ! is_sourced || return 0  # Exit early if script is sourced
     (( $# )) || exit 0        # Terminate if no arguments provided
-    call_function_from_commandline "${0}" "${@}"
+    # call_function_from_commandline "${0}" "${@}"
+    call_function_from_commandline "${@}"
 }
 
 _set_defaults
