@@ -1,46 +1,52 @@
-# lib\_bash\_log.sh - Logging Library for Bash Scripts
+
+# lib_bash_log.sh – Advanced Logging Library for Bash
 
 ![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-![Part of lib\_bash](https://img.shields.io/badge/Part%20of-lib__bash-ffdd00.svg)
+![Part of lib_bash](https://img.shields.io/badge/Part%20of-lib__bash-ffdd00.svg)
 
-Part of the [lib\_bash](https://github.com/bitranox/lib_bash) collection – A powerful Bash scripting utilities library.
+**Part of the [lib_bash](https://github.com/bitranox/lib_bash) collection** – A robust utility suite for professional Bash scripting.
 
 ---
 
-## Quick Example
+## 🔧 Overview
 
-You can **source** this library from within your script to enable structured, colored logging with error tracking:
+This module provides structured, colored, and level-based logging for Bash scripts. It supports multi-file logging, command output tracking, and debug toggling — all with minimal configuration.
+
+---
+
+## 🚀 Quick Start
 
 ```bash
 #!/bin/bash
 source /usr/local/lib_bash/lib_bash.sh
 
-log "Starting deployment..."
-log_warn "Running in test mode"
-log_err "Something went wrong"
-log_debug "Internal variable: $foo"
+log "Deploying application..."
+log_ok "Deployment successful"
+log_wrench "Setting up config..."
+log_warn "Using fallback configuration"
+log_err "Connection failed"
+log_debug "Debug info: $var"
 
-logc ls -l /nonexistent
+logc ls -la /nonexistent
 ```
 
 ---
 
-## Features
+## ✨ Features
 
-* Log to multiple files: main log, error log, and temporary session logs
-* Structured logging with log levels: `log`, `log_warn`, `log_err`, `log_debug`
-* Colored and styled terminal output (requires `lib_color.sh`)
-* Debug mode toggle
-* Automatic temporary log cleanup support
-* Command wrappers: `logc`, `logc_err` for logging command output
+- Multiple log levels: `log`, `log_ok`, `log_warn`, `log_err`, `log_debug`
+- Emoji and color-enhanced terminal output
+- Logs split into: general log, error log, temporary logs
+- Command execution with logging: `logc`, `logc_err`
+- Automatic log path initialization (based on script and privilege)
+- Debug mode toggle via `LIB_BASH_DEBUG_MODE`
+- Integrated with `lib_color.sh` and `lib_bash.sh`
 
-> **Note**: This script **requires** other components from `lib_bash` (`lib_color.sh`, `lib_bash.sh`) and **cannot be used standalone**.
+> ⚠️ This library is **not standalone**. Requires components from `lib_bash` (e.g., `lib_color.sh`, `lib_bash.sh`).
 
 ---
 
-## Installation
-
-### As part of lib\_bash
+## 📦 Installation
 
 ```bash
 sudo git clone --depth 1 https://github.com/bitranox/lib_bash.git /usr/local/lib_bash
@@ -49,64 +55,68 @@ source /usr/local/lib_bash/lib_bash.sh
 
 ---
 
-## Usage
+## 🛠️ Usage
 
 ### Basic Logging
 
 ```bash
-log "Standard log message"
-log_warn "This is a warning"
-log_err "Something failed"
-log_debug "This will only show if debug mode is ON"
+log_wrench "Setting up environment"
+log "Info message"
+log_ok "Success message"
+log_wrench "Tweaking message"
+log_warn "Warning message"
+log_err "Error message"
+log_debug "Visible only in debug mode"
+```
+
+### Command Output Logging
+
+```bash
+logc whoami          # Logs stdout, stderr goes to error log if command fails
+logc_err uptime      # Logs everything as error regardless of exit status
 ```
 
 ### Enable Debug Mode
 
 ```bash
 export LIB_BASH_DEBUG_MODE=ON
-log_debug "Now this will appear"
-```
-
-### Log Command Output
-
-```bash
-logc df -h         # Logs stdout, logs stderr as error
-logc_err uname -a  # Logs everything as error
+log_debug "Debug logging enabled"
 ```
 
 ---
 
-## Log Files
+## 📂 Log Files
 
-Depending on whether the script is run as root or not, log files are placed under:
+Log files are created based on the script name and user privilege:
 
-* `/var/log/lib_bash/` (as root)
-* `$HOME/log/lib_bash/` (non-root)
+| Variable                   | Description                |
+|---------------------------|----------------------------|
+| `LIB_BASH_LOGFILE`         | Main log                   |
+| `LIB_BASH_LOGFILE_TMP`     | Session-specific log       |
+| `LIB_BASH_LOGFILE_ERR`     | Error log                  |
+| `LIB_BASH_LOGFILE_ERR_TMP` | Session-specific error log |
 
-The log file names are based on the script name:
+Paths:
 
-| Variable                   | Purpose                |
-| -------------------------- | ---------------------- |
-| `LIB_BASH_LOGFILE`         | Main log file          |
-| `LIB_BASH_LOGFILE_TMP`     | Temp session log       |
-| `LIB_BASH_LOGFILE_ERR`     | Error-only log file    |
-| `LIB_BASH_LOGFILE_ERR_TMP` | Temp session error log |
+- As **root**: `/var/log/lib_bash/`
+- As **user**: `$HOME/log/lib_bash/`
 
-Temporary logs are auto-registered for cleanup if `register_temppath` is available.
+Temporary logs are registered for cleanup.
 
 ---
 
-## Colored Output
+## 🎨 Color Output
 
-Colorization is handled via functions from `lib_color.sh`:
+Colors and symbols help differentiate log levels:
 
-* Normal: `clr_green`
-* Bold: `clr_bold clr_green`
-* Warnings: `clr_bold clr_yellow`
-* Errors: `clr_bold clr_cyan`
-* Debug: `clr_bold clr_magentab clr_yellow`
+- **log** → `clr_green` ℹ️
+- **log_ok** → `clr_green` ✔️
+- **log_wrench** → `clr_green` 🔧
+- **log_warn** → `clr_yellow` ⚠️
+- **log_err** → `clr_cyan` ❌
+- **log_debug** → `clr_magentab clr_yellow` 🐞
 
-Colors can be reset or customized by calling:
+Reset colors:
 
 ```bash
 _set_default_logfile_colors RESET
@@ -114,72 +124,62 @@ _set_default_logfile_colors RESET
 
 ---
 
-## API Overview
+## 🔍 API Summary
 
-### Public Functions
-
-| Function    | Description                               |
-| ----------- | ----------------------------------------- |
-| `log`       | Standard message with optional color      |
-| `log_warn`  | Warning message                           |
-| `log_err`   | Error message + logs to error files       |
-| `log_debug` | Debug message (only if debug mode is ON)  |
-| `logc`      | Run command and log output (log or error) |
-| `logc_err`  | Run command and always log as error       |
-
----
-
-## Internal Setup Functions
-
-These are called automatically:
-
-* `_set_default_logfiles` – Initializes log file paths
-* `_set_default_logfile_colors` – Initializes color settings
-* `_set_default_debugmode` – Initializes `LIB_BASH_DEBUG_MODE`
-* `_create_log_dir` – Ensures log directories exist
-* `_log` – Core logging function (used internally)
+| Function     | Description                                  |
+|--------------|----------------------------------------------|
+| `log`        | General log message                          |
+| `log_ok`     | Success message                              |
+| `log_wrench` | Task or process message (uses wrench emoji) |
+| `log_warn`   | Warning message                              |
+| `log_err`    | Error message + logs to error files          |
+| `log_debug`  | Debug message (if debug mode is enabled)     |
+| `logc`       | Log stdout/stderr from command               |
+| `logc_err`   | Log all command output as error              |
 
 ---
 
-## Requirements
+## ⚙️ Internal Functions
 
-* **Bash 4.0+**
-* Requires `lib_bash` (especially: `lib_color.sh`, `lib_bash.sh`)
-* Linux or macOS with typical file permissions
-
----
-
-## License
-
-GNU General Public License v3.0 – See [LICENSE](https://github.com/bitranox/lib_bash/blob/master/docs/LICENSE) for details.
+| Function                   | Purpose                                   |
+|---------------------------|-------------------------------------------|
+| `_set_default_logfiles`    | Setup log file paths                      |
+| `_set_default_logfile_colors` | Configure default colors                |
+| `_set_default_debugmode`   | Initialize debug mode                     |
+| `_create_log_dir`          | Ensure log directory exists               |
+| `_log`                     | Internal: format and dispatch log output  |
 
 ---
 
-## lib\_bash Ecosystem
+## 📋 Requirements
 
-This script is part of a comprehensive Bash scripting suite:
-
-* **lib\_color.sh** – Terminal color formatting
-* **lib\_bash.sh** – Utility functions and environment setup
-* **lib\_retry.sh** – Retry failed commands automatically
-* **self\_update.sh** – Make your script self-updating
-
-[View all modules...](https://github.com/bitranox/lib_bash)
+- **Bash** 4.0+
+- Works on **Linux** and **macOS**
+- Requires `lib_color.sh`, `lib_bash.sh`
 
 ---
 
-## Contributing
+## 🌐 Related Modules
 
-We welcome contributions! Just:
+- **lib_color.sh** – Terminal color formatting
+- **lib_bash.sh** – Environment setup, utility functions
+- **lib_retry.sh** – Automatic retries for failing commands
+- **self_update.sh** – Self-updating script mechanism
 
-1. Fork the repo
+[Explore All Modules →](https://github.com/bitranox/lib_bash)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a Pull Request
+4. Submit a pull request
 
-For details, see: [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/master/docs/CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/bitranox/lib_bash/blob/master/docs/CONTRIBUTING.md)
 
 ---
 
-*Tested on: Linux, macOS*
-*Part of the [lib\_bash](https://github.com/bitranox/lib_bash) professional scripting toolkit.*
+*Tested on: Linux, macOS*  
+*Part of the [lib_bash](https://github.com/bitranox/lib_bash) toolkit for maintainable scripting.*
