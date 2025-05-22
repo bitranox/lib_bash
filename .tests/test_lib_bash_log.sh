@@ -52,8 +52,10 @@ run_test() {
 # ------------------------------------------------------------------------------
 mkdir -p /tmp/lib_bash_test_logs
 LIB_BASH_LOGFILE="/tmp/lib_bash_test_logs/test.log"
+# shellcheck disable=SC2034
 LIB_BASH_LOGFILE_TMP="/tmp/lib_bash_test_logs/test_tmp.log"
 LIB_BASH_LOGFILE_ERR="/tmp/lib_bash_test_logs/test_err.log"
+# shellcheck disable=SC2034
 LIB_BASH_LOGFILE_ERR_TMP="/tmp/lib_bash_test_logs/test_err_tmp.log"
 
 # Reset log state
@@ -75,6 +77,7 @@ run_test "error message" 0 log_err "Error test"
 run_test "debug (OFF - should skip)" 0 log_debug "This won't show"
 LIB_BASH_DEBUG_MODE="ON"
 run_test "debug (ON - should log)" 0 log_debug "Debug output"
+# shellcheck disable=SC2034
 LIB_BASH_DEBUG_MODE="OFF"
 
 # ------------------------------------------------------------------------------

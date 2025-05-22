@@ -67,45 +67,49 @@ test_functions_exist() {
 }
 
 test_foreground_colors() {
-    echo "Testing foreground colors..."
+    local colors
+    local func
+    local result
     local text="This is a test of foreground colors"
     local demo_text=""
 
-    local colors=( "black" "red" "green" "yellow" "blue" "magenta" "cyan" "white" )
+    echo "Testing foreground colors..."
+    colors=( "black" "red" "green" "yellow" "blue" "magenta" "cyan" "white" )
     for color in "${colors[@]}"; do
-        local func="clr_${color}"
-        local result=$($func "$text")
+        func="clr_${color}"
+        result=$($func "$text")
         assert "$($func "$text")" "$result" "Testing $color foreground"
         demo_text+="$($func "$color")
 "
     done
-
     demonstrate "Foreground Colors" "$demo_text"
 }
 
 test_background_colors() {
+    local colors
+    local func
+    local result
     echo "Testing background colors..."
     local text="This is a test of background colors"
     local demo_text=""
 
-    local colors=( "blackb" "redb" "greenb" "yellowb" "blueb" "magentab" "cyanb" "whiteb" )
+    colors=( "blackb" "redb" "greenb" "yellowb" "blueb" "magentab" "cyanb" "whiteb" )
     for color in "${colors[@]}"; do
-        local func="clr_${color}"
-        local result=$($func "$text")
+        func="clr_${color}"
+        result=$($func "$text")
         assert "$($func "$text")" "$result" "Testing $color background"
         demo_text+="$($func "$color")
 "
     done
-
     demonstrate "Background Colors" "$demo_text"
 }
 
 test_attributes() {
+    local result
     echo "Testing text attributes..."
     local text="This text demonstrates attributes"
     local demo_text=""
 
-    local result
     result=$(clr_bold "$text")
     assert "$result" "$result" "Bold attribute"
     demo_text+="Bold: $(clr_bold "$text")
@@ -174,12 +178,12 @@ test_clr_layer() {
     demo_text+="Basic layer: $result
 "
 
-    result=$(clr_layer $CLR_RED "test")
+    result=$(clr_layer "$CLR_RED" "test")
     assert $'\033[31mtest\033[0m' "$result" "Layer with color code"
     demo_text+="Red layer: $result
 "
 
-    result=$(clr_layer $CLR_RED $CLR_BOLD "test")
+    result=$(clr_layer "$CLR_RED" "$CLR_BOLD" "test")
     assert $'\033[31;1mtest\033[0m' "$result" "Layer with multiple attributes"
     demo_text+="Bold red layer: $result
 "
@@ -222,7 +226,7 @@ test_rainbow() {
     local colors=("red" "yellow" "green" "cyan" "blue" "magenta")
 
     for color in "${colors[@]}"; do
-        rainbow+="$(clr_${color} "$text") "
+        rainbow+="$(clr_"${color}" "$text") "
     done
 
     demonstrate "Rainbow Demo" "$rainbow"
@@ -276,7 +280,7 @@ test_more_attributes() {
 }
 
 main() {
-    echo "$(clr_bold "Running color library tests...")"
+    clr_bold "Running color library tests..."
     echo
 
     test_functions_exist
@@ -302,12 +306,12 @@ main() {
     test_more_attributes
     echo
 
-    echo "$(clr_bold "Test Summary:")"
+    clr_bold "Test Summary:"
     echo "Tests run: $TESTS_RUN"
     if [ $TESTS_FAILED -eq 0 ]; then
-        echo "$(clr_green "$(clr_bold "All tests passed!")")"
+        clr_green clr_bold "All tests passed!"
     else
-        echo "$(clr_red "$(clr_bold "Tests failed: $TESTS_FAILED")")"
+        clr_red clr_bold "Tests failed: $TESTS_FAILED"
         exit 1
     fi
 }

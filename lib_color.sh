@@ -181,7 +181,7 @@ clr_escape() {
         text="${CLR_ESC}${codes[*]}m${text}${CLR_ESC}${CLR_RESET}m"
     fi
 
-    echo $echoswitches "$text"
+    echo "$echoswitches" "$text"
 }
 
 #####################################################################

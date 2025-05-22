@@ -171,11 +171,12 @@ test_create_temp_file() {
     : > "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"  # Clear registry
 
     # 1) Basic usage (no template)
+    local lines
     local tf
     tf="$(create_temp_file)"
     assert "0" "$?" "create_temp_file (no template) returns success"
     [[ -f "$tf" ]] && echo "✓ Temp file exists" || echo "✗ Temp file missing"
-    local lines="$(_get_number_of_registered_paths)"
+    lines="$(_get_number_of_registered_paths)"
     assert "1" "$lines" "Temp file registered in registry"
 
     rm -f "$tf"
@@ -230,10 +231,11 @@ test_create_temp_dir() {
 
     # 1) Basic usage (no template)
     local td
+    local lines
     td="$(create_temp_dir)"
     assert "0" "$?" "create_temp_dir (no template) success"
     [[ -d "$td" ]] && echo "✓ Temp dir exists" || echo "✗ Temp dir missing"
-    local lines="$(_get_number_of_registered_paths)"
+    lines="$(_get_number_of_registered_paths)"
     assert "1" "$lines" "Temp dir registered"
     rm -rf "$td"
     : > "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"
