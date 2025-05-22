@@ -23,7 +23,7 @@ function update_caller {
 
     # Update if newer version exists
     if [[ "$remote_hash" && "$remote_hash" != "$current_hash" ]]; then
-        echo "Updating to new version: ${remote_hash:0:7}"
+        echo "🔧 Updating to new version: ${remote_hash:0:7}"
         git -C "$SCRIPT_DIR" reset --hard origin/HEAD --quiet >/dev/null 2>&1
         # Restart with original arguments
         exec "$(readlink -f "${BASH_SOURCE[1]}")" "${original_args[@]}"
