@@ -804,6 +804,7 @@ test() {
   log_wrench "log wrench"
   log_warn "log_warn"
   log_err "log_err"
+  LIB_BASH_DEBUG_MODE="ON"
   log_debug "log_debug"
 }
 
