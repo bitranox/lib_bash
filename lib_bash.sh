@@ -799,10 +799,12 @@ help() {
   echo "after registering the shortcuts you can use following commands in the interactive shell:"
   echo ""
   echo "$(clr_bright_green "lib_bash <command> ") $(clr_bright_yellow "# call any lib_bash function")"
-  echo "$(clr_bright_green "update             ") $(clr_bright_yellow "# update linux")"
+  echo "$(clr_bright_green "linuxupdate        ") $(clr_bright_yellow "# update linux")"
   echo "$(clr_bright_green "lsdsk              ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
   echo "$(clr_bright_green "lsdisk             ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
   echo "$(clr_bright_green "install_python     ") $(clr_bright_yellow "# install latest python version")"
+  echo "$(clr_bright_green "install_sgpt       ") $(clr_bright_yellow "# install latest sgpt")"
+  echo "$(clr_bright_green "amdinfo            ") $(clr_bright_yellow "# amdinfo about amd driver, clinfo and vulkan")"
   exit 0
 }
 
