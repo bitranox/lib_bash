@@ -798,6 +798,14 @@ register() {
   exit 0
 }
 
+test() {
+  log "log"
+  log_ok "log OK"
+  log_wrench "log wrench"
+  log_warn "log_warn"
+  log_err "log_err"
+  log_debug "log_debug"
+}
 
 
 ########################################################################################################################################################
@@ -811,10 +819,6 @@ LIB_BASH_MAIN() {
         # support --help command
         --help)
             help
-            ;;
-        # support --register command (create bash aliases)
-        --register)
-            register
             ;;
         *)
             # call any other function of lib_bash from the commandline
