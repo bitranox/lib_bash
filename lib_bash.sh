@@ -806,9 +806,11 @@ LIB_BASH_MAIN() {
     ! is_sourced || return 0  # Exit early if script is sourced
     (( $# )) || exit 0        # Terminate if no arguments provided
         case "$1" in
+        # support --help command
         --help)
             help
             ;;
+        # support --register command (create bash aliases)
         --register)
             register
             ;;
