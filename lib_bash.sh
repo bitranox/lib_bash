@@ -789,7 +789,9 @@ _lib_bash_self_update() {
 }
 
 help() {
-  echo "$(clr_green "sudo ./lib_bash.sh register") $(clr_yellow "# test")"
+  echo "to register the aliases and shortcuts issue following command:"
+  echo "$(clr_green "sudo ./lib_bash.sh register") $(clr_yellow "# register aliases")"
+  echo ""
   echo "after registering the shortcuts you can use following commands include the interactive shell."
   echo "update  # update linux"
   echo "lsdsk   # get a list of disk controllers and drives"
