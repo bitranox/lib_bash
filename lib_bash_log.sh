@@ -177,7 +177,7 @@ _log() {
     if [[ -n "${log_file_err_tmp}" ]]; then _create_log_dir "${log_file_err_tmp}"; fi
 
     local logprefix
-    logprefix="$(date '+%Y-%m-%d %H:%M:%S') - $(whoami)@$(hostname -s) ${level}:"
+    logprefix="$(date '+%Y-%m-%d %H:%M:%S')[$(whoami)@$(hostname -s)]${level}:"
 
     IFS=$'\n' read -rd '' -a lines <<< "${message}" || true
     for line in "${lines[@]}"; do
