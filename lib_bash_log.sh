@@ -280,7 +280,7 @@ log_debug() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_DEBUG:-clr_bold clr_magentab clr_yellow}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[DBG]" "🐞 "
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[DBG]" "🐞"
     return 0
 }
 
