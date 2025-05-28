@@ -230,7 +230,7 @@ log_ok() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅️ "
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅️"
     return 0
 }
 
@@ -267,7 +267,7 @@ log_err() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "[ERR]" "❌ "
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "[ERR]" "❌"
     return 0
 }
 
