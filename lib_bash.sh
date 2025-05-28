@@ -789,7 +789,12 @@ _lib_bash_self_update() {
 }
 
 help() {
-  log "help"
+  clr_green "sudo ./lib_bash.sh register" clr_red "test"
+  echo "after registering the shortcuts you can use following commands include the interactive shell."
+  echo "update  # update linux"
+  echo "lsdsk   # get a list of disk controllers and drives"
+  echo "lsdisk  # get a list of disk controllers and drives"
+  echo "install_latest_python # install latest python version"
   exit 0
 }
 
