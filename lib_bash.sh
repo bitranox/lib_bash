@@ -789,14 +789,18 @@ _lib_bash_self_update() {
 }
 
 help() {
+  echo ""
+  echo "HELP"
+  echo ""
   echo "to register the aliases and shortcuts issue following command:"
   echo "$(clr_bright_green "sudo ./lib_bash.sh register") $(clr_bright_yellow "# register aliases")"
   echo ""
   echo "after registering the shortcuts you can use following commands in the interactive shell:"
-  echo "update  # update linux"
-  echo "lsdsk   # get a list of disk controllers and drives"
-  echo "lsdisk  # get a list of disk controllers and drives"
-  echo "install_latest_python # install latest python version"
+  echo ""
+  echo "$(clr_bright_green "update                ") $(clr_bright_yellow "# update linux")"
+  echo "$(clr_bright_green "lsdsk                 ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
+  echo "$(clr_bright_green "lsdisk                ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
+  echo "$(clr_bright_green "install_latest_python ") $(clr_bright_yellow "# install latest python version")"
   exit 0
 }
 
