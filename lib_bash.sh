@@ -817,11 +817,10 @@ LIB_BASH_MAIN() {
             register
             ;;
         *)
+            # call any other function of lib_bash from the commandline
             call_function_from_commandline "${@}"
             ;;
     esac
-    # call any other function of lib_bash from the commandline
-    call_function_from_commandline "${@}"
 }
 
 _set_defaults
