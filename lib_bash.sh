@@ -790,10 +790,12 @@ _lib_bash_self_update() {
 
 help() {
   log "help"
+  exit 0
 }
 
 register() {
   log "register"
+  exit 0
 }
 
 
