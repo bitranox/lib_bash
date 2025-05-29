@@ -763,8 +763,7 @@ _user_is_allowed_to_update() {
     local current_user=$(id -un)
 
     if [ "$script_uid" -ne "$current_uid" ]; then
-        log_warn "lib_bash : can not apply updates, the current user '$current_user' \
-                  (UID: $current_uid) is not the owner of the script (Owner: '$script_user', UID: $script_uid)"
+        log_warn "lib_bash : can not apply updates, the current user '$current_user' (UID: $current_uid) is not the owner of the script (Owner: '$script_user', UID: $script_uid)"
         return 1
     else
         return 0

@@ -254,7 +254,9 @@ log_ok() {
 #   $2  - options ("bold", "NO_TTY")
 
 log_success() {
-    log_ok "${1}" "${2}"
+    local message="${1:-}"
+    local options="${2:-}"
+    log_ok "${message}" "${options}"
     return 0
 }
 
