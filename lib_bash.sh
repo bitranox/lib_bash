@@ -803,6 +803,7 @@ help() {
   echo "$(clr_bright_green "lsdsk              ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
   echo "$(clr_bright_green "lsdisk             ") $(clr_bright_yellow "# get a list of disk controllers and drives")"
   echo "$(clr_bright_green "install_python     ") $(clr_bright_yellow "# install latest python version")"
+  echo "$(clr_bright_green "pybench            ") $(clr_bright_yellow "# run python benchmark")"
   echo "$(clr_bright_green "install_sgpt       ") $(clr_bright_yellow "# install latest sgpt")"
   echo "$(clr_bright_green "amdinfo            ") $(clr_bright_yellow "# amdinfo about amd driver, clinfo and vulkan")"
   exit 0

@@ -205,8 +205,11 @@ _log() {
 
 
 # ------------------------------------------------------------------------------
-# Public Logging Interfaces
+# log ℹ️
 # ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("bold", "NO_TTY")
 
 log() {
     if [ -z "${1:-}" ]; then
@@ -221,6 +224,14 @@ log() {
     return 0
 }
 
+
+# ------------------------------------------------------------------------------
+# log_ok ✅️
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("bold", "NO_TTY")
+
 log_ok() {
     if [ -z "${1:-}" ]; then
         log_warn "lib_bash_log: log(): no message passed"
@@ -233,6 +244,27 @@ log_ok() {
     _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅️"
     return 0
 }
+
+
+# ------------------------------------------------------------------------------
+# log_success ✅️
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("bold", "NO_TTY")
+
+log_success() {
+    log_ok "${1}" "${2}"
+    return 0
+}
+
+
+# ------------------------------------------------------------------------------
+# log_wrench 🔧
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("bold", "NO_TTY")
 
 log_wrench() {
     if [ -z "${1:-}" ]; then
@@ -247,6 +279,14 @@ log_wrench() {
     return 0
 }
 
+
+# ------------------------------------------------------------------------------
+# log_warn ⚠️
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("NO_TTY")
+
 log_warn() {
     if [ -z "${1:-}" ]; then
         log_warn "lib_bash_log: log_warn: no message passed"
@@ -259,6 +299,14 @@ log_warn() {
     return 0
 }
 
+
+# ------------------------------------------------------------------------------
+# log_err ❌
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("NO_TTY")
+
 log_err() {
     if [ -z "${1:-}" ]; then
         log_warn "lib_bash_log: log_err: no message passed"
@@ -270,6 +318,14 @@ log_err() {
     _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "[ERR]" "❌"
     return 0
 }
+
+
+# ------------------------------------------------------------------------------
+# log_debug 🐞
+# ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - message
+#   $2  - options ("NO_TTY")
 
 log_debug() {
     if [ -z "${1:-}" ]; then
@@ -290,6 +346,9 @@ log_debug() {
 # Purpose : Run a command, log its output live, log errors if any.
 # Usage   : logc <command> [args...]
 # ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - command
+#   $2  - options ("NO_TTY")
 
 logc() {
     local exit_code output has_output
@@ -318,6 +377,9 @@ logc() {
 # Purpose : Always log command output as error, regardless of exit code.
 # Usage   : logc_err <command> [args...]
 # ------------------------------------------------------------------------------
+# Parameters:
+#   $1  - command
+#   $2  - options ("NO_TTY")
 
 logc_err() {
     local exit_code output
