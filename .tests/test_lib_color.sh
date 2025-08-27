@@ -7,6 +7,8 @@ set -o errexit -o nounset -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib_bash.sh"
 
+CMD="${SCRIPT_DIR}/lib_color.sh"
+
 TESTS_RUN=0
 TESTS_FAILED=0
 
@@ -77,7 +79,7 @@ test_foreground_colors() {
     colors=( "black" "red" "green" "yellow" "blue" "magenta" "cyan" "white" )
     for color in "${colors[@]}"; do
         func="clr_${color}"
-        result=$($func "$text")
+        result=$("${CMD}" "$func" "$text")
         assert "$($func "$text")" "$result" "Testing $color foreground"
         demo_text+="$($func "$color")
 "
@@ -96,7 +98,7 @@ test_background_colors() {
     colors=( "blackb" "redb" "greenb" "yellowb" "blueb" "magentab" "cyanb" "whiteb" )
     for color in "${colors[@]}"; do
         func="clr_${color}"
-        result=$($func "$text")
+        result=$("${CMD}" "$func" "$text")
         assert "$($func "$text")" "$result" "Testing $color background"
         demo_text+="$($func "$color")
 "
@@ -110,17 +112,17 @@ test_attributes() {
     local text="This text demonstrates attributes"
     local demo_text=""
 
-    result=$(clr_bold "$text")
+    result=$("${CMD}" clr_bold "$text")
     assert "$result" "$result" "Bold attribute"
     demo_text+="Bold: $(clr_bold "$text")
 "
 
-    result=$(clr_underscore "$text")
+    result=$("${CMD}" clr_underscore "$text")
     assert "$result" "$result" "Underscore attribute"
     demo_text+="Underscore: $(clr_underscore "$text")
 "
 
-    result=$(clr_reverse "$text")
+    result=$("${CMD}" clr_reverse "$text")
     assert "$result" "$result" "Reverse attribute"
     demo_text+="Reverse: $(clr_reverse "$text")
 "
@@ -134,17 +136,17 @@ test_combinations() {
     local demo_text=""
 
     local result
-    result=$(clr_bold "$(clr_red "$(clr_blueb "$text")")")
+    result=$("${CMD}" clr_bold "$(clr_red "$(clr_blueb "$text")")")
     assert "$result" "$result" "Bold red on blue"
     demo_text+="Bold red on blue: $result
 "
 
-    result=$(clr_underscore "$(clr_green "$(clr_yellowb "$text")")")
+    result=$("${CMD}" clr_underscore "$(clr_green "$(clr_yellowb "$text")")")
     assert "$result" "$result" "Underscored green on yellow"
     demo_text+="Underscored green on yellow: $result
 "
 
-    result=$(clr_reverse "$(clr_cyan "$(clr_magentab "$text")")")
+    result=$("${CMD}" clr_reverse "$(clr_cyan "$(clr_magentab "$text")")")
     assert "$result" "$result" "Reverse cyan on magenta"
     demo_text+="Reverse cyan on magenta: $result
 "
@@ -156,11 +158,11 @@ test_error_handling() {
     echo "Testing error handling..."
     local result
 
-    result=$(clr_red "")
+    result=$("${CMD}" clr_red "")
     local expected=$'\033[31m\033[0m'
     assert "$expected" "$result" "Empty input handling"
 
-    result=$(clr_escape "-e" "test" 999 2>/dev/null) || true
+    result=$("${CMD}" clr_escape "-e" "test" 999 2>/dev/null) || true
     assert "" "$result" "Invalid escape code handling"
 
     demonstrate "Error Handling" \
@@ -173,17 +175,17 @@ test_clr_layer() {
     local demo_text=""
 
     local result
-    result=$(clr_layer "test")
+    result=$("${CMD}" clr_layer "test")
     assert "test" "$result" "Basic layer with text only"
     demo_text+="Basic layer: $result
 "
 
-    result=$(clr_layer "$CLR_RED" "test")
+    result=$("${CMD}" clr_layer "$CLR_RED" "test")
     assert $'\033[31mtest\033[0m' "$result" "Layer with color code"
     demo_text+="Red layer: $result
 "
 
-    result=$(clr_layer "$CLR_RED" "$CLR_BOLD" "test")
+    result=$("${CMD}" clr_layer "$CLR_RED" "$CLR_BOLD" "test")
     assert $'\033[31;1mtest\033[0m' "$result" "Layer with multiple attributes"
     demo_text+="Bold red layer: $result
 "

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -eEuo pipefail
-trap 'echo "Script failed at line $LINENO with exit code $?" >&2' ERR
+trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
 
 # ------------------------------------------------------------------------------
 # Function: _set_default_logfiles
@@ -33,7 +33,9 @@ _set_default_logfiles() {
     if is_root; then
         log_prefix="/var/log/lib_bash"
     else
-        log_prefix="${HOME}/log/lib_bash"
+        # This follows the XDG Base Directory Specification, which is a standard 
+        # for organizing user-specific data and configuration files on Linux systems.
+        log_prefix="${XDG_STATE_HOME:-$HOME/.local/state}/lib_bash"
     fi
 
     local main_log="${log_prefix}/${script_stem}.log"
@@ -226,7 +228,7 @@ log() {
 
 
 # ------------------------------------------------------------------------------
-# log_ok ✅️
+# log_ok ✅
 # ------------------------------------------------------------------------------
 # Parameters:
 #   $1  - message
@@ -241,13 +243,13 @@ log_ok() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅️"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅"
     return 0
 }
 
 
 # ------------------------------------------------------------------------------
-# log_success ✅️
+# log_success ✅
 # ------------------------------------------------------------------------------
 # Parameters:
 #   $1  - message
