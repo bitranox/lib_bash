@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -eEuo pipefail
-trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
-
 # ------------------------------------------------------------------------------
 # Function: _set_default_logfiles
 # Purpose : Define default log file paths and initialize global log variables.
@@ -23,6 +20,24 @@ trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2'
 #   - is_root (from lib_bash)
 #   - register_temppath
 # ------------------------------------------------------------------------------
+
+
+_lib_log_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
+
+# --- only in script mode ---
+if _lib_log_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
+
 
 _set_default_logfiles() {
     local reset="${1:-}"

@@ -787,7 +787,7 @@ _lib_bash_self_update() {
     return 1
 }
 
-help() {
+lib_bash_help() {
   echo ""
   echo "HELP"
   echo "----"
@@ -808,12 +808,12 @@ help() {
   exit 0
 }
 
-register() {
-  log "register"
+lib_bash_register() {
+  log "register - work in progress"
   exit 0
 }
 
-test() {
+lib_bash_test() {
   log "log"
   log_ok "log OK"
   log_wrench "log wrench"
@@ -833,8 +833,11 @@ LIB_BASH_MAIN() {
     (( $# )) || exit 0        # Terminate if no arguments provided
         case "$1" in
         # support --help command
-        --help)
-            help
+        --help|help|?)
+            lib_bash_help
+            ;;
+        --register|register|?)
+            lib_bash_register
             ;;
         *)
             # call any other function of lib_bash from the commandline

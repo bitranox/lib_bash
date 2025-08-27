@@ -1,6 +1,22 @@
 #!/bin/bash
 # lib_color.sh
-set -o errexit -o nounset -o pipefail
+
+_lib_color_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
+
+# --- only in script mode ---
+if _lib_color_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
+
 
 #####################################################################
 # 1) Basic SGR (Select Graphic Rendition) codes
@@ -104,7 +120,7 @@ clr_layer() {
             [[ "$ARG" == "-n" ]] && CLR_ECHOSWITCHES="-en"
             CLR_SWITCHES+=" $ARG"
         else
-            if fn_exists "$ARG"; then
+            if fn_exists "$ARG" && [[ "$ARG" == clr_* ]]; then
                 # If it's a color/attribute function, we need to rejoin the current CLR_STACK
                 # into spaced text, call the function, then store the result as a single token.
                 if [[ -n "$CLR_STACK" ]]; then
@@ -204,7 +220,7 @@ clr_blink()           { clr_layer $CLR_BLINK "$@";           }
 # 8 standard fg colors
 clr_black()   { clr_layer $CLR_BLACK "$@";   }
 clr_red()     { clr_layer $CLR_RED "$@";     }
-clr_green()   { clr_layer $CLR_GREEN "$@";   }
+clr_green()   { clr_layer "$CLR_GREEN" "$@";   }
 clr_yellow()  { clr_layer $CLR_YELLOW "$@";  }
 clr_blue()    { clr_layer $CLR_BLUE "$@";    }
 clr_magenta() { clr_layer $CLR_MAGENTA "$@"; }
