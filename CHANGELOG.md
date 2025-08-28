@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.1 (2025-08-29)
+
+### Changed
+- lib_retry: switched option parsing from external `getopt` to built-in `getopts` (no external dependency).
+- lib_retry: moved dependency check inside `retry`; added safe stderr fallback logger; preserved caller `-e` state.
+- lib_retry: documented getopts usage and logger fallback; clarified requirements.
+- lib_bash_log: fixed `logc`/`logc_err` to capture correct exit codes with `pipefail`, preserving caller flags.
+- docs: updated default log paths to use `${XDG_STATE_HOME:-$HOME/.local/state}` for user logs; clarified `<script>` naming via `get_script_stem()`.
+- docs/tests: added descriptive headers to scripts and tests; minor comment improvements.
+
+### Fixed
+- tests: `test_lib_bash_log.sh` expectations for `logc`/`logc_err` now pass with corrected exit codes.
+- shellcheck: removed inline function definition to avoid SC2317; adjusted test shellcheck header to avoid directive parsing.
+
+### Tests
+- All suites pass via `.tests/run_all_tests.sh` (logging, tempfiles, color, retry).
+
 ## 1.0.0 (2025-08-28)
 
 ### Added

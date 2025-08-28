@@ -1,7 +1,46 @@
 #!/bin/bash
-# lib_retry.sh
+# lib_retry.sh — Exponential backoff retry helper for Bash
+#
+# Purpose:
+# - Provides `retry` to re-run a command with exponential backoff.
+# - Supports configurable attempts, base delay, and pluggable logger function.
+# - Honors non-retryable exit codes with environment override.
+#
+# Usage:
+# - `retry -n 3 -d 2 -- cmd args...`
+# - Default logger is `log_err` if available, otherwise a safe stderr fallback.
+#
+# Notes:
+# - Uses built-in `getopts` (no external getopt dependency).
+# - Strict mode only when executed directly, not when sourced.
 
-set -o errexit -o nounset -o pipefail
+# For detection if the script is sourced correctly
+# shellcheck disable=SC2034
+LIB_RETRY_LOADED=true
+
+_lib_retry_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
+
+# --- only in script mode ---
+if _lib_retry_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  # shellcheck disable=SC2154
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
+
+
+# Fallback logger for standalone usage (stderr only)
+_lib_retry_fallback_logger() {
+    printf '%s\n' "$*" >&2
+}
+
 
 check_dependencies() {
     # Pass one or more commands to check, e.g.: check_dependencies "getopt" "curl"
@@ -18,9 +57,6 @@ check_dependencies() {
         exit 127
     fi
 }
-
-# Now call the check_dependencies function before doing anything else
-check_dependencies "getopt"
 
 :<<'DOC'
 Retry command with exponential backoff
@@ -41,7 +77,7 @@ DOC
 retry() {
     local -i max_attempts=5 retry_delay=5 attempt=1
     local log_func="log_err"
-    local -ar non_retryable=(126 127 130)
+    local -a non_retryable=(126 127 130)
     local -Ar error_messages=(
         [1]="General error"
         [2]="Misuse of shell builtins"
@@ -50,26 +86,30 @@ retry() {
         [130]="Script terminated by Control-C"
     )
 
-    # Parse options
-    local opts
-    opts=$(getopt -o n:d:l: -- "$@") || {
-        echo "lib_retry: Usage error" >&2
-        return 1
-    }
-    eval set -- "$opts"
-
-    while true; do
-        case $1 in
-            -n) max_attempts=$2; shift 2 ;;
-            -d) retry_delay=$2; shift 2 ;;
-            -l) log_func=$2; shift 2 ;;
-            --) shift; break ;;
-            *) echo "lib_retry: Invalid option" >&2; return 1 ;;
+    # Parse options using built-in getopts (no external dependency)
+    local OPTIND opt
+    while getopts ":n:d:l:" opt; do
+        case ${opt} in
+            n) max_attempts=${OPTARG} ;;
+            d) retry_delay=${OPTARG} ;;
+            l) log_func=${OPTARG} ;;
+            :) echo "lib_retry: Option -${OPTARG} requires an argument" >&2; return 1 ;;
+            \?) echo "lib_retry: Invalid option: -${OPTARG}" >&2; return 1 ;;
         esac
     done
+    shift $((OPTIND - 1))
+    # Respect optional double-dash separator if provided
+    if [[ ${1-} == "--" ]]; then
+        shift
+    fi
 
-    # Validate parameters before using logger
-    if ! declare -F "${log_func}" &>/dev/null; then
+    # Provide a safe default logger if not available and default is used
+    if [[ "${log_func}" == "log_err" ]] && ! type -t log_err >/dev/null 2>&1; then
+        log_func="_lib_retry_fallback_logger"
+    fi
+
+    # Validate parameters before using logger (accept function, builtin, or external)
+    if ! type -t "${log_func}" >/dev/null 2>&1; then
         echo "lib_retry: Invalid log function: ${log_func}" >&2
         return 1
     fi
@@ -96,10 +136,13 @@ retry() {
     # Retry loop
     local -i cmd_status=0
     while ((attempt <= max_attempts)); do
+        # Preserve caller's errexit (-e) state while capturing command status
+        local _had_e=0
+        case $- in *e*) _had_e=1;; esac
         set +e
         "$@"
         cmd_status=$?
-        set -e
+        (( _had_e )) && set -e
 
         # Check if error is non-retryable
         local -i is_non_retryable=0
@@ -123,7 +166,7 @@ retry() {
 
         # Calculate backoff with cap
         local -i max_backoff=300
-        local -i backoff=$(( retry_delay * 2#1 << (attempt-1) ))
+        local -i backoff=$(( retry_delay * (1 << (attempt - 1)) ))
         (( backoff > max_backoff )) && backoff=${max_backoff}
 
         if ((attempt < max_attempts)); then

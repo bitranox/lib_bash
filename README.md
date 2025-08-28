@@ -117,12 +117,21 @@ _lib_bash_self_update  # Manual update check
 
 ## Log Files
 
-| File Type                | Default Location                  |
-|--------------------------|-----------------------------------|
-| Main Log                 | ~/log/lib_bash/lib_bash.log       |
-| Temporary Log            | ~/log/lib_bash/lib_bash_tmp.log   |
-| Error Log                | ~/log/lib_bash/lib_bash_err.log   |
-| Temporary Error Log      | ~/log/lib_bash/lib_bash_err_tmp.log |
+Default locations depend on privilege and script name.
+
+- As user: `${XDG_STATE_HOME:-$HOME/.local/state}/lib_bash/<script>.log`
+- As root: `/var/log/lib_bash/<script>.log`
+
+Companion files are created alongside the main log:
+
+- Temporary Log: `<script>_tmp.log`
+- Error Log: `<script>_err.log`
+- Temporary Error Log: `<script>_err_tmp.log`
+
+Note on `<script>` naming:
+- `<script>` equals the output of `get_script_stem()` from `lib_bash.sh`.
+- It takes the script basename and strips only the last extension (e.g., `backup.sh` → `backup`).
+- Dotfiles are preserved unchanged (e.g., `.env` remains `.env`).
 
 ## Dependencies
 

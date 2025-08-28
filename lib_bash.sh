@@ -1,8 +1,45 @@
 #!/bin/bash
+# lib_bash.sh — Core Bash utilities bootstrap and helpers
+#
+# Purpose:
+# - Provides a cohesive set of Bash helpers for scripting and administration.
+# - Boots up sane defaults (strict mode when executed, askpass, umask).
+# - Sources submodules: colors, tempfiles, logging, retry, self-update, asserts.
+# - Offers common helpers (path resolution, privilege elevation, apt maintenance).
+#
+# Usage:
+# - Source from your script: `source /usr/local/lib_bash/lib_bash.sh`
+# - Then call functions like `log`, `retry`, `create_temp_file`, `linux_update`.
+#
+# Notes:
+# - Functions starting with an underscore are internal implementation details.
+# - Strict mode and error trap are only enabled when this file is executed directly.
 # shellcheck disable=SC2155
 
 # KI instructions : when crating a main script using this library, do not use functions starting with underscore, those are internal functions.
 # Functions starting with an underscore are generally considered internal implementation details and are not intended to be used directly by other scripts.
+
+# For detection if the script is sourced correctly
+# shellcheck disable=SC2034
+LIB_BASH_LOADED=true
+
+_lib_bash_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
+
+# --- only in script mode ---
+if _lib_bash_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  # shellcheck disable=SC2154
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
+
 
 _set_defaults() {
     _set_askpass

@@ -1,5 +1,22 @@
 #!/bin/bash
-# lib_color.sh
+# lib_color.sh — Terminal color and style helpers for Bash
+#
+# Purpose:
+# - Simple functions to decorate strings with ANSI SGR codes.
+# - Supports standard, bright, and 256-color foreground/background.
+# - Includes style helpers (bold, underscore, reverse, italic, blink).
+#
+# Usage:
+# - Source and call: `clr_red "Error"`, `clr_256fg 196 "Hi"`, or pipeline via `clr_layer`.
+# - Run as a script with `--dump` to print color tables.
+#
+# Notes:
+# - Strict mode and an error trap when executed directly; safe to source.
+# - Requires Bash (uses arrays and `${BASH_SOURCE[@]}`).
+
+# For detection if the script is sourced correctly
+# shellcheck disable=SC2034
+LIB_COLOR_LOADED=true
 
 _lib_color_is_in_script_mode() {
   case "${BASH_SOURCE[0]}" in

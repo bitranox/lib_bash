@@ -1,4 +1,18 @@
 #!/bin/bash
+# lib_bash_log.sh — Structured logging for Bash scripts
+#
+# Purpose:
+# - Rich, colorized, level-based logging to terminal and log files.
+# - Log rotation-friendly file layout for main and error logs (incl. temp logs).
+# - Helpers to log command output (`logc`, `logc_err`) while preserving exit codes.
+#
+# Usage:
+# - Source via `lib_bash.sh` or directly if dependencies are present.
+# - Call `log`, `log_ok`, `log_warn`, `log_err`, `log_debug`, `logc`, `logc_err`.
+#
+# Notes:
+# - Initializes default log paths on load using script stem and privilege.
+# - Only enables strict mode when executed directly (not when sourced).
 
 # ------------------------------------------------------------------------------
 # Function: _set_default_logfiles
@@ -21,6 +35,9 @@
 #   - register_temppath
 # ------------------------------------------------------------------------------
 
+# For detection if the script is sourced correctly
+# shellcheck disable=SC2034
+LIB_BASH_LOG_LOADED=true
 
 _lib_log_is_in_script_mode() {
   case "${BASH_SOURCE[0]}" in
@@ -372,9 +389,18 @@ log_debug() {
 
 logc() {
     local exit_code output has_output
+    # Preserve caller flags for errexit and pipefail
+    local _had_e=0 _had_pf=0
+    case $- in *e*) _had_e=1;; esac
+    if set -o | grep -qE "^pipefail[[:space:]]+on$|pipefail[[:space:]]+on"; then _had_pf=1; fi
+
     exec 3>&1
+    set +e
+    set -o pipefail
     output=$("$@" 2>&1 | tee >(cat >&3))
-    exit_code=${PIPESTATUS[0]}
+    exit_code=$?
+    (( _had_e )) && set -e
+    (( _had_pf )) || set +o pipefail
     exec 3>&-
 
     [[ -n "$output" ]] && has_output=true || has_output=false
@@ -403,9 +429,18 @@ logc() {
 
 logc_err() {
     local exit_code output
+    # Preserve caller flags for errexit and pipefail
+    local _had_e=0 _had_pf=0
+    case $- in *e*) _had_e=1;; esac
+    if set -o | grep -qE "^pipefail[[:space:]]+on$|pipefail[[:space:]]+on"; then _had_pf=1; fi
+
     exec 3>&1
+    set +e
+    set -o pipefail
     output=$("$@" 2>&1 | tee >(cat >&3))
-    exit_code=${PIPESTATUS[0]}
+    exit_code=$?
+    (( _had_e )) && set -e
+    (( _had_pf )) || set +o pipefail
     exec 3>&-
     log_err "${output}" "NO_TTY"
     (( exit_code != 0 )) && log_err "exitcode: ${exit_code}"

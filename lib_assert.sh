@@ -1,5 +1,39 @@
 #!/bin/bash
+# lib_assert.sh — Lightweight assertion helpers for Bash tests
+#
+# Purpose:
+# - Provide simple assertion utilities for shell test scripts.
+# - Compare command output or exit codes and print formatted failures.
+#
+# Usage:
+# - Source in tests: `source ./lib_assert.sh`.
+# - Use: `assert_equal "echo hi" "hi"`, `assert_return_code "false" 1`, etc.
+#
+# Notes:
+# - Preserves and restores shell options and traps around evaluated commands.
+# - Only enables strict mode and trap when executed directly.
 # shellcheck disable=SC2155
+
+# For detection if the script is sourced correctly
+# shellcheck disable=SC2034
+LIB_ASSERT_LOADED=true
+
+_lib_assert_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
+
+# --- only in script mode ---
+if _lib_assert_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  # shellcheck disable=SC2154
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
 
 function assert_equal {
 	# $1 : command

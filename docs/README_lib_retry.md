@@ -35,7 +35,7 @@ retry -n 3 -d 2 -- ls /some/nonexistent/path
 - **Non-retryable exit codes** can be customized
 - **Graceful** handling of system interrupts, command-not-found errors, etc.
 - **Environment override** (`RETRY_NON_RETRYABLE`) for special cases
-- **Portable** Bash script, no external dependencies
+- **Portable** Bash script, no external dependencies (uses built-in `getopts`)
 
 ---
 
@@ -124,7 +124,7 @@ retry -l my_logger -- false
 |-----------------|-----------------------------------------------------------|
 | `-n <value>`    | Max attempts (default: 5)                                 |
 | `-d <value>`    | Base delay in seconds for backoff (default: 5)            |
-| `-l <function>` | Logger function name. Must exist in current shell scope.  |
+| `-l <function>` | Logger function name. If undefined, a fallback logs to stderr. |
 
 - **Returns**:
   - `0` if the command eventually succeeds  
@@ -152,8 +152,8 @@ retry -l my_logger -- false
 ## Requirements
 
 - Bash 4.0+  
-- A logger function if you use `-l`, otherwise default `log_err`  
-- Standard UNIX commands (`getopt`, `sleep`, etc.)
+- A logger function if you use `-l`, otherwise a built-in fallback logs to stderr  
+- Standard UNIX commands (`sleep`, etc.)
 
 ---
 

@@ -1,5 +1,13 @@
 #!/bin/bash
-# test_lib_retry.sh
+# test_lib_retry.sh — Tests for the exponential backoff retry helper
+#
+# Purpose:
+# - Validate retry success/failure flows, non-retryable codes, custom logger,
+#   and basic parameter validation. Includes a transient-failure simulation.
+#
+# Usage:
+# - From repo root: `cd .tests && ./test_lib_retry.sh`
+# - Or run `.tests/run_all_tests.sh` to execute all tests.
 
 set -o errexit -o nounset -o pipefail
 

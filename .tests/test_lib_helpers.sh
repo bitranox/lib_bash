@@ -1,4 +1,13 @@
 #!/bin/bash
+# test_lib_helpers.sh — Tests for assorted helper functions in lib_bash.sh
+#
+# Purpose:
+# - Exercise helper utilities such as package checks, string containment, env vars,
+#   OS detection, and basic assertion functions.
+#
+# Usage:
+# - From repo root: `cd .tests && ./test_lib_helpers.sh`
+# - Or run `.tests/run_all_tests.sh` to execute all tests.
 
 # Load your logging script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

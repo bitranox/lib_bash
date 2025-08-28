@@ -99,7 +99,12 @@ Log files are created based on the script name and user privilege:
 Paths:
 
 - As **root**: `/var/log/lib_bash/`
-- As **user**: `$HOME/log/lib_bash/`
+- As **user**: `${XDG_STATE_HOME:-$HOME/.local/state}/lib_bash/`
+
+Note on `<script>` naming:
+- The actual filenames are based on the script stem returned by `get_script_stem()` from `lib_bash.sh`.
+- It uses the script basename and strips only the last extension (e.g., `deploy.sh` → `deploy`).
+- Dotfiles are preserved unchanged (e.g., `.env` stays `.env`).
 
 Temporary logs are registered for cleanup.
 

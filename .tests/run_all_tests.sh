@@ -1,4 +1,17 @@
 #!/bin/bash
+# run_all_tests.sh — Discover and run all test_*.sh, then shellcheck
+#
+# Purpose:
+# - Sources the project library via lib_bash.sh, executes every test_*.sh in this
+#   directory, then runs shellcheck over tests and top-level scripts.
+#
+# Usage:
+# - From repo root: `cd .tests && ./run_all_tests.sh`
+# - Or source and call `run_all_tests`.
+#
+# Notes:
+# - Expects test files to be executable and located in `.tests` with prefix `test_`.
+# - Requires shellcheck for static analysis step.
 
 # Load your logging script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

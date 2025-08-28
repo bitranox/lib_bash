@@ -1,7 +1,16 @@
 #!/bin/bash
-# tests/test_lib_bash_tempfiles.sh
+# test_lib_bash_tempfiles.sh — Tests for temporary path management library
 #
-# Test suite for lib_bash_tempfiles.sh with 100% coverage of all functions.
+# Purpose:
+# - Validate registry initialization, path registration/deduplication, helpers,
+#   temp file/dir creation with templates, and cleanup logic including failures.
+#
+# Usage:
+# - From repo root: `cd .tests && ./test_lib_bash_tempfiles.sh`
+# - Or run `.tests/run_all_tests.sh` to execute all tests.
+#
+# Notes:
+# - Aims for near 100% coverage of library functions.
 
 set -o errexit -o nounset -o pipefail
 

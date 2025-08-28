@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# test_lib_bash_log.sh — Tests for the logging library
+#
+# Purpose:
+# - Validate core log functions, debug behavior, directory creation, and
+#   command logging helpers `logc` and `logc_err` including exit codes.
+#
+# Usage:
+# - From repo root: `cd .tests && ./test_lib_bash_log.sh`
+# - Or run `.tests/run_all_tests.sh` to execute all tests.
+#
+# Notes:
+# - Provides minimal mocks for functions expected by lib_bash.
+# - Writes logs under `/tmp/lib_bash_test_logs` for inspection during tests.
 # set -u  # leave -e off so we can capture failures and continue
 
 # Optional: debug

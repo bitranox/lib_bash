@@ -1,5 +1,13 @@
 #!/bin/bash
-# tests/test_lib_color.sh
+# test_lib_color.sh — Tests for color/style helper library
+#
+# Purpose:
+# - Ensure all documented color functions exist and basic output formatting works.
+# - Demonstrate 16-color combinations and 256-color tables for manual inspection.
+#
+# Usage:
+# - From repo root: `cd .tests && ./test_lib_color.sh`
+# - Or run `.tests/run_all_tests.sh` to execute all tests.
 
 set -o errexit -o nounset -o pipefail
 
