@@ -81,33 +81,83 @@ get_file_groupname() {
 }
 
 
-# Function to get the full path of the main script
-get_script_fullpath()  {
-    realpath "$0"
-}
+## Function to get the full path of the main script
+#get_script_fullpath()  {
+#    realpath "$0"
+#}
 
 # Function to get the directory of the main script
-get_script_dirname() {
-    dirname "$(get_script_fullpath)"
-}
+#get_script_dirname() {
+#    dirname "$(get_script_fullpath)"
+#}
 
 # Function to get the basename of the main script
-get_script_basename() {
-    basename "$(get_script_fullpath)"
-}
+#get_script_basename() {
+#    basename "$(get_script_fullpath)"
+#}
 
 # Function to get the stem of the main script (the basename without extension)
-get_script_stem() {
-    local script_basename
-    script_basename=$(get_script_basename)
+#get_script_stem() {
+#    local script_basename
+#    script_basename=$(get_script_basename)
 
     # Remove extension only if there is one and it's not a hidden file like `.env`
-    if [[ "$script_basename" == *.* && "$script_basename" != .* ]]; then
-        echo "${script_basename%.*}"
-    else
-        echo "$script_basename"
-    fi
+#    if [[ "$script_basename" == *.* && "$script_basename" != .* ]]; then
+#        echo "${script_basename%.*}"
+#    else
+#        echo "$script_basename"
+#    fi
+#}
+
+# Returns the canonical absolute path to this script file.
+# Works when invoked via PATH (no slash), through symlinks, and even when sourced.
+get_script_fullpath() {
+  local src=${BASH_SOURCE[0]:-$0}
+
+  # If invoked without a slash (e.g., "mytool"), resolve via PATH.
+  if [[ "$src" != */* ]]; then
+    src=$(command -v -- "$src" 2>/dev/null || printf '%s' "$src")
+  fi
+
+  # Follow symlinks.
+  while [ -h "$src" ]; do
+    local dir link
+    dir=$(cd -P "$(dirname "$src")" && pwd) || return 1
+    link=$(readlink "$src") || return 1
+    case "$link" in
+      /*) src="$link" ;;        # absolute link
+      *)  src="$dir/$link" ;;   # relative to the link's directory
+    esac
+  done
+
+  # Normalize to an absolute, physical path.
+  local dir base
+  dir=$(cd -P "$(dirname "$src")" && pwd) || return 1
+  base=$(basename "$src")
+  printf '%s/%s\n' "$dir" "$base"
 }
+
+# Directory of the script
+get_script_dirname() {
+  dirname "$(get_script_fullpath)"
+}
+
+# Basename of the script
+get_script_basename() {
+  basename "$(get_script_fullpath)"
+}
+
+# Basename without the last extension (keeps dotfiles like .env intact)
+get_script_stem() {
+  local b
+  b=$(get_script_basename) || return 1
+  case "$b" in
+    .* )  printf '%s\n' "$b" ;;        # leave dotfiles unchanged
+    *.* ) printf '%s\n' "${b%.*}" ;;   # strip only the last extension
+    * )   printf '%s\n' "$b" ;;
+  esac
+}
+
 
 linux_update() {
     # pass "--force-phased-updates" as parameter if You want to do that
