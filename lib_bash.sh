@@ -80,35 +80,6 @@ get_file_groupname() {
     fi
 }
 
-
-## Function to get the full path of the main script
-#get_script_fullpath()  {
-#    realpath "$0"
-#}
-
-# Function to get the directory of the main script
-#get_script_dirname() {
-#    dirname "$(get_script_fullpath)"
-#}
-
-# Function to get the basename of the main script
-#get_script_basename() {
-#    basename "$(get_script_fullpath)"
-#}
-
-# Function to get the stem of the main script (the basename without extension)
-#get_script_stem() {
-#    local script_basename
-#    script_basename=$(get_script_basename)
-
-    # Remove extension only if there is one and it's not a hidden file like `.env`
-#    if [[ "$script_basename" == *.* && "$script_basename" != .* ]]; then
-#        echo "${script_basename%.*}"
-#    else
-#        echo "$script_basename"
-#    fi
-#}
-
 # Returns the canonical absolute path to this script file.
 # Works when invoked via PATH (no slash), through symlinks, and even when sourced.
 get_script_fullpath() {
