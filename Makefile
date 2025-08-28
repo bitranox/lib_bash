@@ -73,3 +73,16 @@ release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 		  "https://api.github.com/repos/$$owner/$$repo/releases" >/dev/null; \
 		printf "Created GitHub Release via API for v$(VERSION)\n"; \
 	fi
+
+
+release-notes: ## Create/update GitHub Release notes for existing tag: make release-notes VERSION=X.Y.Z
+	@[ -n "$(VERSION)" ] || (echo "ERROR: VERSION=X.Y.Z is required" >&2; exit 1)
+	@echo "Ensuring tag v$(VERSION) exists..."
+	@git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null || (echo "ERROR: tag v$(VERSION) not found." >&2; exit 1)
+	@echo "Preparing release notes from CHANGELOG.md..."
+	@body="$$(awk '/^##  *v?$(VERSION)/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
+	@if command -v gh >/dev/null 2>&1; then 		if gh release view v$(VERSION) >/dev/null 2>&1; then 			gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 		else 			gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 		fi; 	else 		remote="$$(git remote get-url origin)"; 		owner="$$(printf "%s
+" "$$remote" | sed -E 's#https://[^@]*@github.com/([^/]+)/([^/]+)\.git#\1#')"; 		repo="$$(printf "%s
+" "$$remote" | sed -E 's#https://[^@]*@github.com/([^/]+)/([^/]+)\.git#\2#')"; 		token="$${GH_TOKEN:-$${GITHUB_TOKEN:-}}"; [ -n "$$token" ] || token="$$(printf "%s
+" "$$remote" | sed -E 's#https://([^@]*)@github.com/.*#\1#')"; 		body_escaped="$$(printf "%s" "$$body" | sed ':a;N;$!ba;s/
+/\n/g; s/"/\"/g')"; 		api="https://api.github.com/repos/$$owner/$$repo"; 		id="$$(curl -s -H "Accept: application/vnd.github+json" "$$api/releases/tags/v$(VERSION)" | awk -F'[,:}]' '/"id"/{print $$2; exit}')"; 		if [ -n "$$id" ]; then 			curl -sS -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $$token" 			  -d "{"name":"lib_bash $(VERSION)","body":"$$body_escaped","target_commitish":"$(RELEASE_BRANCH)"}" 			  "$$api/releases/$$id" >/dev/null; 			printf "Updated GitHub Release v$(VERSION)\n"; 		else 			curl -sS -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $$token" 			  -d "{"tag_name":"v$(VERSION)","name":"lib_bash $(VERSION)","target_commitish":"$(RELEASE_BRANCH)","body":"$$body_escaped","draft":false,"prerelease":false}" 			  "$$api/releases" >/dev/null; 			printf "Created GitHub Release v$(VERSION)\n"; 		fi; 	fi
