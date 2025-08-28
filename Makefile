@@ -51,7 +51,25 @@ release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 	@git tag -a v$(VERSION) -m "lib_bash $(VERSION)\n\nSee CHANGELOG.md for details."
 	@git push origin HEAD
 	@git push origin v$(VERSION)
-	@# Create GitHub Release if GitHub CLI is available
-	@command -v gh >/dev/null 2>&1 \
-		&& gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "See CHANGELOG.md for $(VERSION) details." --target HEAD \
-		|| echo "gh not found; skipped GitHub Release creation."
+	@# Always create a GitHub Release entry
+	@echo "Creating GitHub Release for v$(VERSION)..."
+	@if command -v gh >/dev/null 2>&1; then \
+		body="$$(awk '/^##  *v?$(VERSION)\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; \
+		[ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."; \
+		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; \
+	else \
+		remote="$$(git remote get-url origin)"; \
+		owner="$$(printf "%s\n" "$$remote" | sed -E 's#https://[^@]*@github.com/([^/]+)/([^/]+)\\.git#\\1#')"; \
+		repo="$$(printf "%s\n" "$$remote" | sed -E 's#https://[^@]*@github.com/([^/]+)/([^/]+)\\.git#\\2#')"; \
+		# Prefer environment token (GH_TOKEN/GITHUB_TOKEN), fallback to token embedded in remote URL
+		token="$${GH_TOKEN:-$${GITHUB_TOKEN:-}}"; \
+		[ -n "$$token" ] || token="$$(printf "%s\n" "$$remote" | sed -E 's#https://([^@]*)@github.com/.*#\\1#')"; \
+		body="$$(awk '/^##  *v?$(VERSION)\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md | sed ':a;N;$!ba;s/\n/\\n/g; s/"/\\"/g')"; \
+		[ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."; \
+		curl -sS -X POST \
+		  -H "Accept: application/vnd.github+json" \
+		  -H "Authorization: token $$token" \
+		  -d "{\"tag_name\":\"v$(VERSION)\",\"name\":\"lib_bash $(VERSION)\",\"target_commitish\":\"$(RELEASE_BRANCH)\",\"body\":\"$$body\",\"draft\":false,\"prerelease\":false}" \
+		  "https://api.github.com/repos/$$owner/$$repo/releases" >/dev/null; \
+		printf "Created GitHub Release via API for v$(VERSION)\n"; \
+	fi
