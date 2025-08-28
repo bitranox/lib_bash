@@ -22,10 +22,23 @@
 #   - _get_number_of_registered_paths: Returns the current number of lines (entries)
 #     in the registry file (i.e., how many paths are registered).
 
-set -o errexit -o nounset -o pipefail
+# Strict mode for safer bash scripting
+_lib_bash_temfiles_is_in_script_mode() {
+  case "${BASH_SOURCE[0]}" in
+    "${0}") return 0 ;;  # script mode
+    *)      return 1 ;;
+  esac
+}
 
-# For detection if the script is sourced correctly
-LIB_BASH_TEMPFILES_LOADED=true
+# --- only in script mode ---
+if _lib_bash_temfiles_is_in_script_mode; then
+  # Strict mode & traps only when run directly
+  set -Eeuo pipefail
+  IFS=$'\n\t'
+  umask 022
+  trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
+fi
+
 
 # A single file holding all registered paths, one path per line:
 declare -g _TMP_LIB_BASH_TEMPFILES_PATHS_LIST=""
