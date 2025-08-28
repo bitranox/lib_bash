@@ -14,7 +14,7 @@ function assert_equal {
 
   # report if failed
 	if [[ "${result}" != "${expected}" ]]; then
-	    create_assert_failed_message "${test_command}" "\"${expected}\"" "\"${result}\""
+	    create_assert_failed_message "${command}" "\"${expected}\"" "\"${result}\"" "assert_equal"
     fi
 }
 
@@ -30,7 +30,7 @@ function assert_contains {
 
   # report if failed
 	if [[ "${result}" != *"${expected}"* ]]; then
-	    create_assert_failed_message "${test_command}" "\"*${expected}*\"" "\"${result}\""
+	    create_assert_failed_message "${command}" "\"*${expected}*\"" "\"${result}\"" "assert_contains"
 	    fi
 }
 
@@ -99,7 +99,7 @@ function check_assert_command_defined {
 function get_returncode_as_string {
   # we need to do this because traps and err flags can be set and we disable them temporary
 	# $1 : command
-	local command result
+	local command result shell_state trap_state output
 	command="${1}"
 
   # Save shell state, trap state and disable strict mode
@@ -109,7 +109,15 @@ function get_returncode_as_string {
   trap - ERR
 
   # check if the command even exists
-  check_assert_command_defined "${command}" "return code = 0" || return 0
+  if ! check_assert_command_defined "${command}" "return code = 0"; then
+      # Restore shell and trap state before returning
+      eval "$shell_state"
+      if [[ -n "$trap_state" ]]; then
+          eval "$trap_state"
+      fi
+      echo "127"
+      return 0
+  fi
 
   # shellcheck disable=SC2034
   output=$(eval "${command}")
@@ -127,7 +135,7 @@ function get_returncode_as_string {
 function get_result_as_string {
   # we need to do this because traps and err flags can be set and we disable them temporary
 	# $1 : command
-	local command result
+	local command result shell_state trap_state output
 	command="${1}"
 
   # Save shell state, trap state and disable strict mode
@@ -137,7 +145,15 @@ function get_result_as_string {
   trap - ERR
 
   # check if the command even exists
-  check_assert_command_defined "${command}" "return code = 0" || return 0
+  if ! check_assert_command_defined "${command}" "return code = 0"; then
+      # Restore shell and trap state before returning
+      eval "$shell_state"
+      if [[ -n "$trap_state" ]]; then
+          eval "$trap_state"
+      fi
+      echo ""
+      return 0
+  fi
 
   # shellcheck disable=SC2034
   output=$(eval "${command}")
@@ -155,12 +171,12 @@ function get_result_as_string {
 function create_assert_failed_message {
 	# $1 : test_command
 	# $2 : expected
-	# $3 : expected
+	# $3 : result
 	# $4 : assert_function
   local test_command="${1}"
   local expected="${2}"
   local result="${3}"
-  local assert_function="${4}:-"
+  local assert_function="${4:-}"
 
 	clr_reverse clr_red "*** ASSERT $assert_function FAILED ***"
 	clr_reverse clr_cyan "File     : $(get_script_fullpath)"

@@ -35,6 +35,7 @@ if _lib_log_is_in_script_mode; then
   set -Eeuo pipefail
   IFS=$'\n\t'
   umask 022
+  # shellcheck disable=SC2154
   trap 'ec=$?; echo "ERR $ec at ${BASH_SOURCE[0]}:${LINENO}: ${BASH_COMMAND}" >&2' ERR
 fi
 

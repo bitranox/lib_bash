@@ -840,6 +840,7 @@ lib_bash_test() {
   log_wrench "log wrench"
   log_warn "log_warn"
   log_err "log_err"
+  # shellcheck disable=SC2034  # used indirectly by log_debug
   LIB_BASH_DEBUG_MODE="ON"
   log_debug "log_debug"
 }
@@ -854,10 +855,10 @@ LIB_BASH_MAIN() {
     (( $# )) || exit 0        # Terminate if no arguments provided
         case "$1" in
         # support --help command
-        --help|help|?)
+        --help|help|[?])
             lib_bash_help
             ;;
-        --register|register|?)
+        --register|register)
             lib_bash_register
             ;;
         *)

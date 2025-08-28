@@ -366,6 +366,7 @@ test_registry_helpers() {
     local reg
     reg="$(print_temppath_registry)"
     assert "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST" "$reg" "print_temppath_registry matches internal var"
+    # shellcheck disable=SC2015
     [[ -f "$reg" ]] && echo "✓ Registry file exists" || { echo "✗ Registry missing"; ((++TESTS_FAILED)); }
 
     # list_temppaths on empty registry prints nothing

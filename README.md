@@ -94,6 +94,19 @@ trap 'cleanup_temppaths' EXIT
 ```
 See `docs/README_lib_bash_tempfiles.md` for full API and examples.
 
+### Assertions
+```bash
+# String output assertions
+assert_equal    "my_func arg" "expected output"
+assert_contains "echo 'foo bar'" "foo"
+
+# Return code assertions
+assert_return_code "false" 1
+assert_pass        "true"
+assert_fail        "false"
+```
+See `docs/README_lib_assert.md` for full API and examples.
+
 ## Self-Updating System
 
 The library automatically checks for updates:
