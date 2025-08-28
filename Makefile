@@ -28,15 +28,15 @@ pre-release: ## Validate VERSION (SemVer), run CI, verify clean git and changelo
 	@printf "%s" "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' \
 		|| (echo "ERROR: VERSION must be SemVer: X.Y.Z" >&2; exit 1)
 	@echo "Checking current branch is $(RELEASE_BRANCH)..."
-	@[ "$$((git rev-parse --abbrev-ref HEAD))" = "$(RELEASE_BRANCH)" ] \
+	@[ "$$(git rev-parse --abbrev-ref HEAD)" = "$(RELEASE_BRANCH)" ] \
 		|| (echo "ERROR: Release must be run on branch $(RELEASE_BRANCH)." >&2; exit 1)
 	@echo "Running CI..."
 	@$(MAKE) ci
 	@echo "Checking git working tree is clean..."
-	@[ -z "$$((git status --porcelain || true))" ] || (echo "ERROR: git working tree not clean. Commit or stash changes." >&2; git status --porcelain; exit 1)
+	@[ -z "$$(git status --porcelain || true)" ] || (echo "ERROR: git working tree not clean. Commit or stash changes." >&2; git status --porcelain; exit 1)
 	@echo "Checking branch is up to date with origin/$(RELEASE_BRANCH)..."
 	@git fetch -q
-	@[ "$$((git rev-parse HEAD))" = "$$((git rev-parse origin/$(RELEASE_BRANCH)))" ] \
+	@[ "$$(git rev-parse HEAD)" = "$$(git rev-parse origin/$(RELEASE_BRANCH))" ] \
 		|| (echo "ERROR: Local branch not up to date with origin/$(RELEASE_BRANCH)." >&2; exit 1)
 	@echo "Checking tag v$(VERSION) does not already exist..."
 	@! git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null \

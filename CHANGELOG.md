@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2 (2025-08-29)
+
+### Added
+- Makefile with `help`, `lint`, `test`, `ci`, `pre-release`, and `release` targets
+- AGENTS.md guiding Codex/humans to use Make targets
+
+### Changed
+- Release workflow: added enforced pre-release checks (SemVer, clean tree, branch, up-to-date, changelog section)
+
+### Tests
+- `make ci` runs lint + tests; all suites passing
+
 ## 1.0.1 (2025-08-29)
 
 ### Changed
