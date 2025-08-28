@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.3 (2025-08-29)
+
+### Changed
+- Makefile: always create a GitHub Release entry during `make release`.
+- Makefile: prefer `GH_TOKEN`/`GITHUB_TOKEN` env vars for GitHub API auth; fallback to token in remote URL only if env tokens are missing.
+
+### Tests
+- Pre-release checks (`make pre-release VERSION=1.0.3`) pass locally.
+
 ## 1.0.2 (2025-08-29)
 
 ### Added
