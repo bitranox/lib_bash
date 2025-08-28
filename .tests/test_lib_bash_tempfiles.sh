@@ -35,6 +35,22 @@ assert() {
     fi
 }
 
+# --- Helper: canonicalize path similar to library logic ---
+canon_path() {
+    local p="$1"
+    if command -v realpath >/dev/null 2>&1; then
+        if realpath -m / >/dev/null 2>&1; then
+            realpath -m -- "$p" 2>/dev/null || echo "$p"
+        else
+            realpath -- "$p" 2>/dev/null || echo "$p"
+        fi
+    elif command -v readlink >/dev/null 2>&1; then
+        readlink -f -- "$p" 2>/dev/null || echo "$p"
+    else
+        echo "$p"
+    fi
+}
+
 # ------------------------------------------------------------------------------
 # test__set_tempfile_management()
 # Ensures it creates the registry file and doesn't break if called repeatedly.
@@ -114,7 +130,7 @@ test_register_temppath() {
 
     # 2) Valid file
     local temp_file
-    temp_file="$(mktemp)"
+    temp_file="$(mktemp "${TMPDIR:-/tmp}/testfile.XXXXXXXX")"
     register_temppath "$temp_file"
     assert "0" "$?" "register_temppath with file returns 0"
     local lines
@@ -124,7 +140,7 @@ test_register_temppath() {
 
     # 3) Valid directory
     local temp_dir
-    temp_dir="$(mktemp -d)"
+    temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/testdir.XXXXXXXX")"
     register_temppath "$temp_dir"
     assert "0" "$?" "register_temppath with directory returns 0"
     lines="$(_get_number_of_registered_paths)"
@@ -137,24 +153,25 @@ test_register_temppath() {
     assert "2" "$lines" "No duplicate lines in registry file"
 
     # 5) Symlink handling (if realpath is available)
-    if command -v realpath &>/dev/null; then
+    if command -v realpath &>/dev/null || command -v readlink &>/dev/null; then
         local target symlink
-        target="$(mktemp)"
-        symlink="$(mktemp -u)"  # name for symlink
+        target="$(mktemp "${TMPDIR:-/tmp}/target.XXXXXXXX")"
+        symlink="$(mktemp "${TMPDIR:-/tmp}/symlink.XXXXXXXX")"  # name for symlink
+        rm -f -- "$symlink"
         ln -sf "$target" "$symlink"
 
         : > "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"
         register_temppath "$symlink"
         assert "0" "$?" "register_temppath with symlink returns 0"
         local resolved
-        resolved="$(realpath -m "$symlink")"
+        resolved="$(canon_path "$symlink")"
 
         grep -Fxq "$resolved" "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"
         assert "0" "$?" "Symlink resolved in registry file"
 
         rm -f "$target" "$symlink"
     else
-        echo "Skipping symlink test (realpath not available)"
+        echo "Skipping symlink test (no realpath/readlink available)"
     fi
 
     # Clean registry
@@ -204,7 +221,7 @@ test_create_temp_file() {
 
     # 4) mktemp fails (simulate by unwritable directory)
     local unwritable
-    unwritable="$(mktemp -d)"
+    unwritable="$(mktemp -d "${TMPDIR:-/tmp}/unwritable.XXXXXXXX")"
     chmod 500 "$unwritable"
     # We pass a template inside the unwritable dir
     set +o errexit
@@ -262,7 +279,7 @@ test_create_temp_dir() {
 
     # 4) mktemp -d failure (unwritable directory)
     local unwritable2
-    unwritable2="$(mktemp -d)"
+    unwritable2="$(mktemp -d "${TMPDIR:-/tmp}/unwritable2.XXXXXXXX")"
     chmod 500 "$unwritable2"
     set +o errexit
     out="$(create_temp_dir "$unwritable2/mydir.XXXXXX" 2>&1)"
@@ -290,8 +307,8 @@ test_cleanup_temppaths() {
 
     # 1) Successful cleanup
     local f1 d1
-    f1="$(mktemp)"
-    d1="$(mktemp -d)"
+    f1="$(mktemp "${TMPDIR:-/tmp}/cleanup_f.XXXXXXXX")"
+    d1="$(mktemp -d "${TMPDIR:-/tmp}/cleanup_d.XXXXXXXX")"
     register_temppath "$f1"
     register_temppath "$d1"
     cleanup_temppaths
@@ -302,7 +319,7 @@ test_cleanup_temppaths() {
 
     # 2) Failed file removal (parent not writable)
     local bad_dir
-    bad_dir="$(mktemp -d)"
+    bad_dir="$(mktemp -d "${TMPDIR:-/tmp}/bad_dir.XXXXXXXX")"
     local protected_file="$bad_dir/prot_file"
     touch "$protected_file"
     chmod a-w "$bad_dir"
@@ -319,7 +336,7 @@ test_cleanup_temppaths() {
 
     # 3) Failed dir removal (non-empty)
     local nonempty
-    nonempty="$(mktemp -d)"
+    nonempty="$(mktemp -d "${TMPDIR:-/tmp}/nonempty.XXXXXXXX")"
     touch "$nonempty/somefile"
     register_temppath "$nonempty"
     set +o errexit
@@ -334,6 +351,66 @@ test_cleanup_temppaths() {
 }
 
 # ------------------------------------------------------------------------------
+# test_registry_helpers()
+# Tests: print_temppath_registry, list_temppaths, clear_temppath_registry,
+# and unregister_temppath behavior.
+# ------------------------------------------------------------------------------
+test_registry_helpers() {
+    echo "Testing registry helpers..."
+
+    # Ensure initialized and empty
+    _set_tempfile_management
+    clear_temppath_registry
+
+    # print_temppath_registry should match internal var and file exists
+    local reg
+    reg="$(print_temppath_registry)"
+    assert "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST" "$reg" "print_temppath_registry matches internal var"
+    [[ -f "$reg" ]] && echo "✓ Registry file exists" || { echo "✗ Registry missing"; ((++TESTS_FAILED)); }
+
+    # list_temppaths on empty registry prints nothing
+    local listed
+    listed="$(list_temppaths)"
+    assert "" "$listed" "list_temppaths prints nothing when empty"
+
+    # Register two entries and list
+    local p1 p2
+    p1="/tmp/tp_$$.one"; p2="/tmp/tp_$$.two"
+    register_temppath "$p1"
+    register_temppath "$p2"
+    local count
+    count="$(_get_number_of_registered_paths)"
+    assert "2" "$count" "Two entries registered"
+
+    # list_temppaths should include both paths (order not enforced)
+    listed="$(list_temppaths)"
+    echo "$listed" | grep -Fxq "$(canon_path "$p1")"
+    assert "0" "$?" "list_temppaths contains first entry"
+    echo "$listed" | grep -Fxq "$(canon_path "$p2")"
+    assert "0" "$?" "list_temppaths contains second entry"
+
+    # unregister_temppath existing path returns 0, reduces count
+    set +o errexit
+    unregister_temppath "$p1"
+    local ec=$?
+    set -o errexit
+    assert "0" "$ec" "unregister_temppath removes existing entry"
+    count="$(_get_number_of_registered_paths)"
+    assert "1" "$count" "Count decreased after unregister"
+
+    # unregister_temppath non-existing path returns 1
+    set +o errexit
+    unregister_temppath "/tmp/does-not-exist-$$"
+    ec=$?
+    set -o errexit
+    assert "1" "$ec" "unregister_temppath of unknown entry returns 1"
+
+    # clear_temppath_registry empties list
+    clear_temppath_registry
+    assert "0" "$(_get_number_of_registered_paths)" "Registry cleared by clear_temppath_registry"
+}
+
+# ------------------------------------------------------------------------------
 # main() - runs all tests
 # ------------------------------------------------------------------------------
 main() {
@@ -342,6 +419,7 @@ main() {
     test__set_tempfile_management
     test__get_number_of_registered_paths
     test_register_temppath
+    test_registry_helpers
     test_create_temp_file
     test_create_temp_dir
     test_cleanup_temppaths

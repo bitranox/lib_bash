@@ -22,8 +22,11 @@
 #   - _get_number_of_registered_paths: Returns the current number of lines (entries)
 #     in the registry file (i.e., how many paths are registered).
 
+# For detection if the script is sourced correctly
+LIB_BASH_TEMPFILES_LOADED=true
+
 # Strict mode for safer bash scripting
-_lib_bash_temfiles_is_in_script_mode() {
+_lib_bash_tempfiles_is_in_script_mode() {
   case "${BASH_SOURCE[0]}" in
     "${0}") return 0 ;;  # script mode
     *)      return 1 ;;
@@ -31,7 +34,7 @@ _lib_bash_temfiles_is_in_script_mode() {
 }
 
 # --- only in script mode ---
-if _lib_bash_temfiles_is_in_script_mode; then
+if _lib_bash_tempfiles_is_in_script_mode; then
   # Strict mode & traps only when run directly
   set -Eeuo pipefail
   IFS=$'\n\t'
@@ -41,11 +44,11 @@ fi
 
 
 # A single file holding all registered paths, one path per line:
-declare -g _TMP_LIB_BASH_TEMPFILES_PATHS_LIST=""
+_TMP_LIB_BASH_TEMPFILES_PATHS_LIST=""
 
 # Arrays to store which paths failed to clean up:
-declare -g -a _TMP_LIB_BASH_TEMPFILES_CLEANUP_FAILED_FILES=()
-declare -g -a _TMP_LIB_BASH_TEMPFILES_CLEANUP_FAILED_DIRS=()
+_TMP_LIB_BASH_TEMPFILES_CLEANUP_FAILED_FILES=()
+_TMP_LIB_BASH_TEMPFILES_CLEANUP_FAILED_DIRS=()
 
 # ------------------------------------------------------------------------------
 # _set_tempfile_management()
@@ -53,7 +56,7 @@ declare -g -a _TMP_LIB_BASH_TEMPFILES_CLEANUP_FAILED_DIRS=()
 # ------------------------------------------------------------------------------
 _set_tempfile_management() {
     if [[ -z "${_TMP_LIB_BASH_TEMPFILES_PATHS_LIST:-}" ]]; then
-        _TMP_LIB_BASH_TEMPFILES_PATHS_LIST="$(mktemp -t bash_tempfiles_list.XXXXXX)"
+        _TMP_LIB_BASH_TEMPFILES_PATHS_LIST="$(mktemp "${TMPDIR:-/tmp}/bash_tempfiles_list.XXXXXXXX")"
     fi
 
     # Make sure the file exists
@@ -106,11 +109,15 @@ register_temppath() {
     _set_tempfile_management
 
     # Attempt to resolve canonical path if realpath is available
-    local canon_path
+    local canon_path="$path"
     if command -v realpath >/dev/null 2>&1; then
-        canon_path=$(realpath -m -- "$path" 2>/dev/null || echo "$path")
-    else
-        canon_path="$path"
+        if realpath -m / >/dev/null 2>&1; then
+            canon_path=$(realpath -m -- "$path" 2>/dev/null || echo "$path")
+        else
+            canon_path=$(realpath -- "$path" 2>/dev/null || echo "$path")
+        fi
+    elif command -v readlink >/dev/null 2>&1; then
+        canon_path=$(readlink -f -- "$path" 2>/dev/null || echo "$path")
     fi
 
     # Append only if not already present
@@ -120,14 +127,90 @@ register_temppath() {
 }
 
 # ------------------------------------------------------------------------------
+# print_temppath_registry()
+# Prints the absolute path to the registry file holding all registered paths.
+# ------------------------------------------------------------------------------
+print_temppath_registry() {
+    _set_tempfile_management
+    echo "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"
+}
+
+# ------------------------------------------------------------------------------
+# list_temppaths()
+# Prints all currently registered paths (one per line) from the registry file.
+# Does not check for existence; mirrors registry contents.
+# ------------------------------------------------------------------------------
+list_temppaths() {
+    _set_tempfile_management
+    # Print without additional formatting; empty output if no entries
+    cat -- "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST" 2>/dev/null || true
+}
+
+# ------------------------------------------------------------------------------
+# unregister_temppath()
+# Removes a given path (file or directory) from the registry file, if present.
+# Returns 0 if the entry was found and removed, 1 if not found, >1 on errors.
+# ------------------------------------------------------------------------------
+unregister_temppath() {
+    local path="$1"
+    [[ -z "$path" ]] && { log_err "unregister_temppath: Path required."; return 1; }
+
+    _set_tempfile_management
+
+    # Canonicalize in the same spirit as register_temppath
+    local canon_path="$path"
+    if command -v realpath >/dev/null 2>&1; then
+        if realpath -m / >/dev/null 2>&1; then
+            canon_path=$(realpath -m -- "$path" 2>/dev/null || echo "$path")
+        else
+            canon_path=$(realpath -- "$path" 2>/dev/null || echo "$path")
+        fi
+    elif command -v readlink >/dev/null 2>&1; then
+        canon_path=$(readlink -f -- "$path" 2>/dev/null || echo "$path")
+    fi
+
+    # Create a temporary file in the same directory when possible
+    local reg_dir tmpfile rc
+    reg_dir="${_TMP_LIB_BASH_TEMPFILES_PATHS_LIST%/*}"
+    tmpfile=$(mktemp "$reg_dir/.tmp.XXXXXXXX" 2>/dev/null || mktemp "${TMPDIR:-/tmp}/.tmp.XXXXXXXX")
+
+    # Filter out the exact matching line; set rc=0 if removed, rc=1 if not found
+    if awk -v target="$canon_path" '{ if ($0 != target) print $0; else found=1 } END { exit (found?0:1) }' \
+        "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST" > "$tmpfile" 2>/dev/null; then
+        rc=0
+    else
+        rc=1
+    fi
+
+    # Replace the registry with the filtered version
+    if ! mv -f -- "$tmpfile" "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"; then
+        log_err "unregister_temppath: Failed to update registry file"
+        rm -f -- "$tmpfile" 2>/dev/null || true
+        return 2
+    fi
+
+    return "$rc"
+}
+
+# ------------------------------------------------------------------------------
+# clear_temppath_registry()
+# Truncates the registry file, effectively removing all registered paths while
+# keeping the registry file itself in place.
+# ------------------------------------------------------------------------------
+clear_temppath_registry() {
+    _set_tempfile_management
+    : > "$_TMP_LIB_BASH_TEMPFILES_PATHS_LIST"
+}
+
+# ------------------------------------------------------------------------------
 # create_temp_file()
 # Creates a temporary file, registers it, and prints the path.
 #
 # Usage: create_temp_file [template]
 # - If a template is provided, it must end with at least six 'X' characters
 #   (e.g., "/tmp/something.XXXXXX"). We pass that to mktemp.
-# - If no template is provided, we just call `mktemp` with no arguments
-#   (which uses the default mktemp naming).
+# - If no template is provided, we use a portable default
+#   template under `${TMPDIR:-/tmp}`.
 # ------------------------------------------------------------------------------
 create_temp_file() {
     local template="${1:-}"  # optional argument
@@ -143,8 +226,8 @@ create_temp_file() {
         # Attempt mktemp with the given template
         temp_file=$(mktemp "$template" 2>/dev/null || true)
     else
-        # No template provided; use default mktemp
-        temp_file=$(mktemp 2>/dev/null || true)
+        # No template provided; use portable default mktemp template
+        temp_file=$(mktemp "${TMPDIR:-/tmp}/tmpfile.XXXXXXXX" 2>/dev/null || true)
     fi
 
     if [[ -z "$temp_file" ]]; then
@@ -170,7 +253,8 @@ create_temp_dir() {
     #
     # If a template is provided, it must end with at least six consecutive 'X'
     # characters (e.g., "/tmp/something.XXXXXX") for mktemp -d to work reliably.
-    # If no template is provided, we just call `mktemp -d` with no arguments.
+    # If no template is provided, we use a portable default
+    # template under `${TMPDIR:-/tmp}`.
     #
     # Registers the created directory path for later cleanup, and prints the path
     # to stdout.
@@ -188,8 +272,8 @@ create_temp_dir() {
         # Attempt mktemp -d with the given template
         temp_dir=$(mktemp -d "$template" 2>/dev/null || true)
     else
-        # No template provided; use default mktemp -d
-        temp_dir=$(mktemp -d 2>/dev/null || true)
+        # No template provided; use portable default mktemp -d template
+        temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/tmpdir.XXXXXXXX" 2>/dev/null || true)
     fi
 
     if [[ -z "$temp_dir" ]]; then
@@ -248,7 +332,7 @@ cleanup_temppaths() {
     while IFS= read -r path; do
         [[ -z "$path" ]] && continue
         if [[ -d "$path" ]]; then
-            rmdir -- "$path" 2>/dev/null || true
+            rmdir "$path" 2>/dev/null || true
             if [[ -d "$path" ]]; then
                 # Directory still exists (non-empty or permission issue)
                 if [[ -n "$(find "$path" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then

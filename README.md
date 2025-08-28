@@ -29,6 +29,7 @@ the functions marked as "OLD" are ridiculouse, don't use them, they will be repl
   - File manipulation tools
   - Assertion testing framework
   - Self-updating mechanism
+  - Temporary path management (temp files/dirs) – see docs/README_lib_bash_tempfiles.md
 
 - **Compatibility**
   - Cross-distribution support
@@ -76,6 +77,22 @@ reinstall_keep_marking "openssl"
 lib_bash_prepend_text_to_file "# Security Settings" "/etc/config"
 backup_file "/etc/nginx.conf"
 ```
+
+### Temporary Paths
+```bash
+# Create and auto-register
+f=$(create_temp_file)
+d=$(create_temp_dir)
+
+# Registry helpers
+list_temppaths
+print_temppath_registry
+unregister_temppath "$f"
+
+# Clean up everything on script exit
+trap 'cleanup_temppaths' EXIT
+```
+See `docs/README_lib_bash_tempfiles.md` for full API and examples.
 
 ## Self-Updating System
 
