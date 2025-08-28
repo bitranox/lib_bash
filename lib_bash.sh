@@ -109,7 +109,6 @@ get_file_groupname() {
 #    fi
 #}
 
-
 # Returns the canonical absolute path to this script file.
 # Works when invoked via PATH (no slash), through symlinks, and even when sourced.
 get_script_fullpath() {
