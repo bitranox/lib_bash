@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 (2025-08-29)
+
+### Changed
+- Makefile: fix GitHub Release target commitish handling — use explicit commit SHA on create and omit `--target` on edit to avoid `Release.target_commitish is invalid`.
+- Docs: minor `AGENTS.md` heading fix.
+
 ## 1.0.4 (2025-08-29)
 
 ### Changed
