@@ -37,9 +37,12 @@ pre-release: ## Validate VERSION (SemVer), run CI, verify clean git and changelo
 	@git fetch -q
 	@[ "$$(git rev-parse HEAD)" = "$$(git rev-parse origin/$(RELEASE_BRANCH))" ] \
 		|| (echo "ERROR: Local branch not up to date with origin/$(RELEASE_BRANCH)." >&2; exit 1)
-	@echo "Checking tag v$(VERSION) does not already exist..."
-	@! git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null \
-		|| (echo "ERROR: tag v$(VERSION) already exists." >&2; exit 1)
+	@if [ -z "$(ALLOW_EXISTING_TAG)" ]; then \
+		echo "Checking tag v$(VERSION) does not already exist..."; \
+		! git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null || (echo "ERROR: tag v$(VERSION) already exists. Set ALLOW_EXISTING_TAG=1 to update release notes only." >&2; exit 1); \
+	else \
+		echo "ALLOW_EXISTING_TAG=1 set — skipping tag existence check"; \
+	fi
 	@echo "Checking CHANGELOG.md contains version section..."
 	@grep -Eq "^##[[:space:]]+v?$(VERSION)\b" CHANGELOG.md \
 		|| (echo "ERROR: CHANGELOG.md missing section for $(VERSION)." >&2; exit 1)
@@ -48,12 +51,21 @@ pre-release: ## Validate VERSION (SemVer), run CI, verify clean git and changelo
 
 release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 	@echo "Tagging and pushing v$(VERSION)..."
-	@git tag -a v$(VERSION) -m "lib_bash $(VERSION)" -m "See CHANGELOG.md for details."
+	@if git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null; then \
+		echo "Tag v$(VERSION) already exists"; \
+		if [ -z "$(ALLOW_EXISTING_TAG)" ]; then echo "ERROR: Tag exists. Use ALLOW_EXISTING_TAG=1 to update the GitHub Release only." >&2; exit 1; fi; \
+	else \
+		git tag -a v$(VERSION) -m "lib_bash $(VERSION)" -m "See CHANGELOG.md for details."; \
+	fi
 	@git push origin HEAD
 	@git push origin v$(VERSION)
 	@# Create or update GitHub Release via gh
 	@command -v gh >/dev/null 2>&1 || (echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1)
 	@echo "Creating/updating GitHub Release v$(VERSION) via gh..."
 	@body="$$(awk '/^##  *v?$(VERSION)/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
-	@if gh release view v$(VERSION) >/dev/null 2>&1; then 		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	else 		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	fi
+	@if gh release view v$(VERSION) >/dev/null 2>&1; then \
+		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; \
+	else \
+		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; \
+	fi
 
