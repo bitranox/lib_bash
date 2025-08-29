@@ -19,7 +19,7 @@ Use the Makefile targets from the repository root:
 
 - make release VERSION=X.Y.Z
   - Runs `pre-release` checks, tags `vX.Y.Z`, pushes branch and tag
-  - If GitHub CLI `gh` is installed and authenticated, also creates a GitHub Release for the tag
+  - Creates or updates the GitHub Release (requires `gh` and pulls notes from `CHANGELOG.md`)
 
 Notes
 - Always run these from the repository root.

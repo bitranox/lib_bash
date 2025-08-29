@@ -4,9 +4,7 @@
 ## lib_bash project helper targets
 ##
 
-.PHONY: help lint test ci pre-release release release-notes
-
-# Branch on which releases are allowed
+.PHONY: help lint test ci pre-release release # Branch on which releases are allowed
 RELEASE_BRANCH ?= master
 
 help: ## Show this help
