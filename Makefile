@@ -4,7 +4,8 @@
 ## lib_bash project helper targets
 ##
 
-.PHONY: help lint test ci pre-release release # Branch on which releases are allowed
+.PHONY: help lint test ci pre-release release
+# Branch on which releases are allowed
 RELEASE_BRANCH ?= master
 
 help: ## Show this help
@@ -56,11 +57,3 @@ release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 	@body="$$(awk '/^##  *v?$(VERSION)/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
 	@if gh release view v$(VERSION) >/dev/null 2>&1; then 		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	else 		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	fi
 
-release-notes: ## Create/update GitHub Release notes for existing tag: make release-notes VERSION=X.Y.Z
-	@[ -n "$(VERSION)" ] || (echo "ERROR: VERSION=X.Y.Z is required" >&2; exit 1)
-	@echo "Ensuring tag v$(VERSION) exists..."
-	@git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null || (echo "ERROR: tag v$(VERSION) not found." >&2; exit 1)
-	@command -v gh >/dev/null 2>&1 || (echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1)
-	@echo "Preparing release notes from CHANGELOG.md..."
-	@body="$$(awk '/^##  *v?$(VERSION)/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
-	@if gh release view v$(VERSION) >/dev/null 2>&1; then 		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	else 		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; 	fi
