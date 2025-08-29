@@ -49,9 +49,7 @@ pre-release: ## Validate VERSION (SemVer), run CI, verify clean git and changelo
 
 release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 	@echo "Tagging and pushing v$(VERSION)..."
-	@git tag -a v$(VERSION) -m "lib_bash $(VERSION)
-
-See CHANGELOG.md for details."
+	@git tag -a v$(VERSION) -m "lib_bash $(VERSION)" -m "See CHANGELOG.md for details."
 	@git push origin HEAD
 	@git push origin v$(VERSION)
 	@# Create or update GitHub Release via gh
