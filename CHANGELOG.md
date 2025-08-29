@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.4 (2025-08-29)
+
+### Changed
+- Makefile: release target now requires `gh` and creates/updates the GitHub Release in one step (bundled with tagging/push).
+- Removed separate `release-notes` target; use `make release VERSION=X.Y.Z` for notes publishing from `CHANGELOG.md`.
+
+### Tests
+- Pre-release checks pass via `make pre-release VERSION=1.0.4`.
+
 ## 1.0.3 (2025-08-29)
 
 ### Changed
