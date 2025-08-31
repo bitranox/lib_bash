@@ -110,14 +110,19 @@ validate_version() {
 choose_bump() {
   local bump=${BUMP:-}
   if [[ -z "$bump" ]]; then
-    echo "Select version bump: [m]ajor / mi[n]or / [p]atch (default)"
-    read -r -p "> " ans || true
-    case "${ans,,}" in
-      m|major) bump=major ;;
-      n|minor) bump=minor ;;
-      ""|p|patch) bump=patch ;;
-      *) echo "Unknown choice '$ans'" >&2; exit 1 ;;
-    esac
+    if [[ -t 0 && -t 1 ]]; then
+      echo "Select version bump: [m]ajor / mi[n]or / [p]atch (default)"
+      read -r -p "> " ans || true
+      case "${ans,,}" in
+        m|major) bump=major ;;
+        n|minor) bump=minor ;;
+        ""|p|patch) bump=patch ;;
+        *) echo "Unknown choice '$ans'" >&2; exit 1 ;;
+      esac
+    else
+      # Non-interactive: default to patch
+      bump=patch
+    fi
   fi
   case "$bump" in
     major|minor|patch) echo "$bump" ;;
