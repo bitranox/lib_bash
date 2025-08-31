@@ -62,10 +62,11 @@ release: pre-release ## Cut a release: make release VERSION=X.Y.Z
 	@# Create or update GitHub Release via gh
 	@command -v gh >/dev/null 2>&1 || (echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1)
 	@echo "Creating/updating GitHub Release v$(VERSION) via gh..."
-	@body="$$(awk '/^##  *v?$(VERSION)/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
+	@body="$$(awk '/^##  *v?$(VERSION)\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
+	@sha="$$(git rev-parse HEAD)"
 	@if gh release view v$(VERSION) >/dev/null 2>&1; then \
-		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; \
+		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body"; \
 	else \
-		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target HEAD; \
+		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target "$$sha"; \
 	fi
 
