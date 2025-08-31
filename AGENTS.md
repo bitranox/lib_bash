@@ -14,14 +14,14 @@ Use the Makefile targets from the repository root:
 - make ci
   - Runs `lint` then `test`
 
-- make pre-release VERSION=X.Y.Z
-  - Verifies SemVer format, runs `lint` and `test`, ensures you are on `RELEASE_BRANCH` (default: `master`) and the working tree is clean, checks the branch is up to date with `origin/RELEASE_BRANCH`, checks `CHANGELOG.md` has a section for the version, and verifies the tag does not already exist
-
-- make release VERSION=X.Y.Z
-  - Runs `pre-release` checks, tags `vX.Y.Z`, pushes branch and tag
-  - Creates or updates the GitHub Release (requires `gh` and pulls notes from `CHANGELOG.md`)
+- make release
+  - Commits all current changes
+  - Shows current version and prompts for new version (blank = bump patch)
+  - Updates `CHANGELOG.md` with a new section built from commits since the last tag
+  - Commits the changelog update, pushes branch, then tags the release so the tag includes the new changelog entry
+  - Creates/updates the GitHub Release (requires `gh`), pulling notes from that new changelog section
+  - Optional: `VERSION=X.Y.Z` to skip prompt; `BUMP=major|minor|patch` to auto-compute; `SKIP_CI=1` to bypass `make ci`
 
 Notes
 - Always run these from the repository root.
 - Tests and lint write to `/tmp` and expect a POSIX environment.
-- For release notes, update `CHANGELOG.md` before invoking `make release VERSION=...`.
