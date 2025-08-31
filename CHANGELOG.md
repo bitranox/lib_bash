@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.6 (2025-08-31)
+
+### Fixed
+- lib_bash: `_set_askpass` now tolerates missing `ssh-askpass`, avoiding noisy `ERR ... command -v ssh-askpass` under strict mode.
+
+### Tests
+- `make ci` green locally after the fix.
+
 ## 1.0.5 (2025-08-29)
 
 ### Changed
