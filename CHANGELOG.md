@@ -1,4 +1,650 @@
 # Changelog
 
+## 1.0.0 (2025-09-01)
+
+### Changed
+- Remove Agents
+- fix(changelog): convert literal \n to real newlines; print new changelog sections with actual line breaks
+- move etkserver to proxmox02
+- release: v1.1.9
+- release(flow): auto fast-forward when behind; correct behind/ahead detection
+- release: v1.1.8
+- release: v1.1.7
+- release: v1.1.6
+- release: v1.1.5
+- release: v1.1.4
+- release: v1.1.3
+- release: v1.1.1
+- release: v1.0.13
+- release: v1.0.12
+- release: v1.0.11
+- release: v1.0.10 — Release flow: changelog committed to master before tag
+- Makefile: commit CHANGELOG on master before tagging; remove release branch step
+- Makefile: use .ONESHELL so interactive release runs in a single shell
+- release: v1.0.8 — Release: include tag notes and robust changelog extraction
+- Makefile: include release notes in tag; robust awk matching for changelog section
+- Makefile: consolidate to single interactive 'release' target
+- Makefile: use explicit SHA for gh release create; remove --target on edit
+- docs: add 1.0.6 entry for ssh-askpass fallback fix
+- lib_bash: tolerate missing ssh-askpass in _set_askpass; avoid ERR noise under strict mode
+- feat(makefile): add ALLOW_EXISTING_TAG=1 support; require gh for release notes; tidy formatting
+- fix(makefile): single-line tag message using double -m to avoid missing separator
+- feat(makefile): require gh and create/update release notes within make release; simplify release-notes to use gh only
+- fix(makefile): rewrite release-notes target cleanly
+- fix(makefile): proper multiline recipe for release-notes target
+- feat(makefile): add release-notes target to create/update GitHub Release notes
+- release: 1.0.0
+- tempfiles: make portable, add helpers; update docs/tests; fix unregister rc
+- refractor
+- update get script path
+- update prompts
+- update prompts
+- refractor get scriptname ....
+- refactor(core): standardize function naming and strict mode application
+- refactor(bash): enhance error reporting and log path management
+- update
+- adminscript - boilerplate
+- proxmox cluster config
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- introduce --help and --register
+- correct unicodes logging
+- update lib_log readme
+- fix shellcheck errors
+- lib_bash assert
+- lib_bash assert
+- lib_bash assert
+- lib_bash assert
+- put log functions into own module
+- update install readme
+- refractor, recreate temporary files which might get deleted after some update
+- refractor, recreate temporary files which might get deleted after some update
+- refractor, recreate temporary files which might get deleted after some update
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- new retry version
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- change lib_bash
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- self_update refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- update alias
+- update alias
+- update alias
+- update alias
+- check if root
+- check if root
+- check if root
+- check if root
+- check if root
+- check if root
+- upgrade instead of install not to mark packages as manually installed
+- upgrade instead of install not to mark packages as manually installed
+- upgrade instead of install not to mark packages as manually installed
+- upgrade instead of install not to mark packages as manually installed
+- upgrade instead of install not to mark packages as manually installed
+- upgrade instead of install not to mark it as manually installed
+- update linux update function
+- update linux update function
+- update linux update function
+- update linux update function
+- update linux update function
+- update linux update function
+- update function linux_update to keep existing configuration files automatically
+- autoremove --purge
+- refractor lib_list
+- refractor lib_list
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- introduce PEP517 installer
+- shopware update via composer
+- shopware update via composer
+- typo
+- fix shellcheck 2236
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- added is_ok function
+- refractor
+- refractor
+- refractor
+- add pythonpath to be able to import from other projects - might be not necessary for everyone, but its not harmful
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- refractor
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+- initial commit
+
 ### Changed
 - initial release
