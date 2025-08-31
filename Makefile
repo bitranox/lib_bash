@@ -72,7 +72,8 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	# Push branch with the changelog commit so the tag includes the new section
 	git push origin HEAD:"$(RELEASE_BRANCH)"; \
 	# Prepare release notes body by extracting the new section from CHANGELOG.md
-	body=$$(awk -v ver="$$newv" 'f==1 && /^## /{exit} f{print} ($$1=="##" && $$2==ver){f=1; next}' CHANGELOG.md); [ -n "$$body" ] || body="See CHANGELOG.md for $$newv details."; \
+	body=$$(awk -v ver="$$newv" 'f==1 && /^## /{exit} f{print} ($$1=="##" && $$2==ver){f=1; next}' CHANGELOG.md); \
+	[ -n "$$body" ] || { echo "ERROR: Could not extract notes for $$newv from CHANGELOG.md" >&2; exit 1; }; \
 	# Create annotated tag including the release notes
 	git tag -a "v$$newv" -m "lib_bash $$newv" -m "$$body"; \
 	git push origin "v$$newv"; \
