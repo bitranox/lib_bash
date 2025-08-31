@@ -17,3 +17,7 @@ Use the Makefile targets from the repository root:
 Notes
 - Always run these from the repository root.
 - Tests and lint write to `/tmp` and expect a POSIX environment.
+
+Release
+- `make release` uses a Python helper at `make_scripts/release.py` (via `gh`).
+- Options: `VERSION=X.Y.Z` or `BUMP=major|minor|patch` (defaults to patch when non-interactive).

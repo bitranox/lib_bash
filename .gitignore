@@ -18,6 +18,9 @@
 *.code-workspace
 .editorconfig
 
+# codex files
+AGENTS.md
+
 # ====================================
 # Python bytecode & caches
 # ====================================
