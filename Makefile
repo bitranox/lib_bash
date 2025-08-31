@@ -20,8 +20,8 @@ test: ## Run the full test suite
 	@cd .tests && ./run_all_tests.sh
 
 ci: ## Run lint and tests
-	@$(MAKE) lint
-	@$(MAKE) test
+	@$(MAKE) --no-print-directory lint
+	@$(MAKE) --no-print-directory test
 
 release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGELOG from git log, tag, push, and create GitHub Release
 	@set -Eeuo pipefail; IFS=$$'\n\t'; \
@@ -60,7 +60,7 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	# Build CHANGELOG entry using commit messages since last tag/current version
 	date_str=$$(date +%Y-%m-%d); \
 	log_range=""; [ -n "$$prev_tag" ] && log_range="$$prev_tag..HEAD" || log_range=""; \
-	changes=$$(git log --no-merges --pretty='- %s' $$log_range | grep -Ev '^- release: v[0-9]+\.[0-9]+\.[0-9]+$$' || true); \
+	changes=$$(git log --no-merges --pretty='- %s' $$log_range | grep -Ev '^- (release: v[0-9]+\.[0-9]+\.[0-9]+|chore: commit all changes before release)$$' || true); \
 	[ -n "$$changes" ] || changes="- No changes recorded since last version."; \
 	tmp=$$(mktemp); \
 	awk -v ver="$$newv" -v d="$$date_str" -v body="$$changes" 'NR==1{print; print ""; print "## " ver " (" d ")"; print ""; print "### Changed"; print body; next}1' CHANGELOG.md > "$$tmp"; \
@@ -88,4 +88,7 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	else \
 		gh release create "v$$newv" --title "lib_bash $$newv" --notes "$$body" --target "$$sha"; \
 	fi; \
+	# Print the new CHANGELOG section so it's visible without scrolling CI output
+	echo "----- CHANGELOG for v$$newv -----"; \
+	printf "## %s (%s)\n\n%s\n" "$$newv" "$$date_str" "$$body"; \
 	echo "Release v$$newv complete on branch $(RELEASE_BRANCH)"
