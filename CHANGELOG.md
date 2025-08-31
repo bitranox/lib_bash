@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8 (2025-08-31)
+
+### Changed
+- Release: include tag notes and robust changelog extraction
+
 ## 1.0.6 (2025-08-31)
 
 ### Fixed
