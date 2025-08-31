@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.10 (2025-08-31)
+
+### Changed
+- Release flow: changelog committed to master before tag
+
 ## 1.0.8 (2025-08-31)
 
 ### Changed
