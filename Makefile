@@ -41,24 +41,24 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 		git add -A; \
 		git commit -m "chore: commit all changes before release"; \
 	fi; \
-	# Determine current version from CHANGELOG.md (first version header)
-	current=$$(awk '/^##[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+/{ver=$$2; sub(/^v/,"",ver); print ver; exit}' CHANGELOG.md); \
-	echo "Current version: $${current:-<none>}"; \
+	# Determine current version from latest tag reachable from HEAD
+	prev_tag=$$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true); \
+	prev_ver=$${prev_tag#v}; \
+	echo "Current version: $${prev_ver:-<none>}"; \
 	# Determine new version: VERSION > BUMP > prompt (blank => patch)
 	newv="$${VERSION:-}"; \
 	if [ -z "$$newv" ] && [ -n "$${BUMP:-}" ]; then \
 		case "$$BUMP" in major|minor|patch) ;; *) echo "ERROR: Invalid BUMP='$$BUMP' (use major|minor|patch)" >&2; exit 1;; esac; \
-		if [ -n "$$current" ]; then IFS=. read -r a b c <<<"$$current"; case "$$BUMP" in major) a=$$((a+1)); b=0; c=0 ;; minor) b=$$((b+1)); c=0 ;; patch) c=$$((c+1)) ;; esac; newv="$$a.$$b.$$c"; else echo "ERROR: No current version found; please specify VERSION=X.Y.Z when using BUMP" >&2; exit 1; fi; \
+		if [ -n "$$prev_ver" ]; then IFS=. read -r a b c <<<"$$prev_ver"; case "$$BUMP" in major) a=$$((a+1)); b=0; c=0 ;; minor) b=$$((b+1)); c=0 ;; patch) c=$$((c+1)) ;; esac; newv="$$a.$$b.$$c"; else echo "ERROR: No current version found; please specify VERSION=X.Y.Z when using BUMP" >&2; exit 1; fi; \
 	fi; \
 	if [ -z "$$newv" ]; then read -rp "Enter new version (SemVer X.Y.Z, blank = patch bump): " ans || true; newv="$$ans"; fi; \
 	if [ -z "$$newv" ]; then \
-		if [ -n "$$current" ]; then IFS=. read -r a b c <<<"$$current"; c=$$((c+1)); newv="$$a.$$b.$$c"; else echo "ERROR: No current version found; please specify VERSION=X.Y.Z" >&2; exit 1; fi; \
+		if [ -n "$$prev_ver" ]; then IFS=. read -r a b c <<<"$$prev_ver"; c=$$((c+1)); newv="$$a.$$b.$$c"; else echo "ERROR: No current version found; please specify VERSION=X.Y.Z" >&2; exit 1; fi; \
 	fi; \
 	printf "%s" "$$newv" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "ERROR: Invalid SemVer: $$newv" >&2; exit 1; }; \
 	! git rev-parse -q --verify "refs/tags/v$$newv" >/dev/null || { echo "ERROR: Tag v$$newv already exists" >&2; exit 1; }; \
 	# Build CHANGELOG entry using commit messages since last tag/current version
 	date_str=$$(date +%Y-%m-%d); \
-	prev_tag=""; if [ -n "$$current" ] && git rev-parse -q --verify "refs/tags/v$$current" >/dev/null; then prev_tag="v$$current"; fi; \
 	log_range=""; [ -n "$$prev_tag" ] && log_range="$$prev_tag..HEAD" || log_range=""; \
 	changes=$$(git log --no-merges --pretty='- %s' $$log_range | grep -Ev '^(release: v[0-9]+\.[0-9]+\.[0-9]+|chore: commit all changes before release)$$' || true); \
 	[ -n "$$changes" ] || changes="- No changes recorded since last version."; \
