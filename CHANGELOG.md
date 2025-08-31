@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6 (2025-08-31)
+
+### Changed
+- chore: sync release flow docs and CI behavior
+
 ## 1.1.5 (2025-08-31)
 
 ### Changed
