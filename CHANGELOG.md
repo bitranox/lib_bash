@@ -3,7 +3,10 @@
 ## 1.1.1 (2025-08-31)
 
 ### Changed
-- chore: commit all changes before release
+- Makefile: release now commits pending changes, prompts or auto-bumps version, generates the changelog from commits since the last tag, runs CI (unless `SKIP_CI=1`), pushes the branch before tagging, and creates/updates the GitHub Release with notes extracted from the new changelog section.
+- Makefile: supports `VERSION=X.Y.Z` and `BUMP=major|minor|patch`; shows current version based on the latest tag reachable from `HEAD`.
+- Makefile: adds an up-to-date guard to prevent releasing when the local branch is behind `origin`.
+- AGENTS.md: documents the updated release flow and the `VERSION`, `BUMP`, and `SKIP_CI` options.
 
 ## 1.0.13 (2025-08-31)
 

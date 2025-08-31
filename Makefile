@@ -60,7 +60,7 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	# Build CHANGELOG entry using commit messages since last tag/current version
 	date_str=$$(date +%Y-%m-%d); \
 	log_range=""; [ -n "$$prev_tag" ] && log_range="$$prev_tag..HEAD" || log_range=""; \
-	changes=$$(git log --no-merges --pretty='- %s' $$log_range | grep -Ev '^(release: v[0-9]+\.[0-9]+\.[0-9]+|chore: commit all changes before release)$$' || true); \
+	changes=$$(git log --no-merges --pretty='- %s' $$log_range | grep -Ev '^- release: v[0-9]+\.[0-9]+\.[0-9]+$$' || true); \
 	[ -n "$$changes" ] || changes="- No changes recorded since last version."; \
 	tmp=$$(mktemp); \
 	awk -v ver="$$newv" -v d="$$date_str" -v body="$$changes" 'NR==1{print; print ""; print "## " ver " (" d ")"; print ""; print "### Changed"; print body; next}1' CHANGELOG.md > "$$tmp"; \
