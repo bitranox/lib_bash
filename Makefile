@@ -67,18 +67,22 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	mv "$$tmp" CHANGELOG.md; \
 	git add -A; \
 	git commit -m "release: v$$newv"; \
+	release_commit_sha=$$(git rev-parse HEAD); \
 	# Optional CI gate (set SKIP_CI=1 to bypass)
 	[ "${SKIP_CI:-}" = 1 ] || $(MAKE) ci; \
-	# Push branch with the changelog commit so the tag includes the new section
-	git push origin HEAD:"$(RELEASE_BRANCH)"; \
-	# Prepare release notes body by extracting the new section from CHANGELOG.md
-	body=$$(awk -v ver="$$newv" 'f==1 && /^## /{exit} f{print} ($$1=="##" && $$2==ver){f=1; next}' CHANGELOG.md); \
-	[ -n "$$body" ] || { echo "ERROR: Could not extract notes for $$newv from CHANGELOG.md" >&2; exit 1; }; \
+	# Push branch with the changelog commit so the tag includes the new section (explicit commit)
+	git push origin "$$release_commit_sha":"$(RELEASE_BRANCH)"; \
+	# Prepare release notes body by extracting the new section from the committed CHANGELOG for this release commit
+	body=$$(git -c pager.show=false show "$$release_commit_sha:CHANGELOG.md" | awk -v ver="$$newv" 'f==1 && /^## /{exit} f{print} ($$1=="##" && $$2==ver){f=1; next}'); \
+	[ -n "$$body" ] || { echo "ERROR: Could not extract notes for $$newv from CHANGELOG.md at $$release_commit_sha" >&2; exit 1; }; \
+	# Sanity echo: show extracted notes line count and target commit
+	lines=$$(printf "%s" "$$body" | wc -l | tr -d ' '); sha_short=$$(git rev-parse --short "$$release_commit_sha"); \
+	echo "release: v$$newv — notes lines=$$lines, commit=$$sha_short"; \
 	# Create annotated tag including the release notes
-	git tag -a "v$$newv" -m "lib_bash $$newv" -m "$$body"; \
+	git tag -a "v$$newv" "$$release_commit_sha" -m "lib_bash $$newv" -m "$$body"; \
 	git push origin "v$$newv"; \
 	command -v gh >/dev/null 2>&1 || { echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1; }; \
-	sha=$$(git rev-parse HEAD); \
+	sha="$$release_commit_sha"; \
 	if gh release view "v$$newv" >/dev/null 2>&1; then \
 		gh release edit "v$$newv" --title "lib_bash $$newv" --notes "$$body"; \
 	else \
