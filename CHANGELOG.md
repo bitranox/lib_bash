@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 (2025-08-31)
+
+### Changed
+- Makefile: unify release flow; use explicit SHA for create; omit target on edit
+
 ## 1.0.6 (2025-08-31)
 
 ### Fixed
