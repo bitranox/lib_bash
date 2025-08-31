@@ -150,8 +150,11 @@ def collect_notes_since_last_tag() -> list[str]:
     log = run(["git", "log", "--no-merges", "--pretty=format:%s", rng], capture=True)
     messages = [m for m in log.splitlines() if m.strip()]
 
-    # Exclude obvious maintenance/release messages
-    exclude = re.compile(r"^(Merge( pull request)?|chore\(release\)|docs\(changelog\)|chore: prepare release v)")
+    # Exclude maintenance entries:
+    # - Any chore:* or chore(scope):* commit messages
+    # - docs(changelog):* maintenance
+    # - Merge commits (already removed via --no-merges, keep guard for PR merges)
+    exclude = re.compile(r"^(Merge( pull request)?|chore(\(|:)|docs\(changelog\))", re.IGNORECASE)
     notes = [f"- {m}" for m in messages if not exclude.match(m)]
     if not notes:
         notes = ["- No changes recorded since last version."]
