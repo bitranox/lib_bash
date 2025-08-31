@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.11 (2025-08-31)
+\n### Changed\n- No changes recorded since last version.\n
+
 ## 1.1.10 (2025-08-31)
 \n### Changed\n- chore: prepare release v1.1.10
 - docs(changelog): 1.1.9
