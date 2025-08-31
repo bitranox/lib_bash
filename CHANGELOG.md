@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5 (2025-08-31)
+
+### Changed
+- chore: commit all changes before release
+
 ## 1.1.4 (2025-08-31)
 
 ### Changed
