@@ -28,10 +28,20 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	branch_cur=$$(git rev-parse --abbrev-ref HEAD); \
 	[ "$$branch_cur" = "$(RELEASE_BRANCH)" ] || { echo "ERROR: Switch to branch $(RELEASE_BRANCH) (current: $$branch_cur)" >&2; exit 1; }; \
 	git fetch -q || true; \
-	# Ensure local is not behind remote to avoid merges during release
+	# Ensure branch is synchronized with origin to avoid unintended merges
 	if git rev-parse --verify -q origin/"$(RELEASE_BRANCH)" >/dev/null; then \
-		if ! git merge-base --is-ancestor origin/"$(RELEASE_BRANCH)" HEAD; then \
-			echo "ERROR: Local branch is behind origin/$(RELEASE_BRANCH). Please pull/rebase first." >&2; exit 1; \
+		if git merge-base --is-ancestor HEAD origin/"$(RELEASE_BRANCH)"; then \
+			# Local is behind origin: attempt fast-forward if tree is clean
+			if [ -z "$$({ git status --porcelain || true; } | sed -n '1p')" ]; then \
+				git merge --ff-only origin/"$(RELEASE_BRANCH)"; \
+			else \
+				echo "ERROR: Local is behind origin/$(RELEASE_BRANCH) with uncommitted changes. Please sync first (e.g., git pull --rebase)." >&2; exit 1; \
+			fi; \
+		else \
+			# Not behind; if diverged, abort with guidance. Otherwise up-to-date or ahead.
+			if ! git merge-base --is-ancestor origin/"$(RELEASE_BRANCH)" HEAD; then \
+				echo "ERROR: Local and origin/$(RELEASE_BRANCH) have diverged. Please rebase (git pull --rebase) and re-run." >&2; exit 1; \
+			fi; \
 		fi; \
 	else \
 		echo "ERROR: Remote branch origin/$(RELEASE_BRANCH) not found. Add remote or fetch." >&2; exit 1; \
