@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.13 (2025-08-31)
+
+### Changed
+- No changes recorded since last version.
+
 ## 1.1.12 (2025-08-31)
 
 ### Changed
