@@ -23,7 +23,7 @@ ci: ## Run lint and tests
 	@$(MAKE) lint
 	@$(MAKE) test
 
-release: ## Interactive: prompts version, updates changelog, commits, branches, tags (with notes), pushes, and creates GitHub Release
+release: ## Interactive: prompts version, updates changelog on master, commits, tags (with notes), pushes, and creates GitHub Release
 	@set -Eeuo pipefail; IFS=$$'\n\t'; \
 	current=$$(awk '/^##[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+([[:space:]]|\()/{ver=$$2; sub(/^v/,"",ver); print ver; exit}' CHANGELOG.md); \
 	echo "Current version: $${current:-<none>}"; \
@@ -41,12 +41,10 @@ release: ## Interactive: prompts version, updates changelog, commits, branches, 
 	tmp=$$(mktemp); \
 	awk -v ver="$$newv" -v d="$$date_str" -v msg="$$notes" 'NR==1{print; print ""; print "## " ver " (" d ")"; print ""; print "### Changed"; if (length(msg)) print "- " msg; else print "- See details in this release."; next}1' CHANGELOG.md > "$$tmp"; \
 	mv "$$tmp" CHANGELOG.md; \
-	branch_name="release/v$$newv"; \
-	git checkout -b "$$branch_name"; \
 	git add CHANGELOG.md; \
 	commit_msg="release: v$$newv"; [ -n "$$notes" ] && commit_msg="$$commit_msg — $$notes"; \
 	git commit -m "$$commit_msg"; \
-	git push -u origin "$$branch_name"; \
+	git push origin "$(RELEASE_BRANCH)"; \
 	# Prepare release notes body from the new CHANGELOG section (match header with or without leading v)
 	body=$$(awk '/^##[[:space:]]+v?'"$$newv"'([[:space:]]|\()/{flag=1;next}/^##[[:space:]]/{flag=0}flag' CHANGELOG.md); [ -n "$$body" ] || body="See CHANGELOG.md for $$newv details."; \
 	# Create annotated tag including the release notes
@@ -59,4 +57,4 @@ release: ## Interactive: prompts version, updates changelog, commits, branches, 
 	else \
 		gh release create "v$$newv" --title "lib_bash $$newv" --notes "$$body" --target "$$sha"; \
 	fi; \
-	echo "Release v$$newv complete on branch $$branch_name"
+	echo "Release v$$newv complete on branch $(RELEASE_BRANCH)"
