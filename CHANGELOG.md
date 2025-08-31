@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3 (2025-08-31)
+
+### Changed
+- chore: commit all changes before release
+- docs(changelog): add 1.1.2 section; ensure tag + release include latest changes
+
 ## 1.1.2 (2025-08-31)
 
 ### Changed
