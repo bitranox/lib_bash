@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.1.9 (2025-08-31)
+\n### Changed\n- chore: prepare release v1.1.9
+- move etkserver to proxmox02\n
+
+## 1.1.9 (2025-08-31)
 
 ### Changed
 - release(flow): auto fast-forward when behind; correct behind/ahead detection
