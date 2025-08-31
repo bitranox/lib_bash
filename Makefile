@@ -1,4 +1,5 @@
 SHELL := bash
+.ONESHELL:
 .DEFAULT_GOAL := help
 
 ##
