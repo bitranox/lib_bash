@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.12 (2025-08-31)
+
+### Changed
+- fix(changelog): convert literal \n to real newlines; print new changelog sections with actual line breaks
+
+
 ## 1.1.11 (2025-08-31)
 
 ### Changed
