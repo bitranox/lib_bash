@@ -1,17 +1,26 @@
 # Changelog
 
 ## 1.1.11 (2025-08-31)
-\n### Changed\n- No changes recorded since last version.\n
+
+### Changed
+- No changes recorded since last version.
+
 
 ## 1.1.10 (2025-08-31)
-\n### Changed\n- chore: prepare release v1.1.10
+
+### Changed
+- chore: prepare release v1.1.10
 - docs(changelog): 1.1.9
 - chore: prepare release v1.1.9
-- move etkserver to proxmox02\n
+- move etkserver to proxmox02
+
 
 ## 1.1.9 (2025-08-31)
-\n### Changed\n- chore: prepare release v1.1.9
-- move etkserver to proxmox02\n
+
+### Changed
+- chore: prepare release v1.1.9
+- move etkserver to proxmox02
+
 
 ## 1.1.9 (2025-08-31)
 

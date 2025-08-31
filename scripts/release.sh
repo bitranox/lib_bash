@@ -174,11 +174,14 @@ update_changelog() {
     notes="- No changes recorded since last version."
   fi
 
-  local header="## ${new_version} (${date})"
-  local body="\n### Changed\n${notes}\n"
-
   if [[ ! -f CHANGELOG.md ]]; then
-    printf '# Changelog\n\n%s\n%s\n' "$header" "$body" > CHANGELOG.md
+    {
+      printf '# Changelog\n\n'
+      printf '## %s (%s)\n\n' "$new_version" "$date"
+      printf '### Changed\n'
+      [[ -n "$notes" ]] && printf '%s\n' "$notes"
+      printf '\n'
+    } > CHANGELOG.md
     return
   fi
 
@@ -186,7 +189,10 @@ update_changelog() {
   tmp=$(mktemp)
   {
     printf '# Changelog\n\n'
-    printf '%s\n%s\n' "$header" "$body"
+    printf '## %s (%s)\n\n' "$new_version" "$date"
+    printf '### Changed\n'
+    [[ -n "$notes" ]] && printf '%s\n' "$notes"
+    printf '\n'
     # Append existing content without the first line if it is the main header
     tail -n +2 CHANGELOG.md || true
   } > "$tmp"
