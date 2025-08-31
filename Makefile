@@ -22,9 +22,9 @@ ci: ## Run lint and tests
 	@$(MAKE) lint
 	@$(MAKE) test
 
-release: ## Interactive: prompts version, updates changelog, commits, branches, tags, pushes, and creates GitHub Release
+release: ## Interactive: prompts version, updates changelog, commits, branches, tags (with notes), pushes, and creates GitHub Release
 	@set -Eeuo pipefail; IFS=$$'\n\t'; \
-	current=$$(awk '/^##  *v?[0-9]+\.[0-9]+\.[0-9]+\b/{ver=$$2; sub(/^v/ ,"", ver); print ver; exit}' CHANGELOG.md); \
+	current=$$(awk '/^##[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+([[:space:]]|\()/{ver=$$2; sub(/^v/,"",ver); print ver; exit}' CHANGELOG.md); \
 	echo "Current version: $${current:-<none>}"; \
 	read -rp "Enter new version (SemVer X.Y.Z): " newv; \
 	[ -n "$$newv" ] || { echo "ERROR: Version is required" >&2; exit 1; }; \
@@ -46,11 +46,13 @@ release: ## Interactive: prompts version, updates changelog, commits, branches, 
 	commit_msg="release: v$$newv"; [ -n "$$notes" ] && commit_msg="$$commit_msg — $$notes"; \
 	git commit -m "$$commit_msg"; \
 	git push -u origin "$$branch_name"; \
-	git tag -a "v$$newv" -m "lib_bash $$newv" -m "See CHANGELOG.md for details."; \
+	# Prepare release notes body from the new CHANGELOG section (match header with or without leading v)
+	body=$$(awk '/^##[[:space:]]+v?'"$$newv"'([[:space:]]|\()/{flag=1;next}/^##[[:space:]]/{flag=0}flag' CHANGELOG.md); [ -n "$$body" ] || body="See CHANGELOG.md for $$newv details."; \
+	# Create annotated tag including the release notes
+	git tag -a "v$$newv" -m "lib_bash $$newv" -m "$$body"; \
 	git push origin "v$$newv"; \
 	command -v gh >/dev/null 2>&1 || { echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1; }; \
 	sha=$$(git rev-parse HEAD); \
-	body=$$(awk '/^##  *v?'"$$newv"'\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md); [ -n "$$body" ] || body="See CHANGELOG.md for $$newv details."; \
 	if gh release view "v$$newv" >/dev/null 2>&1; then \
 		gh release edit "v$$newv" --title "lib_bash $$newv" --notes "$$body"; \
 	else \
