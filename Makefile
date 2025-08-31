@@ -68,8 +68,8 @@ release: ## Interactive: commit changes, prompt/auto-bump version, update CHANGE
 	git add -A; \
 	git commit -m "release: v$$newv"; \
 	release_commit_sha=$$(git rev-parse HEAD); \
-	# Optional CI gate (set SKIP_CI=1 to bypass)
-	[ "${SKIP_CI:-}" = 1 ] || $(MAKE) ci; \
+	# Run CI before tagging
+	$(MAKE) ci; \
 	# Push branch with the changelog commit so the tag includes the new section (explicit commit)
 	git push origin "$$release_commit_sha":"$(RELEASE_BRANCH)"; \
 	# Prepare release notes body by extracting the new section from the committed CHANGELOG for this release commit
