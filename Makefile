@@ -1,10 +1,11 @@
+SHELL := bash
 .DEFAULT_GOAL := help
 
 ##
 ## lib_bash project helper targets
 ##
 
-.PHONY: help lint test ci pre-release release
+.PHONY: help lint test ci release
 # Branch on which releases are allowed
 RELEASE_BRANCH ?= master
 
@@ -21,52 +22,38 @@ ci: ## Run lint and tests
 	@$(MAKE) lint
 	@$(MAKE) test
 
-pre-release: ## Validate VERSION (SemVer), run CI, verify clean git and changelog
-	@[ -n "$(VERSION)" ] || (echo "ERROR: VERSION=X.Y.Z is required" >&2; exit 1)
-	@echo "Checking VERSION format: $(VERSION)"
-	@printf "%s" "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' \
-		|| (echo "ERROR: VERSION must be SemVer: X.Y.Z" >&2; exit 1)
-	@echo "Checking current branch is $(RELEASE_BRANCH)..."
-	@[ "$$(git rev-parse --abbrev-ref HEAD)" = "$(RELEASE_BRANCH)" ] \
-		|| (echo "ERROR: Release must be run on branch $(RELEASE_BRANCH)." >&2; exit 1)
-	@echo "Running CI..."
-	@$(MAKE) ci
-	@echo "Checking git working tree is clean..."
-	@[ -z "$$(git status --porcelain || true)" ] || (echo "ERROR: git working tree not clean. Commit or stash changes." >&2; git status --porcelain; exit 1)
-	@echo "Checking branch is up to date with origin/$(RELEASE_BRANCH)..."
-	@git fetch -q
-	@[ "$$(git rev-parse HEAD)" = "$$(git rev-parse origin/$(RELEASE_BRANCH))" ] \
-		|| (echo "ERROR: Local branch not up to date with origin/$(RELEASE_BRANCH)." >&2; exit 1)
-	@if [ -z "$(ALLOW_EXISTING_TAG)" ]; then \
-		echo "Checking tag v$(VERSION) does not already exist..."; \
-		! git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null || (echo "ERROR: tag v$(VERSION) already exists. Set ALLOW_EXISTING_TAG=1 to update release notes only." >&2; exit 1); \
+release: ## Interactive: prompts version, updates changelog, commits, branches, tags, pushes, and creates GitHub Release
+	@set -Eeuo pipefail; IFS=$$'\n\t'; \
+	current=$$(awk '/^##  *v?[0-9]+\.[0-9]+\.[0-9]+\b/{ver=$$2; sub(/^v/ ,"", ver); print ver; exit}' CHANGELOG.md); \
+	echo "Current version: $${current:-<none>}"; \
+	read -rp "Enter new version (SemVer X.Y.Z): " newv; \
+	[ -n "$$newv" ] || { echo "ERROR: Version is required" >&2; exit 1; }; \
+	printf "%s" "$$newv" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "ERROR: Invalid SemVer: $$newv" >&2; exit 1; }; \
+	branch_cur=$$(git rev-parse --abbrev-ref HEAD); \
+	[ "$$branch_cur" = "$(RELEASE_BRANCH)" ] || { echo "ERROR: Switch to branch $(RELEASE_BRANCH) (current: $$branch_cur)" >&2; exit 1; }; \
+	[ -z "$$({ git status --porcelain || true; } | sed -n '1p')" ] || { echo "ERROR: Working tree not clean" >&2; git status --porcelain; exit 1; }; \
+	git fetch -q; \
+	[ "$$(git rev-parse HEAD)" = "$$({ git rev-parse origin/$(RELEASE_BRANCH) || echo unknown; })" ] || { echo "ERROR: Local $(RELEASE_BRANCH) not up to date with origin" >&2; exit 1; }; \
+	! git rev-parse -q --verify "refs/tags/v$$newv" >/dev/null || { echo "ERROR: Tag v$$newv already exists" >&2; exit 1; }; \
+	read -rp "One-line release notes (optional): " notes || true; \
+	date_str=$$(date +%Y-%m-%d); \
+	tmp=$$(mktemp); \
+	awk -v ver="$$newv" -v d="$$date_str" -v msg="$$notes" 'NR==1{print; print ""; print "## " ver " (" d ")"; print ""; print "### Changed"; if (length(msg)) print "- " msg; else print "- See details in this release."; next}1' CHANGELOG.md > "$$tmp"; \
+	mv "$$tmp" CHANGELOG.md; \
+	branch_name="release/v$$newv"; \
+	git checkout -b "$$branch_name"; \
+	git add CHANGELOG.md; \
+	commit_msg="release: v$$newv"; [ -n "$$notes" ] && commit_msg="$$commit_msg — $$notes"; \
+	git commit -m "$$commit_msg"; \
+	git push -u origin "$$branch_name"; \
+	git tag -a "v$$newv" -m "lib_bash $$newv" -m "See CHANGELOG.md for details."; \
+	git push origin "v$$newv"; \
+	command -v gh >/dev/null 2>&1 || { echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1; }; \
+	sha=$$(git rev-parse HEAD); \
+	body=$$(awk '/^##  *v?'"$$newv"'\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md); [ -n "$$body" ] || body="See CHANGELOG.md for $$newv details."; \
+	if gh release view "v$$newv" >/dev/null 2>&1; then \
+		gh release edit "v$$newv" --title "lib_bash $$newv" --notes "$$body"; \
 	else \
-		echo "ALLOW_EXISTING_TAG=1 set — skipping tag existence check"; \
-	fi
-	@echo "Checking CHANGELOG.md contains version section..."
-	@grep -Eq "^##[[:space:]]+v?$(VERSION)\b" CHANGELOG.md \
-		|| (echo "ERROR: CHANGELOG.md missing section for $(VERSION)." >&2; exit 1)
-	@echo "Pre-release checks passed."
-
-
-release: pre-release ## Cut a release: make release VERSION=X.Y.Z
-	@echo "Tagging and pushing v$(VERSION)..."
-	@if git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null; then \
-		echo "Tag v$(VERSION) already exists"; \
-		if [ -z "$(ALLOW_EXISTING_TAG)" ]; then echo "ERROR: Tag exists. Use ALLOW_EXISTING_TAG=1 to update the GitHub Release only." >&2; exit 1; fi; \
-	else \
-		git tag -a v$(VERSION) -m "lib_bash $(VERSION)" -m "See CHANGELOG.md for details."; \
-	fi
-	@git push origin HEAD
-	@git push origin v$(VERSION)
-	@# Create or update GitHub Release via gh
-	@command -v gh >/dev/null 2>&1 || (echo "ERROR: gh CLI is required. Install gh and run: gh auth login" >&2; exit 1)
-	@echo "Creating/updating GitHub Release v$(VERSION) via gh..."
-	@body="$$(awk '/^##  *v?$(VERSION)\b/{flag=1;next}/^##  /{flag=0}flag' CHANGELOG.md)"; [ -n "$$body" ] || body="See CHANGELOG.md for $(VERSION) details."
-	@sha="$$(git rev-parse HEAD)"
-	@if gh release view v$(VERSION) >/dev/null 2>&1; then \
-		gh release edit v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body"; \
-	else \
-		gh release create v$(VERSION) --title "lib_bash $(VERSION)" --notes "$$body" --target "$$sha"; \
-	fi
-
+		gh release create "v$$newv" --title "lib_bash $$newv" --notes "$$body" --target "$$sha"; \
+	fi; \
+	echo "Release v$$newv complete on branch $$branch_name"
