@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 (2025-08-31)
+
+### Changed
+- Makefile: derive current version from latest tag, not changelog.
+- Makefile: generate changelog from commits since last tag; filter only prior `release:` commits.
+- Makefile: commit and push the changelog before tagging so the tag always contains the new section; release notes are extracted from that section.
+
 ## 1.1.1 (2025-08-31)
 
 ### Changed
