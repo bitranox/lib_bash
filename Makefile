@@ -24,4 +24,4 @@ ci: ## Run lint and tests
 	@$(MAKE) --no-print-directory test
 
 release: ## Bump version, update CHANGELOG, tag, push, and create GitHub release (uses `gh`)
-	@bash scripts/release.sh
+	@python3 scripts/release.py
