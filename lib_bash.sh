@@ -48,7 +48,15 @@ _set_defaults() {
 
 _set_askpass() {
     # 2025-01-21
-    export SUDO_ASKPASS="$(command -v ssh-askpass)"
+    # Resolve ssh-askpass if present without tripping set -e when missing
+    local _askpass
+    _askpass=$(command -v ssh-askpass 2>/dev/null || true)
+    if [[ -n "${_askpass}" ]]; then
+        export SUDO_ASKPASS="${_askpass}"
+    else
+        # Ensure variable does not point to a non-existent helper
+        unset SUDO_ASKPASS || true
+    fi
     export NO_AT_BRIDGE=1  # suppress accessibility-related D-Bus warnings (like dbind-WARNING) in GUI applications on Linux
 }
 
