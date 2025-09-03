@@ -165,6 +165,8 @@ GNU General Public License v3.0 - See [LICENSE](https://github.com/bitranox/lib_
 git clone git@github.com:your_username/lib_bash.git
 cd lib_bash
 # Create virtual environment recommended
+# Disable self-update during local dev/CI
+export LIB_BASH_DISABLE_SELF_UPDATE=1
 ```
 
 ## Maintainer
