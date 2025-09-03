@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 (2025-09-03)
+
+### Docs
+- README: explain how to suppress self-update via `LIB_BASH_DISABLE_SELF_UPDATE=1`.
+- README: note that `linux_update` lives in `lib_bash_linux_update.sh` and is auto-sourced by `lib_bash.sh`.
+
 ## 1.0.1 (2025-09-03)
 
 ### Changed

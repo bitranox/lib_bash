@@ -1,4 +1,4 @@
-# lib_bash - Bash Utility Library
+che# lib_bash - Bash Utility Library
 
 [![License: GPL3](https://img.shields.io/badge/License-GPL3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Bash Version](https://img.shields.io/badge/Bash-4.4%2B-lightgrey)
@@ -58,6 +58,8 @@ export LIB_BASH_LOGFILE_ERR="/var/log/myapp_errors.log"
 ```bash
 linux_update  # Full system update with cleanup
 ```
+Note: linux_update is implemented in lib_bash_linux_update.sh and is auto-sourced by lib_bash.sh; no extra imports needed.
+
 
 ### Logging
 ```bash
@@ -114,6 +116,14 @@ The library automatically checks for updates:
 # On next execution, updates will be applied
 _lib_bash_self_update  # Manual update check
 ```
+
+To suppress self-update (e.g., in CI, tests, or restricted environments), set:
+
+```bash
+export LIB_BASH_DISABLE_SELF_UPDATE=1
+```
+
+When this variable is set, lib_bash.sh will skip the self-update logic entirely.
 
 ## Log Files
 
