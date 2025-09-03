@@ -13,6 +13,7 @@ set -o errexit -o nounset -o pipefail
 
 # Load your logging script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export LIB_BASH_DISABLE_SELF_UPDATE=1
 source "${SCRIPT_DIR}/../lib_bash.sh"
 
 CMD="${SCRIPT_DIR}/lib_color.sh"

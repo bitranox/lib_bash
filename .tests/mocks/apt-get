@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+MOCK_LOG=${MOCK_LOG:-/tmp/mock_log}
+PHASED_FILE=${PHASED_FILE:-}
+{
+  printf 'apt-get'; for a in "$@"; do printf ' %s' "$a"; done; printf '\n'
+} >>"$MOCK_LOG"
+
+if [[ ${1:-} == "-s" && ${2:-} == "upgrade" ]]; then
+  if [[ -n "$PHASED_FILE" && -s "$PHASED_FILE" ]]; then
+    echo "Reading package lists... Done"
+    echo "Calculating upgrade... Done"
+    echo "The following packages have been kept back:"
+    pkgs=$(tr '\n' ' ' <"$PHASED_FILE" | sed -e 's/  */ /g' -e 's/^ *//' -e 's/ *$//')
+    echo " $pkgs"
+    echo "0 upgraded, 0 newly installed, 0 to remove and 2 not upgraded."
+  else
+    echo "Reading package lists... Done"
+    echo "0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded."
+  fi
+  exit 0
+fi
+
+# Handle reinstall removing package from phased file
+if [[ "$*" == *"install --reinstall"* ]]; then
+  pkg="${*: -1}"
+  if [[ -n "$PHASED_FILE" && -f "$PHASED_FILE" ]]; then
+    grep -v -x "$pkg" "$PHASED_FILE" >"$PHASED_FILE.tmp" || true
+    mv "$PHASED_FILE.tmp" "$PHASED_FILE"
+  fi
+fi
+
+# Generic success for other actions
+exit 0

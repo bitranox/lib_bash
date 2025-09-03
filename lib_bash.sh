@@ -68,6 +68,7 @@ _source_submodules() {
     source "$(_get_own_dirname)/lib_retry.sh"
     source "$(_get_own_dirname)/lib_update_caller.sh"
     source "$(_get_own_dirname)/lib_assert.sh"
+    source "$(_get_own_dirname)/lib_bash_linux_update.sh"
 }
 
 _exit_if_not_is_root() {
@@ -175,66 +176,55 @@ get_script_stem() {
 }
 
 
-linux_update() {
-    # pass "--force-phased-updates" as parameter if You want to do that
-    local force_phased_updates="${1:-}"
-    # 2025-01-21
-    _exit_if_not_is_root
-    # Save shell state, trap state and disable strict mode
-    shell_state=$(set +o)
-    trap_state=$(trap -p ERR)
-    set +eEuo pipefail
-    trap - ERR
-    # Update the list of available packages from the repositories
-    log "apt-get update"
-    logc apt-get update
-    # Configure any packages that were unpacked but not yet configured
-    log "dpkg --configure -a"
-    logc dpkg --configure -a
-    # Attempt to fix broken dependencies and install missing packages
-    log "apt-get --fix-broken install -y -o Dpkg::Options::=\"--force-confold\""
-    logc apt-get --fix-broken install -y -o Dpkg::Options::="--force-confold"
-    # Upgrade all installed packages while keeping existing configuration files
-    log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc apt-get upgrade -y -o Dpkg::Options::="--force-confold"
-    # Perform a distribution upgrade, which can include installing or removing packages
-    # This also keeps existing configuration files
-    log "apt-get dist-upgrade -y -o Dpkg::Options::=\"--force-confold\""
-    logc apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold"
-    # Clean up the local repository of retrieved package files to free up space
-    log "apt-get autoclean -y"
-    logc apt-get autoclean -y
-    # Remove unnecessary packages and purge their configuration files
-    log "apt-get autoremove --purge -y"
-    logc apt-get autoremove --purge -y
-    # Forcing Phased Updates
-    log "Force update of phased (kept back) updates"
-    if [[ "${force_phased_updates}" == "--force-phased-updates" ]]; then
-        while true; do
-          first_package_to_update=$(LANG=C apt-get -s upgrade | awk '/deferred due to phasing:|have been kept back:/ {while(1){getline; if(/^[0-9]/) break; for(i=1;i<=NF;i++) print $i}}' | sort -u | head -n1)
-          if [ -z "$first_package_to_update" ]; then
-            break
-          fi
-          reinstall_packages "${first_package_to_update}"
-        done
-    fi
+############################################
+# External tool wrappers (override via env)
+############################################
 
-    # Repeat cleaning up of the package files after additional installations
-    log "apt-get autoclean -y"
-    logc apt-get autoclean -y
-    # Repeat removal of unnecessary packages after additional installations
-    log "apt-get autoremove --purge -y"
-    logc apt-get autoremove --purge -y
-    # recreate temporary files which might get deleted after some update
-    systemd-tmpfiles --create > /dev/null 2>&1
-
-    # Restore shell and trap state
-    eval "$shell_state"
-    if [[ -n "$trap_state" ]]; then
-        eval "$trap_state"
-    fi
-    log_ok "Update Finished"
+_apt() {
+  local bin
+  if [[ -n "${APT_GET_BIN:-}" && -x "${APT_GET_BIN}" ]]; then
+    bin="${APT_GET_BIN}"
+  elif [[ -n "${LIB_BASH_TEST_MOCKS_DIR:-}" && -x "${LIB_BASH_TEST_MOCKS_DIR}/apt-get" ]]; then
+    bin="${LIB_BASH_TEST_MOCKS_DIR}/apt-get"
+  else
+    bin="apt-get"
+  fi
+  "${bin}" "$@"
 }
+_dpkg() {
+  local bin
+  if [[ -n "${DPKG_BIN:-}" && -x "${DPKG_BIN}" ]]; then
+    bin="${DPKG_BIN}"
+  elif [[ -n "${LIB_BASH_TEST_MOCKS_DIR:-}" && -x "${LIB_BASH_TEST_MOCKS_DIR}/dpkg" ]]; then
+    bin="${LIB_BASH_TEST_MOCKS_DIR}/dpkg"
+  else
+    bin="dpkg"
+  fi
+  "${bin}" "$@"
+}
+_apt_mark() {
+  local bin
+  if [[ -n "${APT_MARK_BIN:-}" && -x "${APT_MARK_BIN}" ]]; then
+    bin="${APT_MARK_BIN}"
+  elif [[ -n "${LIB_BASH_TEST_MOCKS_DIR:-}" && -x "${LIB_BASH_TEST_MOCKS_DIR}/apt-mark" ]]; then
+    bin="${LIB_BASH_TEST_MOCKS_DIR}/apt-mark"
+  else
+    bin="apt-mark"
+  fi
+  "${bin}" "$@"
+}
+_systemd_tmpfiles() {
+  local bin
+  if [[ -n "${SYSTEMD_TMPFILES_BIN:-}" && -x "${SYSTEMD_TMPFILES_BIN}" ]]; then
+    bin="${SYSTEMD_TMPFILES_BIN}"
+  elif [[ -n "${LIB_BASH_TEST_MOCKS_DIR:-}" && -x "${LIB_BASH_TEST_MOCKS_DIR}/systemd-tmpfiles" ]]; then
+    bin="${LIB_BASH_TEST_MOCKS_DIR}/systemd-tmpfiles"
+  else
+    bin="systemd-tmpfiles"
+  fi
+  "${bin}" "$@"
+}
+
 
 reinstall_packages() {
   # Function to reinstall a list of packages while preserving their original marking (manual or auto)
@@ -245,19 +235,23 @@ reinstall_packages() {
   # Loop through each package in the provided list
   for pkg in ${packages}; do
     # Check if the package is marked as manually installed
-    if apt-mark showmanual | grep -q "^${pkg}$"; then
+    if _apt_mark showmanual | grep -q "^${pkg}$"; then
       # Reinstall the package and re-mark it as manually installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
-      apt-mark manual "${pkg}"
+      logc _apt install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      _apt_mark manual "${pkg}"
     else
       # Reinstall the package and re-mark it as automatically installed
       log "apt-get install --reinstall -o Dpkg::Options::=\"--force-confold\" -y ${pkg}"
-      logc apt-get install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
-      apt-mark auto "${pkg}"
+      logc _apt install --reinstall -o Dpkg::Options::="--force-confold" -y "${pkg}"
+      _apt_mark auto "${pkg}"
     fi
   done
 }
+
+
+
+
 
 
 # lib_bash_prepend_text_to_file 2025-01-21
@@ -615,9 +609,9 @@ install_package_if_not_present() {
     silent="${2}"
     if ! is_package_installed "${package}"; then
         if [[ "${silent}" == "True" ]]; then
-            retry_nofail "$(cmd "sudo")" apt-get install "${package}" -y  > /dev/null 2>&1
+            retry_nofail "$(cmd "sudo")" "${APT_GET_BIN:-apt-get}" install "${package}" -y  > /dev/null 2>&1
         else
-            retry "$(cmd "sudo")" apt-get install "${package}" -y
+            retry "$(cmd "sudo")" "${APT_GET_BIN:-apt-get}" install "${package}" -y
         fi
     fi
     if ! is_package_installed "${package}"; then
@@ -636,9 +630,9 @@ uninstall_package_if_present() {
 
     if is_package_installed "${package}"; then
         if [[ "${silent}" == "True" ]]; then
-            retry_nofail "$(cmd "sudo")" apt-get purge "${package}" -y > /dev/null 2>&1
+            retry_nofail "$(cmd "sudo")" "${APT_GET_BIN:-apt-get}" purge "${package}" -y > /dev/null 2>&1
         else
-            retry "$(cmd "sudo")" apt-get purge "${package}" -y
+            retry "$(cmd "sudo")" "${APT_GET_BIN:-apt-get}" purge "${package}" -y
         fi
     fi
     if is_package_installed "${package}"; then
@@ -915,18 +909,14 @@ LIB_BASH_MAIN() {
 
 _set_defaults
 
-# Self-update and restart logic
+# Self-update and restart logic (disabled when sourced or via LIB_BASH_DISABLE_SELF_UPDATE)
 if [[ -z "${LIB_BASH_RESTARTED-}" ]]; then  # Safe check for unset/nounset
     export LIB_BASH_RESTARTED=1
-    if _lib_bash_self_update; then
-        if is_sourced; then
-            # Restart parent script when sourced
-            _lib_bash_restart_parent "$@"
-        else
-            # Restart directly when executed
+    if [[ -z "${LIB_BASH_DISABLE_SELF_UPDATE:-}" ]] && ! is_sourced; then
+        if _lib_bash_self_update; then
             exec "$BASH" --noprofile --norc "$0" "$@"
         fi
     fi
 fi
 
-LIB_BASH_MAIN "$@"
+LIB_BASH_MAIN "$@" "$@"

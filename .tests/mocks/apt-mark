@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+MOCK_LOG=${MOCK_LOG:-/tmp/mock_log}
+{
+  printf 'apt-mark'; for a in "$@"; do printf ' %s' "$a"; done; printf '\n'
+} >>"$MOCK_LOG"
+if [[ ${1:-} == "showmanual" ]]; then
+  # Optional manual list via file
+  if [[ -n ${APT_MARK_MANUAL_FILE:-} && -f ${APT_MARK_MANUAL_FILE:-} ]]; then
+    cat -- "$APT_MARK_MANUAL_FILE"
+  fi
+  exit 0
+fi
+exit 0

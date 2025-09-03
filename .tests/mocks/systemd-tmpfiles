@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+MOCK_LOG=${MOCK_LOG:-/tmp/mock_log}
+{
+  printf 'systemd-tmpfiles'; for a in "$@"; do printf ' %s' "$a"; done; printf '\n'
+} >>"$MOCK_LOG"
+exit 0
