@@ -249,7 +249,12 @@ _log() {
     IFS=$'\n' read -rd '' -a lines <<< "${message}" || true
     for line in "${lines[@]}"; do
         if [[ "${options}" != *NO_TTY* ]]; then
-            local formatted_line="${logprefix} ${line}"
+            local formatted_line
+            if $include_icon; then
+                formatted_line="${logprefix}${line}"
+            else
+                formatted_line="${logprefix} ${line}"
+            fi
             local -a color_funcs=()
             IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
             for func in "${color_funcs[@]}"; do
@@ -288,7 +293,11 @@ _log() {
             echo -e "${formatted_line}"
         fi
 
-        logline="${logprefix} ${line}"
+        if $include_icon; then
+            logline="${logprefix}${line}"
+        else
+            logline="${logprefix} ${line}"
+        fi
         if [[ -n "${log_file}" ]]; then echo "${logline}" >> "${log_file}"; fi
         if [[ -n "${log_file_tmp}" ]]; then echo "${logline}" >> "${log_file_tmp}"; fi
         if [[ -n "${log_file_err}" ]]; then echo "${logline}" >> "${log_file_err}"; fi
