@@ -206,6 +206,7 @@ _log() {
     local icon="${9:-}"
     local logline
     local include_icon=true
+    local spacer=$'\u200B '
     # Accept common truthy values: 1|true|yes|on (case-insensitive)
     local _nosym_val="${LIB_BASH_LOG_NO_SYMBOLS:-0}"
     local _nosym_lc
@@ -237,11 +238,12 @@ _log() {
     _ts_date="$(date '+%Y-%m-%d')"
     _ts_time="$(date '+%H:%M:%S')"
     _user_host="$(whoami)@$(hostname -s)"
-    # Add a separator before the icon; omit icon if disabled via LIB_BASH_LOG_NO_SYMBOLS=1
+    # Add a separator before the icon; after the icon emit zero-width space + blank (no ':').
+    # If symbols are disabled, keep a colon after LEVEL for readability.
     if $include_icon; then
-        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|${icon}|"
+        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|${icon}${spacer}"
     else
-        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|"
+        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}:"
     fi
 
     IFS=$'\n' read -rd '' -a lines <<< "${message}" || true
@@ -268,7 +270,7 @@ _log() {
                 fi
                 local colored_icon
                 colored_icon="${CLR_ESC}${CLR_BRIGHT_WHITE};${CLR_BRIGHT_GREENB}m${icon}${CLR_ESC}${CLR_RESET}m${CLR_ESC}${reapply_seq}m"
-                formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${colored_icon}|}"
+                formatted_line="${formatted_line/|LOG|${icon}${spacer}/|LOG|${colored_icon}${spacer}}"
             fi
 
             # Special styling: error cross as bright white on red background
@@ -279,20 +281,10 @@ _log() {
                 local colored_x
                 colored_x="${CLR_ESC}${CLR_BRIGHT_WHITE};${CLR_REDB}m✖${CLR_ESC}${CLR_RESET}m${CLR_ESC}${reapply_seq_err}m"
                 # Replace the raw icon in the formatted line with the styled version
-                formatted_line="${formatted_line/|ERR|${icon}|/|ERR|${colored_x}|}"
+                formatted_line="${formatted_line/|ERR|${icon}${spacer}/|ERR|${colored_x}${spacer}}"
             fi
 
-            # Ensure the separator after emoji is visible by inserting a zero-width spacer in TTY
-            # (does not affect file logs). This avoids glyph overlap in some fonts/terminals.
-            local _zwsp=$'\u200B'
-            if $include_icon; then
-              case "${level}:${icon}" in
-                  "LOG:ℹ️") formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${icon}${_zwsp}|}" ;;
-                  "LOG:🔧") formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${icon}${_zwsp}|}" ;;
-                  "WRN:⚠️") formatted_line="${formatted_line/|WRN|${icon}|/|WRN|${icon}${_zwsp}|}" ;;
-                  "DBG:🐞") formatted_line="${formatted_line/|DBG|${icon}|/|DBG|${icon}${_zwsp}|}" ;;
-              esac
-            fi
+            # Spacer already included in prefix; no further adjustment required.
             echo -e "${formatted_line}"
         fi
 
