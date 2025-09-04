@@ -50,7 +50,21 @@ Set environment variables in your script/shell:
 ```bash
 export LIB_BASH_LOGFILE="/var/log/myapp.log"
 export LIB_BASH_LOGFILE_ERR="/var/log/myapp_errors.log"
+export LIB_BASH_LOG_NO_SYMBOLS=1   # optional: hide emoji/symbol segment in logs
 ```
+
+### Environment Variables: Sudo and Sessions
+
+If a variable seems ignored:
+
+- Sudo drops env vars by default. Use one of:
+  - `sudo -E LIB_BASH_LOG_NO_SYMBOLS=1 ./your_script …`
+  - `sudo env LIB_BASH_LOG_NO_SYMBOLS=1 ./your_script …`
+  - Or allowlist the var in sudoers (`env_keep`).
+- Different shell/session: export in the same shell that launches the script.
+- Value mismatch: some vars are strict. For example:
+  - `LIB_BASH_LOG_NO_SYMBOLS`: `1|true|yes|on` disable symbols (case-insensitive).
+  - `LIB_BASH_DEBUG_MODE`: set to `ON` to enable debug messages.
 
 ## Key Functions
 

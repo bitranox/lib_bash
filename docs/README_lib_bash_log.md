@@ -110,9 +110,87 @@ Temporary logs are registered for cleanup.
 
 ---
 
+## 🧾 Log Line Format
+
+Every log line (terminal and files) uses a pipe-delimited, structured prefix:
+
+```
+YYYY-MM-DD|HH:MM:SS|user@host-short|caller-script|LEVEL|<emoji>| message
+```
+
+Example:
+
+```
+2025-09-04|10:56:21|root@proxmox-pbs|my_script.sh|LOG|ℹ️| apt-get autoremove --purge -y
+```
+
+- `caller-script` is the basename of the script that sourced `lib_bash` (or `lib_bash_log`).
+- `LEVEL` is one of `LOG`, `WRN`, `ERR`, `DBG` (success uses `LOG|✔`).
+- On TTY, the success check is styled as bright white on green background; file logs remain plain text.
+- Emojis are included in both terminal and file logs for quick scanning.
+
+---
+
+## 🧰 Symbols Toggle (`LIB_BASH_LOG_NO_SYMBOLS`)
+
+You can hide the symbol segment entirely via environment variable:
+
+```bash
+export LIB_BASH_LOG_NO_SYMBOLS=1
+```
+
+When enabled, the line format changes to omit the emoji/symbol field:
+
+```
+YYYY-MM-DD|HH:MM:SS|user@host-short|caller-script|LEVEL| message
+```
+
+Examples:
+
+```
+# Default (symbols enabled)
+2025-09-04|10:56:21|root@host|script.sh|LOG|ℹ️| Starting
+
+# With LIB_BASH_LOG_NO_SYMBOLS=1
+2025-09-04|10:56:21|root@host|script.sh|LOG| Starting
+```
+
+Notes:
+- This affects both TTY and file logs.
+- Only the symbol field is removed; all other fields and separators are preserved.
+
+---
+
+## 🛠️ Environment Variables: Behavior and Gotchas
+
+Several features are controlled by environment variables (e.g., `LIB_BASH_LOG_NO_SYMBOLS`, `LIB_BASH_DEBUG_MODE`, custom log paths). If a variable seems ignored, check the following:
+
+Why you might still see symbols
+
+- Sudo drops env vars by default. If you run via sudo, use one of:
+  - `sudo -E LIB_BASH_LOG_NO_SYMBOLS=1 ./your_script …`
+  - `sudo env LIB_BASH_LOG_NO_SYMBOLS=1 ./your_script …`
+  - Or allowlist the var in sudoers (`env_keep`).
+- Different shell/session. Ensure you exported in the same shell that launches the script:
+  - `export LIB_BASH_LOG_NO_SYMBOLS=1`
+  - `./lib_bash.sh log "test"`
+- Value mismatch. Only the truthy values below disable symbols; `0` or unset shows symbols.
+
+Accepted values
+
+- `LIB_BASH_LOG_NO_SYMBOLS`: `1`, `true`, `yes`, `on` (case-insensitive) disable symbols; any other value shows symbols.
+- `LIB_BASH_DEBUG_MODE`: set to `ON` (exact) to enable debug messages; any other value disables.
+
+Tips for other variables
+
+- The same sudo/export rules apply to other variables in this module (e.g., `LIB_BASH_LOGFILE`, `LIB_BASH_LOGFILE_ERR`, `LIB_BASH_LOGFILE_TMP`, `LIB_BASH_LOGFILE_ERR_TMP`).
+- If your script escalates with `sudo` internally, pass through required variables at invocation time as shown above.
+
+---
+
 ## 🎨 Color Output
 
-Colors and symbols help differentiate log levels:
+Colors (TTY only) and symbols help differentiate log levels:
 
 - **log** → `clr_green` ℹ️
 - **log_ok** → `clr_green` ✔️

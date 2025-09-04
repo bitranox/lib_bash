@@ -136,4 +136,30 @@ grep "Test log line" "$LIB_BASH_LOGFILE" > /dev/null \
 grep "Error test" "$LIB_BASH_LOGFILE_ERR" > /dev/null \
     && echo "✅ Error message written to error log file"
 
+# ------------------------------------------------------------------------------
+# Verify new log line prefix format (date|time|user@host|script|LEVEL|ICON| msg)
+# ------------------------------------------------------------------------------
+script_base="$(basename -- "${BASH_SOURCE[0]}")"
+user_host="$(whoami)@$(hostname -s)"
+
+# Build a loose regex to avoid locale issues with emojis; just check LEVEL and separators
+prefix_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}\\|[0-9]{2}:[0-9]{2}:[0-9]{2}\\|${user_host//\./\\.}\\|${script_base//./\\.}\\|LOG\\|.* Test log line$"
+if grep -E "$prefix_regex" "$LIB_BASH_LOGFILE" >/dev/null; then
+    echo "✅ Log prefix format OK (main log)"
+else
+    echo "❌ Log prefix format mismatch (main log)"
+    echo "Expected regex: $prefix_regex"
+    echo "Last lines:"; tail -n 5 "$LIB_BASH_LOGFILE"
+fi
+
+# Error line format check
+err_regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}\\|[0-9]{2}:[0-9]{2}:[0-9]{2}\\|${user_host//\./\\.}\\|${script_base//./\\.}\\|ERR\\|.* Error test$"
+if grep -E "$err_regex" "$LIB_BASH_LOGFILE_ERR" >/dev/null; then
+    echo "✅ Log prefix format OK (error log)"
+else
+    echo "❌ Log prefix format mismatch (error log)"
+    echo "Expected regex: $err_regex"
+    echo "Last lines:"; tail -n 5 "$LIB_BASH_LOGFILE_ERR"
+fi
+
 echo "🧪 Logging test suite complete."

@@ -74,7 +74,7 @@ _source_submodules() {
 _exit_if_not_is_root() {
 # exits if not elevated
 if ! is_root; then
-    log_err "lib_bash: You need to run this script or function as root (elevated)."
+    log_err "You need to run this script or function as root (elevated)."
     exit 1
 fi
 }

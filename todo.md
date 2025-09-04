@@ -76,5 +76,9 @@ If you want, I can:
 
 change log to : 
 
+change the log format from (example): 
 2025-09-04 10:56:21 [root@proxmox-pbs] [LOG]: ℹ️  apt-get autoremove --purge -y
-2025-09-04|10:56:21|root@proxmox-pbs|lib_bash|️️ℹ️LOG: apt-get autoremove --purge -y
+to: 
+2025-09-04|10:56:21|root@proxmox-pbs|lib_bash|️LOG️️ℹ️: apt-get autoremove --purge -y
+where "lib_bash" is the basename of the script that sourced lib_bash (or lib_log), root@proxmox-pbs is the username@hostname (short) 
+adopt all tests and documentation

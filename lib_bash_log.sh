@@ -111,7 +111,7 @@ _set_default_logfile_colors() {
 
     local default_clr="clr_green"
     local default_bold="clr_bold clr_green"
-    local default_err="clr_bold clr_cyan"
+    local default_err="clr_bold clr_red"
     local default_warn="clr_bold clr_yellow"
     local default_debug="clr_bold clr_magentab clr_yellow"
 
@@ -186,7 +186,7 @@ _create_log_dir() {
 #   $5  - log_file_tmp
 #   $6  - log_file_err
 #   $7  - log_file_err_tmp
-#   $8  - log level tag (e.g., "[LOG]")
+#   $8  - log level tag (e.g., "LOG")
 #   $9  - icon (e.g., "✅")
 #
 # Dependencies:
@@ -205,19 +205,49 @@ _log() {
     local level="${8:-}"
     local icon="${9:-}"
     local logline
+    local include_icon=true
+    # Accept common truthy values: 1|true|yes|on (case-insensitive)
+    local _nosym_val="${LIB_BASH_LOG_NO_SYMBOLS:-0}"
+    local _nosym_lc
+    _nosym_lc=$(printf '%s' "${_nosym_val}" | tr '[:upper:]' '[:lower:]')
+    case "${_nosym_lc}" in
+        1|true|yes|on) include_icon=false ;;
+    esac
 
     if [[ -n "${log_file}" ]]; then _create_log_dir "${log_file}"; fi
     if [[ -n "${log_file_tmp}" ]]; then _create_log_dir "${log_file_tmp}"; fi
     if [[ -n "${log_file_err}" ]]; then _create_log_dir "${log_file_err}"; fi
     if [[ -n "${log_file_err_tmp}" ]]; then _create_log_dir "${log_file_err_tmp}"; fi
 
-    local logprefix
-    logprefix="$(date '+%Y-%m-%d %H:%M:%S') [$(whoami)@$(hostname -s)] ${level}:"
+    # Build caller script basename (the script that sourced lib_bash/lib_log)
+    local _caller_base
+    {
+        # Prefer the top-most entry from BASH_SOURCE when available
+        local _idx
+        _idx=$(( ${#BASH_SOURCE[@]} - 1 ))
+        if (( _idx >= 0 )) && [[ -n "${BASH_SOURCE[$_idx]:-}" ]]; then
+            _caller_base="$(basename -- "${BASH_SOURCE[$_idx]}")"
+        else
+            _caller_base="$(basename -- "${0}")"
+        fi
+    } || _caller_base="$(basename -- "${0}")"
+
+    # Compose the new pipe-delimited prefix
+    local _ts_date _ts_time _user_host logprefix
+    _ts_date="$(date '+%Y-%m-%d')"
+    _ts_time="$(date '+%H:%M:%S')"
+    _user_host="$(whoami)@$(hostname -s)"
+    # Add a separator before the icon; omit icon if disabled via LIB_BASH_LOG_NO_SYMBOLS=1
+    if $include_icon; then
+        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|${icon}|"
+    else
+        logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|"
+    fi
 
     IFS=$'\n' read -rd '' -a lines <<< "${message}" || true
     for line in "${lines[@]}"; do
         if [[ "${options}" != *NO_TTY* ]]; then
-            local formatted_line="${logprefix} ${icon} ${line}"
+            local formatted_line="${logprefix} ${line}"
             local -a color_funcs=()
             IFS=' ' read -ra color_funcs <<< "${color_funcs_str}"
             for func in "${color_funcs[@]}"; do
@@ -227,6 +257,42 @@ _log() {
                     echo "Missing color function: ${func}" >&2
                 fi
             done
+            # Special styling: make the success checkmark bright white on green background on TTY when using ASCII check
+            if $include_icon && [[ "${level}" == "LOG" && "${icon}" == "✔" ]]; then
+                # Re-apply outer style after the icon to keep the rest green (and bold if requested)
+                local reapply_seq
+                if [[ "${options}" == *bold* ]]; then
+                    reapply_seq="${CLR_BOLD};${CLR_GREEN}"
+                else
+                    reapply_seq="${CLR_GREEN}"
+                fi
+                local colored_icon
+                colored_icon="${CLR_ESC}${CLR_BRIGHT_WHITE};${CLR_BRIGHT_GREENB}m${icon}${CLR_ESC}${CLR_RESET}m${CLR_ESC}${reapply_seq}m"
+                formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${colored_icon}|}"
+            fi
+
+            # Special styling: error cross as bright white on red background
+            if $include_icon && [[ "${level}" == "ERR" && ( "${icon}" == "✖" || "${icon}" == "❌" ) ]]; then
+                local reapply_seq_err
+                # error lines use bold red by default
+                reapply_seq_err="${CLR_BOLD};${CLR_RED}"
+                local colored_x
+                colored_x="${CLR_ESC}${CLR_BRIGHT_WHITE};${CLR_REDB}m✖${CLR_ESC}${CLR_RESET}m${CLR_ESC}${reapply_seq_err}m"
+                # Replace the raw icon in the formatted line with the styled version
+                formatted_line="${formatted_line/|ERR|${icon}|/|ERR|${colored_x}|}"
+            fi
+
+            # Ensure the separator after emoji is visible by inserting a zero-width spacer in TTY
+            # (does not affect file logs). This avoids glyph overlap in some fonts/terminals.
+            local _zwsp=$'\u200B'
+            if $include_icon; then
+              case "${level}:${icon}" in
+                  "LOG:ℹ️") formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${icon}${_zwsp}|}" ;;
+                  "LOG:🔧") formatted_line="${formatted_line/|LOG|${icon}|/|LOG|${icon}${_zwsp}|}" ;;
+                  "WRN:⚠️") formatted_line="${formatted_line/|WRN|${icon}|/|WRN|${icon}${_zwsp}|}" ;;
+                  "DBG:🐞") formatted_line="${formatted_line/|DBG|${icon}|/|DBG|${icon}${_zwsp}|}" ;;
+              esac
+            fi
             echo -e "${formatted_line}"
         fi
 
@@ -255,7 +321,7 @@ log() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "ℹ️ "
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "LOG" "ℹ️"
     return 0
 }
 
@@ -276,7 +342,7 @@ log_ok() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "✅"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "LOG" "✔"
     return 0
 }
 
@@ -312,7 +378,7 @@ log_wrench() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[LOG]" "🔧"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "LOG" "🔧"
     return 0
 }
 
@@ -332,7 +398,7 @@ log_warn() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_WARN:-clr_bold clr_yellow}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[WRN]" "⚠️ "
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "WRN" "⚠️"
     return 0
 }
 
@@ -351,8 +417,8 @@ log_err() {
     fi
     local message="${1:-}"
     local options="${2:-}"
-    local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_cyan}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "[ERR]" "❌"
+    local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_red}"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "ERR" "✖"
     return 0
 }
 
@@ -373,7 +439,7 @@ log_debug() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_DEBUG:-clr_bold clr_magentab clr_yellow}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "[DBG]" "🐞"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "DBG" "🐞"
     return 0
 }
 

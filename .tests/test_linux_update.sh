@@ -14,6 +14,12 @@ source "${SCRIPT_DIR}/../lib_bash.sh"
 # Override root check for tests
 is_root() { return 0; }
 
+# Helper: call save and print saved shell state in the same context
+print_saved_shell_state() {
+  _lib_bash_save_shell_state
+  echo "$LIB_BASH_SHELL_STATE"
+}
+
 run_tests() {
   local tmpdir mocklog phased
   tmpdir="$(mktemp -d)"; trap '[[ -n ${tmpdir-} ]] && rm -rf "${tmpdir}"' EXIT
@@ -25,7 +31,8 @@ run_tests() {
 
   # 1) save shell state
   assert_pass "_lib_bash_save_shell_state"
-  assert_contains "echo \"$LIB_BASH_SHELL_STATE\"" "set -o"
+  # The shell state is captured via `set +o`; validate via helper
+  assert_contains "print_saved_shell_state" "set +o"
 
   # 2) apt update/configure
   : >"$mocklog"
