@@ -265,7 +265,7 @@ _log() {
                 fi
             done
             # Special styling: make the success checkmark bright white on green background on TTY when using ASCII check
-            if $include_icon && [[ "${level}" == "LOG" && "${icon}" == "✔" ]]; then
+            if $include_icon && [[ "${level}" == "LOG" && "${icon}" == "✔️" ]]; then
                 # Re-apply outer style after the icon to keep the rest green (and bold if requested)
                 local reapply_seq
                 if [[ "${options}" == *bold* ]]; then
@@ -343,7 +343,7 @@ log_ok() {
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR:-clr_green}"
     [[ "${options}" == *bold* ]] && color_funcs_str="${_LOG_COLOR_BOLD:-clr_bold clr_green}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "LOG" "✔"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "" "" "LOG" "✔️"
     return 0
 }
 
@@ -419,7 +419,7 @@ log_err() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_red}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "ERR" "✖"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "ERR" "✖️"
     return 0
 }
 
