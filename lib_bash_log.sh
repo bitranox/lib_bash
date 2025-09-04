@@ -279,7 +279,7 @@ _log() {
             fi
 
             # Special styling: error cross as bright white on red background
-            if $include_icon && [[ "${level}" == "ERR" && ( "${icon}" == "✖" || "${icon}" == "❌" ) ]]; then
+            if $include_icon && [[ "${level}" == "ERR" && ( "${icon}" == "✖️" || "${icon}" == "✖" ) ]]; then
                 local reapply_seq_err
                 # error lines use bold red by default
                 reapply_seq_err="${CLR_BOLD};${CLR_RED}"
@@ -419,7 +419,7 @@ log_err() {
     local message="${1:-}"
     local options="${2:-}"
     local color_funcs_str="${_LOG_COLOR_ERR:-clr_bold clr_red}"
-    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "ERR" "✖️"
+    _log "${message}" "${options}" "${color_funcs_str}" "${LIB_BASH_LOGFILE}" "${LIB_BASH_LOGFILE_TMP}" "${LIB_BASH_LOGFILE_ERR}" "${LIB_BASH_LOGFILE_ERR_TMP}" "ERR" "❌"
     return 0
 }
 
