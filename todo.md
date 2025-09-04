@@ -19,15 +19,15 @@ Strengths
 
 Notable Deviations & Suggestions
 
+- Dependencies Explicitness
+    - lib_update_caller.sh uses git and readlink -f; lib_bash.sh’s linux_update uses apt tools; send_email uses mutt.
+    - Suggestion: lightweight needs git, needs mutt (or fallback to mailx/sendmail) at call sites; document platform expectation (GNU readlink).
 - Side Effects on Import
     - lib_bash_log.sh ends by calling _set_default_logfiles RESET etc. on load, which mutates global state as a side effect of source.
     - Consider: Re-init only if unset, or expose an explicit init_logging entry point and keep automatic init minimal. This reduces “hidden” coupling and surprises when sourcing.
 - Duplication vs. Wrapping
     - Logging wrappers (log, log_ok, log_wrench, etc.) repeat a similar pattern. Readability is good, but it’s close to duplication.
     - Consider: A tiny mapper or a single wrapper with level/icon mapping to reduce repetition while keeping call-sites clear.
-- Dependencies Explicitness
-    - lib_update_caller.sh uses git and readlink -f; lib_bash.sh’s linux_update uses apt tools; send_email uses mutt.
-    - Suggestion: lightweight needs git, needs mutt (or fallback to mailx/sendmail) at call sites; document platform expectation (GNU readlink).
 - Magic Numbers/Strings
     - lib_retry.sh: max_backoff=300, default attempts/delay inline; send_email: retries=3, exponential backoff.
     - Suggestion: promote these into small named constants at the top of each file to avoid magic numbers and clarify intent.
@@ -70,8 +70,11 @@ Per‑File Highlights
     - eval is intentional; keep it strictly within test scope.
 
 If you want, I can:
-
-- Propose a minimal refactor plan to split linux_update into small helpers (no behavior changes).
 - Add a Makefile target to shellcheck the library files as well.
 - Draft a short “platform dependencies” note per file (git/readlink/mutt/apt) to make dependencies explicit.
-- 
+
+
+change log to : 
+
+2025-09-04 10:56:21 [root@proxmox-pbs] [LOG]: ℹ️  apt-get autoremove --purge -y
+2025-09-04|10:56:21|root@proxmox-pbs|lib_bash|️️ℹ️LOG: apt-get autoremove --purge -y
