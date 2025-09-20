@@ -206,7 +206,7 @@ _log() {
     local icon="${9:-}"
     local logline
     local include_icon=true
-    local spacer=' '
+    local spacer='  '
     # Accept common truthy values: 1|true|yes|on (case-insensitive)
     local _nosym_val="${LIB_BASH_LOG_NO_SYMBOLS:-0}"
     local _nosym_lc
@@ -238,7 +238,7 @@ _log() {
     _ts_date="$(date '+%Y-%m-%d')"
     _ts_time="$(date '+%H:%M:%S')"
     _user_host="$(whoami)@$(hostname -s)"
-    # Add a separator before the icon; after the icon emit a single blank (no ':').
+    # Add a separator before the icon; after the icon emit two blanks (no ':').
     # If symbols are disabled, keep a colon after LEVEL for readability.
     if $include_icon; then
         logprefix="${_ts_date}|${_ts_time}|${_user_host}|${_caller_base}|${level}|${icon}${spacer}"
