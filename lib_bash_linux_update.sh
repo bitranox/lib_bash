@@ -51,6 +51,11 @@ _lib_bash_apt_fix() {
     logc _apt --fix-broken install -y -o Dpkg::Options::="--force-confold"
 }
 
+_lib_bash_modernize_sources() {
+    log "apt modernize-sources -y"
+    logc apt modernize-sources -y
+}
+
 _lib_bash_apt_upgrade() {
     log "apt-get upgrade -y -o Dpkg::Options::=\"--force-confold\""
     logc _apt upgrade -y -o Dpkg::Options::="--force-confold"
@@ -102,6 +107,7 @@ linux_update() {
     local force_phased_updates="${1:-}"
     _exit_if_not_is_root
     _lib_bash_save_shell_state
+    _lib_bash_modernize_sources
     _lib_bash_apt_update
     _lib_bash_apt_fix
     _lib_bash_apt_upgrade
