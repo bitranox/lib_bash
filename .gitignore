@@ -139,3 +139,6 @@ ehthumbs.db
 
 # Archives
 *.zip
+
+# Local, per-developer settings (Claude Code etc.) - never commit
+*.local.json
